@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "smart_survival_architect",
+  "version": "${version}",
+  "name": "Smart Survival Architect",
+  "description": "A survival-oriented architecture and construction system.",
+  "authors": [
+    "Terrainwright"
+  ],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.ssa.fabric.SmartSurvivalArchitectMod"
+    ],
+    "client": [
+      "dev.ssa.fabric.client.SmartSurvivalArchitectClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

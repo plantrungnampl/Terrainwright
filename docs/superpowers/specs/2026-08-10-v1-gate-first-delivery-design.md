@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-10  
 **Status:** Approved delivery design  
-**Canonical product source:** `../../../../Smart-Survival-Architect-Master-Architecture-R2/`
+**Canonical product source:** `../../../Smart-Survival-Architect-Master-Architecture-R2/`
 
 ## Goal
 
@@ -12,8 +12,8 @@ The work proceeds through evidence gates. The first subproject proves mandatory 
 
 ## Workspace and repository
 
-- Implementation repository: `D:\Terrainwright\smart-survival-architect`.
-- The R2 design package remains unchanged in its sibling directory.
+- Implementation repository: `D:\Terrainwright`.
+- The R2 design package remains unchanged in `D:\Terrainwright\Smart-Survival-Architect-Master-Architecture-R2`.
 - The implementation repository uses Git with `main` as its initial branch.
 - Production code uses the fixed package prefix `dev.ssa` and mod ID `smart_survival_architect`.
 - Toolchain coordinates from R2 are provisional until S1 resolves them against current official Fabric sources and proves clean client and dedicated-server launches.

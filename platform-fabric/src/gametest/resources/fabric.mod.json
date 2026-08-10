@@ -6,7 +6,8 @@
   "environment": "*",
   "entrypoints": {
     "fabric-gametest": [
-      "dev.ssa.fabric.spike.navigation.BuilderNavigationGameTests"
+      "dev.ssa.fabric.spike.navigation.BuilderNavigationGameTests",
+      "dev.ssa.fabric.spike.persistence.MinecraftSnapshotGameTests"
     ],
     "fabric-client-gametest": [
       "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest"

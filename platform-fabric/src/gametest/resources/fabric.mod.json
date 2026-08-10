@@ -7,6 +7,9 @@
   "entrypoints": {
     "fabric-gametest": [
       "dev.ssa.fabric.spike.navigation.BuilderNavigationGameTests"
+    ],
+    "fabric-client-gametest": [
+      "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest"
     ]
   }
 }

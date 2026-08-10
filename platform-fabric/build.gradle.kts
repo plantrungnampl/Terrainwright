@@ -22,7 +22,7 @@ fabricApi {
         createSourceSet = true
         modId = "smart_survival_architect_gametest"
         enableGameTests = true
-        enableClientGameTests = false
+        enableClientGameTests = true
         eula = true
     }
 }

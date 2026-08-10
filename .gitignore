@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+build/
+*/build/
+run/
+logs/
+*.log
+Smart-Survival-Architect-Master-Architecture-R2/
+smart-survival-architect/

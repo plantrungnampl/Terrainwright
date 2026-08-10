@@ -17,6 +17,16 @@ loom {
     }
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "smart_survival_architect_gametest"
+        enableGameTests = true
+        enableClientGameTests = false
+        eula = true
+    }
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
     implementation("net.fabricmc:fabric-loader:${property("loader_version")}")

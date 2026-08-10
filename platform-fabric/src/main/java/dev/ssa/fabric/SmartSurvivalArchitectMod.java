@@ -2,6 +2,7 @@ package dev.ssa.fabric;
 
 import dev.ssa.fabric.block.ModBlockIds;
 import dev.ssa.fabric.block.ModBlocks;
+import dev.ssa.fabric.spike.navigation.SpikeEntityTypes;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ public final class SmartSurvivalArchitectMod implements ModInitializer {
     @Override
     public void onInitialize() {
         ModBlocks.initialize();
+        SpikeEntityTypes.initialize();
         LOGGER.info("SSA_S1_COMMON_READY block={}", ModBlockIds.SPIKE_MARKER.identifier());
     }
 }

@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.BlockHitResult;
@@ -41,6 +42,8 @@ public final class SpikeBuilderEntity extends PathfinderMob {
     private int legAttempts;
     private int pathAttempts;
     private int ticksWithoutProgress;
+    private int stuckTimeouts;
+    private int scaffoldBlocks;
     private BlockPos currentStandingPos;
     private double bestDistanceSquared = Double.MAX_VALUE;
     private double maxTickDisplacement;
@@ -125,7 +128,11 @@ public final class SpikeBuilderEntity extends PathfinderMob {
             ticksWithoutProgress++;
         }
 
-        if (getNavigation().isDone() || ticksWithoutProgress >= STUCK_TICKS) {
+        boolean stuckTimedOut = ticksWithoutProgress >= STUCK_TICKS;
+        if (getNavigation().isDone() || stuckTimedOut) {
+            if (stuckTimedOut) {
+                stuckTimeouts++;
+            }
             getNavigation().stop();
             currentStandingPos = null;
             attemptPath(level);
@@ -207,8 +214,10 @@ public final class SpikeBuilderEntity extends PathfinderMob {
             }
         }
 
-        if (allowScaffold && spikeState == State.NAVIGATE_SITE) {
+        if (allowScaffold && spikeState == State.NAVIGATE_SITE && placeShortScaffoldRamp(level)) {
             allowScaffold = false;
+            beginLeg(level, targetPos);
+            return;
         }
         block("No reachable standing position for " + spikeState
                 + "; candidates=" + standingCandidates.size()
@@ -244,6 +253,33 @@ public final class SpikeBuilderEntity extends PathfinderMob {
         }
     }
 
+    private boolean placeShortScaffoldRamp(ServerLevel level) {
+        int deltaX = blockPosition().getX() - targetPos.getX();
+        int deltaZ = blockPosition().getZ() - targetPos.getZ();
+        Direction towardBuilder;
+        if (Math.abs(deltaX) >= Math.abs(deltaZ)) {
+            towardBuilder = deltaX < 0 ? Direction.WEST : Direction.EAST;
+        } else {
+            towardBuilder = deltaZ < 0 ? Direction.NORTH : Direction.SOUTH;
+        }
+
+        List<BlockPos> ramp = List.of(
+                targetPos.relative(towardBuilder, 5).atY(targetPos.getY() - 3),
+                targetPos.relative(towardBuilder, 4).atY(targetPos.getY() - 2),
+                targetPos.relative(towardBuilder, 3).atY(targetPos.getY() - 1));
+        if (ramp.stream().anyMatch(pos -> !level.isLoaded(pos) || !level.getBlockState(pos).isAir())) {
+            return false;
+        }
+
+        for (BlockPos scaffoldPos : ramp) {
+            if (!level.setBlock(scaffoldPos, Blocks.OAK_PLANKS.defaultBlockState(), 3)) {
+                return false;
+            }
+            scaffoldBlocks++;
+        }
+        return true;
+    }
+
     private void block(String reason) {
         failureReason = reason;
         spikeState = State.BLOCKED;
@@ -269,6 +305,14 @@ public final class SpikeBuilderEntity extends PathfinderMob {
 
     public String failureReason() {
         return failureReason;
+    }
+
+    public int scaffoldBlocks() {
+        return scaffoldBlocks;
+    }
+
+    public int stuckTimeouts() {
+        return stuckTimeouts;
     }
 
     public List<Long> pathDurationsNanos() {

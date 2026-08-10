@@ -73,6 +73,10 @@ public final class FileOperationIntentStore {
         });
     }
 
+    public CompletableFuture<Optional<OperationIntent>> loadActive() {
+        return executor.submit(this::readActive);
+    }
+
     public Optional<OperationIntent> readActive() {
         if (!Files.exists(walPath)) {
             return Optional.empty();

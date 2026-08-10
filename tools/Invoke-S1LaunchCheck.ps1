@@ -33,7 +33,12 @@ function Receive-SsaOutput {
             if ($null -eq $line) {
                 $stream.Closed = $true
             } else {
-                $Lines.Add("$($stream.Prefix) $line")
+                $line = $line.TrimEnd()
+                if ($line) {
+                    $Lines.Add("$($stream.Prefix) $line")
+                } else {
+                    $Lines.Add($stream.Prefix)
+                }
                 $stream.Pending = $stream.Reader.ReadLineAsync()
             }
         }

@@ -2,7 +2,7 @@
 
 ## Decision
 
-**PASS** as of `2026-08-10T21:38:16.8463417+07:00`.
+**PASS** as of `2026-08-10T21:40:16.1469723+07:00`.
 
 The Java 25/Fabric 26.2 bootstrap builds, the common entrypoint loads on both environments, the client entrypoint reaches `CLIENT_STARTED`, and the dedicated server reaches `Done` before stopping cleanly. S1 does not authorize gameplay implementation; S2-S5 still require their own plans and gates.
 
@@ -18,10 +18,10 @@ The Java 25/Fabric 26.2 bootstrap builds, the common entrypoint loads on both en
 ## Build and tests
 
 ```powershell
-.\gradlew.bat test build --no-daemon
+.\gradlew.bat clean test build --no-daemon
 ```
 
-Exit code: `0`. The build ran the `NamespacedId`, architecture-boundary, and stable block-ID tests and produced:
+Exit code: `0`; 21 Gradle tasks executed. The build ran the `NamespacedId`, architecture-boundary, and stable block-ID tests and produced:
 
 ```text
 platform-fabric/build/libs/smart-survival-architect-0.1.0-SNAPSHOT.jar
@@ -59,7 +59,7 @@ Observed markers:
 
 ```text
 SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-Done (1.951s)! For help, type "help"
+Done (0.382s)! For help, type "help"
 Stopping server
 Saving worlds
 ```
@@ -69,3 +69,17 @@ The workspace owner explicitly confirmed the Minecraft EULA for this local devel
 ## Scope retained
 
 S1 registers only `smart_survival_architect:spike_marker`. It adds no block item, assets, UI, generation, persistence, networking, Builder behavior, or construction gameplay.
+
+## Fresh gate sequence
+
+The final verification run executed these commands in order, each with exit code `0`:
+
+```powershell
+.\gradlew.bat clean test build --no-daemon
+.\tools\verify-s1-layout.ps1
+.\tools\Invoke-S1LaunchCheck.ps1 -Mode Server -TimeoutSeconds 180
+.\tools\Invoke-S1LaunchCheck.ps1 -Mode Client -TimeoutSeconds 180
+git diff --check
+```
+
+The final jar is `4,960` bytes and contains every required entrypoint/metadata class. A fresh import scan found no `net.minecraft` or `net.fabricmc` imports in the pure modules, and no owned Java process remained after either launch check.

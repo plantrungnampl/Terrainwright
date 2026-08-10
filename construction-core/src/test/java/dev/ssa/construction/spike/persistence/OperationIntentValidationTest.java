@@ -29,6 +29,12 @@ final class OperationIntentValidationTest {
     }
 
     @Test
+    void emptyStackCannotCarryComponents() {
+        assertThrows(IllegalArgumentException.class, () ->
+                StackSnapshot.of("", 0, bytes("noncanonical-components")));
+    }
+
+    @Test
     void intentCopiesItsDeltasAndStartsPrepared() {
         List<OperationDelta> deltas = new ArrayList<>(validTransferDeltas());
         OperationIntent intent = OperationIntent.prepared("op", "job", 9, OperationKind.MATERIAL_TRANSFER, deltas);

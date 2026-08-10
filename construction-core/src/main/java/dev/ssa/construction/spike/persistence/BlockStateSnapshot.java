@@ -32,6 +32,10 @@ public final class BlockStateSnapshot implements EvidenceSnapshot {
         return propertiesPayload.clone();
     }
 
+    public int propertiesPayloadSize() {
+        return propertiesPayload.length;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {

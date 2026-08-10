@@ -33,6 +33,14 @@ public final class OperationRecoveryClassifier {
             }
         }
 
+        if (intent.status() == OperationStatus.QUARANTINED) {
+            return RecoveryDecision.quarantine();
+        }
+        if (intent.status() == OperationStatus.ABORTED) {
+            return completedPrefix == 0
+                    ? RecoveryDecision.abortPrepared()
+                    : RecoveryDecision.quarantine();
+        }
         if (intent.status() == OperationStatus.COMMITTED) {
             return completedPrefix == deltas.size()
                     ? RecoveryDecision.finalizeCommit(deltas.size())

@@ -68,6 +68,27 @@ final class OperationRecoveryClassifierTest {
         assertEquals(RecoveryDecision.quarantine(), classifier.classify(intent, new ObservedEvidence(observations)));
     }
 
+    @Test
+    void terminalStatusesCannotResumeMutation() {
+        OperationIntent prepared = materialTransfer();
+        ObservedEvidence allBefore = observe(prepared, index -> prepared.deltas().get(index).before());
+        ObservedEvidence prefix = prefix(prepared, 1);
+        ObservedEvidence allAfter = observe(prepared, index -> prepared.deltas().get(index).after());
+
+        assertEquals(RecoveryDecision.quarantine(),
+                classifier.classify(prepared.withStatus(OperationStatus.QUARANTINED), allBefore));
+        assertEquals(RecoveryDecision.quarantine(),
+                classifier.classify(prepared.withStatus(OperationStatus.QUARANTINED), prefix));
+        assertEquals(RecoveryDecision.abortPrepared(),
+                classifier.classify(prepared.withStatus(OperationStatus.ABORTED), allBefore));
+        assertEquals(RecoveryDecision.quarantine(),
+                classifier.classify(prepared.withStatus(OperationStatus.ABORTED), prefix));
+        assertEquals(RecoveryDecision.finalizeCommit(2),
+                classifier.classify(prepared.withStatus(OperationStatus.COMMITTED), allAfter));
+        assertEquals(RecoveryDecision.quarantine(),
+                classifier.classify(prepared.withStatus(OperationStatus.COMMITTED), prefix));
+    }
+
     private static OperationIntent materialTransfer() {
         byte[] components = bytes("{}");
         return OperationIntent.prepared("transfer-1", "job-1", 3, OperationKind.MATERIAL_TRANSFER, List.of(

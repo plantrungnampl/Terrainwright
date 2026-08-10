@@ -28,7 +28,13 @@ public final class OperationCoordinator {
     public CompletableFuture<CoordinatorResult> execute(OperationIntent intent, OperationEvidencePort evidence) {
         Objects.requireNonNull(intent, "intent");
         Objects.requireNonNull(evidence, "evidence");
-        return CompletableFuture.runAsync(listener::beforePrepare, serverExecutor)
+        return CompletableFuture.runAsync(() -> {
+                    listener.beforePrepare();
+                    RecoveryDecision before = classifier.classify(intent, evidence.observe(intent));
+                    if (before.action() != RecoveryAction.ABORT_PREPARED) {
+                        throw new IllegalStateException("operation evidence is not exact all-before state");
+                    }
+                }, serverExecutor)
                 .thenCompose(ignored -> store.prepare(intent))
                 .thenCompose(acknowledgement -> CompletableFuture.runAsync(() -> {
                     listener.afterPrepared(acknowledgement);
@@ -37,7 +43,12 @@ public final class OperationCoordinator {
                         listener.afterDelta(index);
                     }
                     listener.afterAllDeltas();
+                    RecoveryDecision after = classifier.classify(intent, evidence.observe(intent));
+                    if (after.action() != RecoveryAction.FINALIZE_COMMIT) {
+                        throw new IllegalStateException("operation did not produce exact all-after evidence");
+                    }
                     evidence.commit(intent);
+                    listener.afterJournalCommit();
                 }, serverExecutor))
                 .thenCompose(ignored -> store.transition(intent.operationId(), OperationStatus.COMMITTED))
                 .thenCompose(ignored -> CompletableFuture.runAsync(listener::afterCommit, serverExecutor))
@@ -72,15 +83,19 @@ public final class OperationCoordinator {
             OperationEvidencePort evidence,
             RecoveryDecision decision) {
         return switch (decision.action()) {
-            case ABORT_PREPARED -> terminalAndClear(
-                    intent,
-                    OperationStatus.ABORTED,
-                    new CoordinatorResult(CoordinatorOutcome.ABORTED, 0));
+            case ABORT_PREPARED -> intent.status() == OperationStatus.ABORTED
+                    ? clear(intent, new CoordinatorResult(CoordinatorOutcome.ABORTED, 0))
+                    : terminalAndClear(
+                            intent,
+                            OperationStatus.ABORTED,
+                            new CoordinatorResult(CoordinatorOutcome.ABORTED, 0));
             case COMPLETE_SUFFIX -> completeSuffix(intent, evidence, decision.completedPrefixLength());
             case FINALIZE_COMMIT -> finalizeCommit(intent, evidence, decision.completedPrefixLength());
-            case QUARANTINE_UNKNOWN_EVIDENCE -> store
-                    .transition(intent.operationId(), OperationStatus.QUARANTINED)
-                    .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.QUARANTINED, 0));
+            case QUARANTINE_UNKNOWN_EVIDENCE -> intent.status() == OperationStatus.QUARANTINED
+                    ? CompletableFuture.completedFuture(
+                            new CoordinatorResult(CoordinatorOutcome.QUARANTINED, 0))
+                    : store.transition(intent.operationId(), OperationStatus.QUARANTINED)
+                            .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.QUARANTINED, 0));
         };
     }
 

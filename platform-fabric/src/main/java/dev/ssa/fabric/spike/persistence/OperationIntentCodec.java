@@ -23,12 +23,13 @@ public final class OperationIntentCodec {
     private static final int FORMAT_VERSION = 1;
     private static final int MAX_STRING_BYTES = 65_536;
     private static final int MAX_SNAPSHOT_BYTES = 1_048_576;
+    private static final int MAX_ENCODED_BYTES = 4 * 1_048_576;
 
     private OperationIntentCodec() {
     }
 
     public static byte[] encode(OperationIntent intent) throws IOException {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(encodedSize(intent));
         try (DataOutputStream output = new DataOutputStream(bytes)) {
             output.writeInt(FORMAT_VERSION);
             writeString(output, intent.operationId());
@@ -58,6 +59,52 @@ public final class OperationIntentCodec {
             }
         }
         return bytes.toByteArray();
+    }
+
+    private static int encodedSize(OperationIntent intent) throws IOException {
+        long size = Integer.BYTES
+                + stringSize(intent.operationId())
+                + stringSize(intent.jobId())
+                + Long.BYTES
+                + Byte.BYTES
+                + Byte.BYTES
+                + Integer.BYTES;
+        for (OperationDelta delta : intent.deltas()) {
+            size += Byte.BYTES;
+            if (delta instanceof InventoryDelta inventory) {
+                size += stringSize(inventory.inventoryId())
+                        + Integer.BYTES
+                        + Integer.BYTES
+                        + stackSize(inventory.before())
+                        + stackSize(inventory.after());
+            } else if (delta instanceof WorldDelta world) {
+                size += stringSize(world.worldId())
+                        + 3L * Integer.BYTES
+                        + blockSize(world.before())
+                        + blockSize(world.after())
+                        + Byte.BYTES;
+            }
+            if (size > MAX_ENCODED_BYTES) {
+                throw new IOException("encoded operation intent exceeds 4 MiB");
+            }
+        }
+        return (int) size;
+    }
+
+    private static long stackSize(StackSnapshot stack) throws IOException {
+        return stringSize(stack.itemId()) + Integer.BYTES + Integer.BYTES + stack.componentsPayloadSize();
+    }
+
+    private static long blockSize(BlockStateSnapshot block) throws IOException {
+        return stringSize(block.blockId()) + Integer.BYTES + block.propertiesPayloadSize();
+    }
+
+    private static int stringSize(String value) throws IOException {
+        int length = value.getBytes(StandardCharsets.UTF_8).length;
+        if (length > MAX_STRING_BYTES) {
+            throw new IOException("string exceeds codec limit");
+        }
+        return Integer.BYTES + length;
     }
 
     public static OperationIntent decode(byte[] payload) throws IOException {
@@ -117,9 +164,7 @@ public final class OperationIntentCodec {
         String itemId = readString(input);
         int count = input.readInt();
         byte[] components = readBytes(input);
-        return count == 0 && itemId.isEmpty()
-                ? StackSnapshot.empty()
-                : StackSnapshot.of(itemId, count, components);
+        return StackSnapshot.of(itemId, count, components);
     }
 
     private static void writeBlock(DataOutputStream output, BlockStateSnapshot block) throws IOException {

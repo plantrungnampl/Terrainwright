@@ -20,6 +20,9 @@ public final class StackSnapshot implements EvidenceSnapshot {
         if ((count == 0) != itemId.isEmpty()) {
             throw new IllegalArgumentException("only the empty stack may have a zero count or empty item ID");
         }
+        if (count == 0 && this.componentsPayload.length != 0) {
+            throw new IllegalArgumentException("empty stack must not carry component payload bytes");
+        }
         if (this.componentsPayload.length > MAX_COMPONENT_BYTES) {
             throw new IllegalArgumentException("component payload exceeds 1 MiB");
         }
@@ -44,6 +47,10 @@ public final class StackSnapshot implements EvidenceSnapshot {
 
     public byte[] componentsPayload() {
         return componentsPayload.clone();
+    }
+
+    public int componentsPayloadSize() {
+        return componentsPayload.length;
     }
 
     @Override

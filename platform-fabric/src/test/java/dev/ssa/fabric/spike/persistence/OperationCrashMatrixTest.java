@@ -79,8 +79,11 @@ final class OperationCrashMatrixTest {
             try {
                 OperationCoordinator coordinator = new OperationCoordinator(store, server, OperationBoundaryListener.NONE);
                 first = coordinator.recover(fixture).join();
+                long quarantinedWalLength = Files.size(wal);
                 second = coordinator.recover(fixture).join();
-                assertEquals(OperationStatus.QUARANTINED, store.readActive().orElseThrow().status());
+                assertEquals(quarantinedWalLength, Files.size(wal),
+                        "idempotent quarantine appended another WAL record");
+                assertEquals(OperationStatus.QUARANTINED, store.loadActive().join().orElseThrow().status());
             } finally {
                 close(server);
             }
@@ -91,6 +94,103 @@ final class OperationCrashMatrixTest {
         assertEquals(0, fixture.applyCount());
         assertFalse(fixture.committed());
         System.out.println("SSA_S4_CRASH operation=material_transfer point=foreign_evidence decision=QUARANTINED exact=true idempotent=true");
+    }
+
+    @Test
+    void executeRejectsForeignBeforeEvidenceWithoutPreparing() throws Exception {
+        OperationIntent intent = placement();
+        Path wal = temporaryDirectory.resolve("foreign-before-execute.wal");
+        FixtureEvidencePort fixture = new FixtureEvidencePort(
+                temporaryDirectory.resolve("foreign-before-execute.bin"), intent);
+        fixture.setForeign(0);
+
+        try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-persistence")) {
+            FileOperationIntentStore store = new FileOperationIntentStore(wal, persistence);
+            ExecutorService server = newServerExecutor();
+            try {
+                OperationCoordinator coordinator = new OperationCoordinator(store, server, OperationBoundaryListener.NONE);
+                assertThrows(CompletionException.class, () -> coordinator.execute(intent, fixture).join());
+                assertTrue(store.loadActive().join().isEmpty());
+            } finally {
+                close(server);
+            }
+        }
+        assertEquals(0, fixture.applyCount());
+        assertFalse(fixture.committed());
+    }
+
+    @Test
+    void executeVerifiesAllAfterEvidenceBeforeCommit() throws Exception {
+        OperationIntent intent = placement();
+        Path wal = temporaryDirectory.resolve("failed-after-verification.wal");
+        AtomicBoolean committed = new AtomicBoolean();
+        OperationEvidencePort faultyEvidence = new OperationEvidencePort() {
+            @Override
+            public ObservedEvidence observe(OperationIntent observedIntent) {
+                List<EvidenceObservation> observations = observedIntent.deltas().stream()
+                        .map(delta -> new EvidenceObservation(delta.evidenceKey(), delta.before()))
+                        .toList();
+                return new ObservedEvidence(observations);
+            }
+
+            @Override
+            public void apply(OperationDelta delta) {
+            }
+
+            @Override
+            public boolean isCommitted(String operationId) {
+                return committed.get();
+            }
+
+            @Override
+            public void commit(OperationIntent committedIntent) {
+                committed.set(true);
+            }
+        };
+
+        try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-persistence")) {
+            FileOperationIntentStore store = new FileOperationIntentStore(wal, persistence);
+            ExecutorService server = newServerExecutor();
+            try {
+                OperationCoordinator coordinator = new OperationCoordinator(
+                        store, server, OperationBoundaryListener.NONE);
+                assertThrows(CompletionException.class, () -> coordinator.execute(intent, faultyEvidence).join());
+                assertEquals(OperationStatus.PREPARED, store.loadActive().join().orElseThrow().status());
+            } finally {
+                close(server);
+            }
+        }
+        assertFalse(committed.get(), "journal/task commit ran without exact all-after evidence");
+    }
+
+    @Test
+    void terminalIntentWithForeignEvidenceEscalatesToStickyQuarantine() throws Exception {
+        for (OperationStatus terminal : List.of(OperationStatus.ABORTED, OperationStatus.COMMITTED)) {
+            OperationIntent intent = materialTransfer();
+            Path directory = temporaryDirectory.resolve("terminal-foreign-" + terminal.name().toLowerCase());
+            Files.createDirectories(directory);
+            Path wal = directory.resolve("intent.wal");
+            FixtureEvidencePort fixture = new FixtureEvidencePort(directory.resolve("evidence.bin"), intent);
+            fixture.setForeign(0);
+
+            try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-persistence")) {
+                FileOperationIntentStore store = new FileOperationIntentStore(wal, persistence);
+                store.prepare(intent).join();
+                store.transition(intent.operationId(), terminal).join();
+                ExecutorService server = newServerExecutor();
+                try {
+                    OperationCoordinator coordinator = new OperationCoordinator(
+                            store, server, OperationBoundaryListener.NONE);
+                    assertEquals(CoordinatorOutcome.QUARANTINED, coordinator.recover(fixture).join().outcome());
+                    long quarantinedWalLength = Files.size(wal);
+                    assertEquals(CoordinatorOutcome.QUARANTINED, coordinator.recover(fixture).join().outcome());
+                    assertEquals(quarantinedWalLength, Files.size(wal));
+                    assertEquals(OperationStatus.QUARANTINED, store.loadActive().join().orElseThrow().status());
+                } finally {
+                    close(server);
+                }
+            }
+        }
     }
 
     @Test
@@ -155,7 +255,8 @@ final class OperationCrashMatrixTest {
             targets.add(CrashTarget.afterDelta(index));
         }
         targets.add(CrashTarget.afterAllDeltas());
-        targets.add(CrashTarget.afterCommit());
+        targets.add(CrashTarget.afterJournalCommit());
+        targets.add(CrashTarget.afterWalCommit());
         targets.add(CrashTarget.afterClear());
 
         for (CrashTarget target : targets) {
@@ -195,7 +296,7 @@ final class OperationCrashMatrixTest {
                         reopenedStore, server, OperationBoundaryListener.NONE);
                 firstRecovery = recovery.recover(reopenedFixture).join();
                 secondRecovery = recovery.recover(reopenedFixture).join();
-                assertTrue(reopenedStore.readActive().isEmpty(), "supported recovery left an active intent");
+                assertTrue(reopenedStore.loadActive().join().isEmpty(), "supported recovery left an active intent");
             } finally {
                 close(server);
             }
@@ -205,6 +306,7 @@ final class OperationCrashMatrixTest {
         if (shouldCommit) {
             assertTrue(reopenedFixture.allAfter(), "supported prefix did not reach exact all-after evidence");
             assertTrue(reopenedFixture.committed(), "supported prefix did not commit journal/task evidence");
+            assertEquals(1, reopenedFixture.commitCount(), "journal/task commit was duplicated");
             assertConservation(intent, reopenedFixture);
         } else {
             assertTrue(reopenedFixture.allBefore(), "pre-mutation crash changed exact evidence");
@@ -238,6 +340,11 @@ final class OperationCrashMatrixTest {
             @Override
             public void afterAllDeltas() {
                 crash(CrashPhase.AFTER_ALL_DELTAS, -1);
+            }
+
+            @Override
+            public void afterJournalCommit() {
+                crash(CrashPhase.AFTER_JOURNAL_COMMIT, -1);
             }
 
             @Override
@@ -336,6 +443,7 @@ final class OperationCrashMatrixTest {
         AFTER_PREPARED,
         AFTER_DELTA,
         AFTER_ALL_DELTAS,
+        AFTER_JOURNAL_COMMIT,
         AFTER_COMMIT,
         AFTER_CLEAR
     }
@@ -361,8 +469,15 @@ final class OperationCrashMatrixTest {
             return new CrashTarget(CrashPhase.AFTER_ALL_DELTAS, -1, "after_all_deltas_before_commit");
         }
 
-        static CrashTarget afterCommit() {
-            return new CrashTarget(CrashPhase.AFTER_COMMIT, -1, "after_commit_before_clear");
+        static CrashTarget afterJournalCommit() {
+            return new CrashTarget(
+                    CrashPhase.AFTER_JOURNAL_COMMIT,
+                    -1,
+                    "after_journal_commit_before_wal_commit");
+        }
+
+        static CrashTarget afterWalCommit() {
+            return new CrashTarget(CrashPhase.AFTER_COMMIT, -1, "after_wal_commit_before_clear");
         }
 
         static CrashTarget afterClear() {
@@ -372,6 +487,7 @@ final class OperationCrashMatrixTest {
         boolean hasAppliedEvidence() {
             return phase == CrashPhase.AFTER_DELTA
                     || phase == CrashPhase.AFTER_ALL_DELTAS
+                    || phase == CrashPhase.AFTER_JOURNAL_COMMIT
                     || phase == CrashPhase.AFTER_COMMIT
                     || phase == CrashPhase.AFTER_CLEAR;
         }
@@ -388,7 +504,7 @@ final class OperationCrashMatrixTest {
         private final OperationIntent intent;
         private final boolean[] after;
         private final List<String> mutationThreads = new ArrayList<>();
-        private boolean committed;
+        private int commitCount;
         private int foreignIndex = -1;
         private int applyCount;
 
@@ -405,7 +521,7 @@ final class OperationCrashMatrixTest {
                 for (int index = 0; index < after.length; index++) {
                     after[index] = state.get() != 0;
                 }
-                committed = state.get() != 0;
+                commitCount = state.getInt();
                 foreignIndex = state.getInt();
             } else {
                 persist();
@@ -442,13 +558,13 @@ final class OperationCrashMatrixTest {
         @Override
         public boolean isCommitted(String operationId) {
             assertEquals(intent.operationId(), operationId);
-            return committed;
+            return commitCount > 0;
         }
 
         @Override
         public void commit(OperationIntent committedIntent) {
             assertEquals(intent.operationId(), committedIntent.operationId());
-            committed = true;
+            commitCount++;
             mutationThreads.add(Thread.currentThread().getName());
             persistUnchecked();
         }
@@ -477,7 +593,11 @@ final class OperationCrashMatrixTest {
         }
 
         boolean committed() {
-            return committed;
+            return commitCount > 0;
+        }
+
+        int commitCount() {
+            return commitCount;
         }
 
         int applyCount() {
@@ -497,12 +617,12 @@ final class OperationCrashMatrixTest {
         }
 
         private void persist() throws IOException {
-            ByteBuffer state = ByteBuffer.allocate(Integer.BYTES + after.length + Byte.BYTES + Integer.BYTES);
+            ByteBuffer state = ByteBuffer.allocate(Integer.BYTES + after.length + Integer.BYTES + Integer.BYTES);
             state.putInt(after.length);
             for (boolean value : after) {
                 state.put((byte) (value ? 1 : 0));
             }
-            state.put((byte) (committed ? 1 : 0));
+            state.putInt(commitCount);
             state.putInt(foreignIndex);
             state.flip();
             try (FileChannel channel = FileChannel.open(

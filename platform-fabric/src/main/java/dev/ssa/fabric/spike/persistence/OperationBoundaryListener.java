@@ -15,6 +15,9 @@ public interface OperationBoundaryListener {
     default void afterAllDeltas() {
     }
 
+    default void afterJournalCommit() {
+    }
+
     default void afterCommit() {
     }
 

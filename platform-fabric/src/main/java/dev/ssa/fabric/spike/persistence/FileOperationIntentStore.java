@@ -37,7 +37,7 @@ public final class FileOperationIntentStore {
         this(walPath, executor, AppendProbe.NONE);
     }
 
-    FileOperationIntentStore(Path walPath, PersistenceExecutor executor, AppendProbe appendProbe) {
+    public FileOperationIntentStore(Path walPath, PersistenceExecutor executor, AppendProbe appendProbe) {
         this.walPath = Objects.requireNonNull(walPath, "walPath");
         this.executor = Objects.requireNonNull(executor, "executor");
         this.appendProbe = Objects.requireNonNull(appendProbe, "appendProbe");

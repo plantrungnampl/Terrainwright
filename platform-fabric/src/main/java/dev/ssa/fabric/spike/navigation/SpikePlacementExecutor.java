@@ -19,6 +19,10 @@ final class SpikePlacementExecutor {
             SpikeBuilderEntity builder,
             BlockPos targetPos,
             SimpleContainer carriedItems) {
+        if (!level.isLoaded(targetPos)) {
+            return false;
+        }
+
         ItemStack stack = carriedItems.getItem(0);
         if (!stack.is(Items.COBBLESTONE) || stack.isEmpty() || !level.getBlockState(targetPos).isAir()) {
             return false;

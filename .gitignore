@@ -6,5 +6,6 @@ run/
 logs/
 *.log
 !docs/spikes/S1/*.log
+!docs/spikes/S2/*.log
 Smart-Survival-Architect-Master-Architecture-R2/
 smart-survival-architect/

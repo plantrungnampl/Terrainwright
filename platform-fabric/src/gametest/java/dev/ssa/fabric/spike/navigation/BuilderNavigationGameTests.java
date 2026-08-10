@@ -4,6 +4,7 @@ import java.util.Arrays;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -222,6 +223,23 @@ public final class BuilderNavigationGameTests {
             context.assertValueEqual(chest.getItem(0).getCount(), 1, "Chest item count");
             logFixture("chunk_unload", "SUSPENDED", builder);
         });
+    }
+
+    @GameTest(maxTicks = 40, padding = 1)
+    public void placementExecutorRejectsUnloadedTarget(GameTestHelper context) {
+        BlockPos unloadedTarget = context.absolutePos(new BlockPos(512, 1, 2));
+        SpikeBuilderEntity builder = context.spawn(SpikeEntityTypes.BUILDER, 0, 1, 2);
+        builder.setPos(unloadedTarget.getX() + 1.5, unloadedTarget.getY(), unloadedTarget.getZ() + 0.5);
+        SimpleContainer carriedItems = new SimpleContainer(new ItemStack(Items.COBBLESTONE));
+
+        context.assertTrue(!context.getLevel().isLoaded(unloadedTarget), "Target chunk unexpectedly loaded");
+        boolean placed = SpikePlacementExecutor.placeCobblestone(
+                context.getLevel(), builder, unloadedTarget, carriedItems);
+
+        context.assertTrue(!placed, "Executor accepted an unloaded target");
+        context.assertTrue(!context.getLevel().isLoaded(unloadedTarget), "Executor loaded the target chunk");
+        context.assertValueEqual(carriedItems.getItem(0).getCount(), 1, "Carried item count");
+        context.succeed();
     }
 
     @GameTest(maxTicks = 400, padding = 20)

@@ -3,6 +3,7 @@ package dev.ssa.architect.blueprint;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.HouseRequirements;
 import dev.ssa.architect.model.StyleId;
+import dev.ssa.architect.terrain.TerrainPlan;
 import dev.ssa.architect.validation.BlueprintValidation;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ public record Blueprint(
         List<Room> rooms,
         List<BlueprintBlock> blocks,
         List<BuildPhase> buildPhases,
+        TerrainPlan terrainPlan,
         BlueprintValidation validation,
         int formatVersion) {
     public static final int CURRENT_FORMAT_VERSION = 1;
@@ -28,6 +30,7 @@ public record Blueprint(
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(styleId, "styleId");
         Objects.requireNonNull(localBounds, "localBounds");
+        Objects.requireNonNull(terrainPlan, "terrainPlan");
         Objects.requireNonNull(validation, "validation");
         if (floors < HouseRequirements.MIN_FLOORS || floors > HouseRequirements.MAX_FLOORS) {
             throw new IllegalArgumentException("Blueprint floors must be within the V1 house bounds");

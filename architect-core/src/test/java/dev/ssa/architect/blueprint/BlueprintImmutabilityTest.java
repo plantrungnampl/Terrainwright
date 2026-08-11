@@ -8,6 +8,7 @@ import dev.ssa.architect.model.BlockStateSpec;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
 import dev.ssa.architect.model.StyleId;
+import dev.ssa.architect.terrain.TerrainPlan;
 import dev.ssa.architect.validation.BlueprintValidation;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -119,6 +120,16 @@ final class BlueprintImmutabilityTest {
                 rooms,
                 blocks,
                 phases,
+                new TerrainPlan(
+                        TerrainPlan.Strategy.FLAT,
+                        0,
+                        0,
+                        0,
+                        0,
+                        false,
+                        false,
+                        TerrainPlan.SalvagePolicy.DISCARD_NO_DROPS,
+                        List.of()),
                 BlueprintValidation.valid(),
                 formatVersion);
     }

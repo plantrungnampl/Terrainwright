@@ -13,11 +13,14 @@ import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
 import dev.ssa.fabric.SmartSurvivalArchitectMod;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
+import dev.ssa.fabric.network.PreviewPayloads.CancelSurvey;
+import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
 import dev.ssa.fabric.network.PreviewPayloads.SelectSurveySite;
 import dev.ssa.fabric.network.PreviewPayloads.StartSurvey;
 import dev.ssa.fabric.network.PreviewPayloads.SurveyTokenResult;
+import dev.ssa.fabric.network.PreviewPayloads.SurveyStatus;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
 import dev.ssa.fabric.preview.ArchitectGenerationService;
 import dev.ssa.fabric.preview.PreviewSessionService;
@@ -61,16 +64,20 @@ public final class PreviewNetworking {
         }
         initialized = true;
         PayloadTypeRegistry.serverboundPlay().register(StartSurvey.TYPE, StartSurvey.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CancelSurvey.TYPE, CancelSurvey.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SelectSurveySite.TYPE, SelectSurveySite.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(RequestPreview.TYPE, RequestPreview.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ConfirmPreview.TYPE, ConfirmPreview.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(SurveyTokenResult.TYPE, SurveyTokenResult.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(SurveyStatus.TYPE, SurveyStatus.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PreviewFailure.TYPE, PreviewFailure.CODEC);
         PayloadTypeRegistry.clientboundPlay().registerLarge(
                 PreviewResult.TYPE,
                 PreviewResult.CODEC,
                 MAX_PREVIEW_PACKET_BYTES);
 
         ServerPlayNetworking.registerGlobalReceiver(StartSurvey.TYPE, PreviewNetworking::startSurvey);
+        ServerPlayNetworking.registerGlobalReceiver(CancelSurvey.TYPE, PreviewNetworking::cancelSurvey);
         ServerPlayNetworking.registerGlobalReceiver(SelectSurveySite.TYPE, PreviewNetworking::selectSite);
         ServerPlayNetworking.registerGlobalReceiver(RequestPreview.TYPE, PreviewNetworking::requestPreview);
         ServerPlayNetworking.registerGlobalReceiver(ConfirmPreview.TYPE, PreviewNetworking::confirmPreview);
@@ -79,12 +86,14 @@ public final class PreviewNetworking {
             UUID owner = listener.player.getUUID();
             services.surveys().cancel(owner);
             services.generation().cancel(owner);
+            services.forget(owner);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(PreviewNetworking::close);
     }
 
     private static void startSurvey(StartSurvey payload, ServerPlayNetworking.Context context) {
         Services services = services(context.server());
+        services.generation().cancel(context.player().getUUID());
         SurveyModeService.StartResult result = services.surveys().start(
                 context.player(),
                 payload.architectTablePos(),
@@ -92,6 +101,14 @@ public final class PreviewNetworking {
         if (result.failure().isPresent()) {
             LOGGER.debug("Rejected Survey start for {}: {}", context.player().getUUID(), result.failure().orElseThrow());
         }
+        sendSurveyStatus(context.player(), SurveyStatus.Action.START, result.session().isPresent());
+    }
+
+    private static void cancelSurvey(CancelSurvey payload, ServerPlayNetworking.Context context) {
+        Services services = services(context.server());
+        UUID owner = context.player().getUUID();
+        services.generation().cancel(owner);
+        services.surveys().cancel(owner);
     }
 
     private static void selectSite(SelectSurveySite payload, ServerPlayNetworking.Context context) {
@@ -110,6 +127,7 @@ public final class PreviewNetworking {
                     new SurveyTokenResult(result.token().orElseThrow().rawToken()));
         } else if (result.failure().isPresent()) {
             LOGGER.debug("Rejected Survey selection for {}: {}", context.player().getUUID(), result.failure().orElseThrow());
+            sendSurveyStatus(context.player(), SurveyStatus.Action.SELECT_SITE, false);
         }
     }
 
@@ -117,11 +135,15 @@ public final class PreviewNetworking {
         Services services = services(context.server());
         if (!services.admit(context.player().getUUID(), context.server().getTickCount())) {
             LOGGER.debug("Rate-limited preview request for {}", context.player().getUUID());
+            sendFailure(context.player(), payload.requestNonce(), PreviewFailure.Reason.RATE_LIMITED);
+            returnRetryToken(context.player(), payload.surveyToken());
             return;
         }
         StylePack style = STYLES.get(payload.requirements().styleId());
         if (style == null) {
             LOGGER.debug("Rejected unknown preview style {}", payload.requirements().styleId());
+            sendFailure(context.player(), payload.requestNonce(), PreviewFailure.Reason.INVALID_SURVEY);
+            returnRetryToken(context.player(), payload.surveyToken());
             return;
         }
         BlockCapabilityRegistry registry = capabilities(style);
@@ -132,19 +154,63 @@ public final class PreviewNetworking {
                         style,
                         registry)
                 .thenAccept(outcome -> {
-                    if (outcome.session().isEmpty()
-                            || !ServerPlayNetworking.canSend(context.player(), PreviewResult.TYPE)) {
-                        return;
+                    if (outcome.session().isPresent()
+                            && ServerPlayNetworking.canSend(context.player(), PreviewResult.TYPE)) {
+                        PreviewSessionService.PreviewSession session = outcome.session().orElseThrow();
+                        ServerPlayNetworking.send(context.player(), new PreviewResult(
+                                session.id(),
+                                session.blueprintHash(),
+                                session.blueprint(),
+                                session.anchor(),
+                                session.rotation(),
+                                session.expiryRevision(),
+                                session.requestNonce()));
                     }
-                    PreviewSessionService.PreviewSession session = outcome.session().orElseThrow();
-                    ServerPlayNetworking.send(context.player(), new PreviewResult(
-                            session.id(),
-                            session.blueprintHash(),
-                            session.blueprint(),
-                            session.rotation(),
-                            session.expiryRevision(),
-                            session.requestNonce()));
+                    outcome.failure().ifPresent(failure -> sendFailure(
+                            context.player(), payload.requestNonce(), failureReason(failure)));
+                    if (outcome.failure().filter(
+                                    failure -> failure == ArchitectGenerationService.Failure.TERRAIN_UNAVAILABLE)
+                            .isPresent()) {
+                        returnRetryToken(context.player(), payload.surveyToken());
+                    }
+                    if (outcome.status() != ArchitectGenerationService.Status.REPLACED
+                            && ServerPlayNetworking.canSend(context.player(), SurveyTokenResult.TYPE)) {
+                        outcome.consumedToken()
+                                .flatMap(token -> services.surveys().reissue(
+                                        token, context.server().getTickCount()))
+                                .ifPresent(token -> ServerPlayNetworking.send(
+                                        context.player(), new SurveyTokenResult(token.rawToken())));
+                    }
                 });
+    }
+
+    private static void returnRetryToken(ServerPlayer player, String rawToken) {
+        if (ServerPlayNetworking.canSend(player, SurveyTokenResult.TYPE)) {
+            ServerPlayNetworking.send(player, new SurveyTokenResult(rawToken));
+        }
+    }
+
+    private static void sendFailure(ServerPlayer player, long requestNonce, PreviewFailure.Reason reason) {
+        if (ServerPlayNetworking.canSend(player, PreviewFailure.TYPE)) {
+            ServerPlayNetworking.send(player, new PreviewFailure(requestNonce, reason));
+        }
+    }
+
+    private static void sendSurveyStatus(ServerPlayer player, SurveyStatus.Action action, boolean accepted) {
+        if (ServerPlayNetworking.canSend(player, SurveyStatus.TYPE)) {
+            ServerPlayNetworking.send(player, new SurveyStatus(action, accepted));
+        }
+    }
+
+    private static PreviewFailure.Reason failureReason(ArchitectGenerationService.Failure failure) {
+        return switch (failure) {
+            case INVALID_SURVEY_TOKEN, SERVER_THREAD_REQUIRED -> PreviewFailure.Reason.INVALID_SURVEY;
+            case SURVEY_EXPIRED -> PreviewFailure.Reason.SURVEY_EXPIRED;
+            case WRONG_DIMENSION -> PreviewFailure.Reason.WRONG_DIMENSION;
+            case TERRAIN_UNAVAILABLE -> PreviewFailure.Reason.TERRAIN_UNAVAILABLE;
+            case GENERATION_FAILED -> PreviewFailure.Reason.GENERATION_FAILED;
+            case SERVER_BUSY -> PreviewFailure.Reason.SERVER_BUSY;
+        };
     }
 
     private static void confirmPreview(ConfirmPreview payload, ServerPlayNetworking.Context context) {
@@ -268,6 +334,10 @@ public final class PreviewNetworking {
             }
             lastRequestTicks.put(owner, currentTick);
             return true;
+        }
+
+        private synchronized void forget(UUID owner) {
+            lastRequestTicks.remove(owner);
         }
     }
 }

@@ -115,6 +115,24 @@ public final class PreviewAuthorityGameTest {
         context.assertTrue(
                 service.consumeToken(player.getUUID(), replacement.rawToken(), 15).isEmpty(),
                 "Survey token was reusable");
+        SurveyModeService.IssuedSiteToken successor = service.reissue(replacement.token(), 16)
+                .orElseThrow();
+        context.assertTrue(
+                service.validateToken(player.getUUID(), replacement.rawToken(), 16).isEmpty(),
+                "reissuing a token revived its consumed predecessor");
+        context.assertTrue(
+                service.validateToken(player.getUUID(), successor.rawToken(), 16).isPresent(),
+                "successor Survey token was not valid for regeneration");
+        context.assertTrue(
+                successor.token().anchor().equals(replacement.token().anchor()),
+                "successor Survey token changed the server-selected anchor");
+        context.assertTrue(service.start(player, table, 17).session().isPresent(), "new Survey did not start");
+        context.assertTrue(
+                service.reissue(replacement.token(), 17).isEmpty(),
+                "consumed token restored authority over a newer active Survey");
+        context.assertTrue(
+                service.activeSession(player.getUUID()).isPresent(),
+                "stale token reissue removed the newer Survey session");
         context.succeed();
     }
 

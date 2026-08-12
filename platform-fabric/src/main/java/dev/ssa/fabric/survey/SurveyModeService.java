@@ -188,6 +188,38 @@ public final class SurveyModeService {
         return token;
     }
 
+    public Optional<IssuedSiteToken> reissue(SiteToken consumedToken, long currentRevision) {
+        SiteToken trustedToken = Objects.requireNonNull(consumedToken, "consumedToken");
+        if (currentRevision < 0) {
+            throw new IllegalArgumentException("currentRevision must not be negative");
+        }
+        purgeExpiredTokens(currentRevision);
+        if (currentRevision > trustedToken.expiresAtRevision()) {
+            return Optional.empty();
+        }
+        boolean newerTokenExists = tokens.values().stream()
+                .anyMatch(token -> token.ownerId().equals(trustedToken.ownerId()));
+        if (sessions.containsKey(trustedToken.ownerId()) || newerTokenExists) {
+            return Optional.empty();
+        }
+
+        String rawToken = randomToken();
+        String tokenHash = hashToken(rawToken);
+        long expiresAtRevision = currentRevision > Long.MAX_VALUE - tokenTtl
+                ? Long.MAX_VALUE
+                : currentRevision + tokenTtl;
+        SiteToken successor = new SiteToken(
+                trustedToken.ownerId(),
+                trustedToken.dimensionId(),
+                trustedToken.architectTablePos(),
+                trustedToken.anchor(),
+                tokenHash,
+                trustedToken.worldRevision(),
+                expiresAtRevision);
+        tokens.put(tokenHash, successor);
+        return Optional.of(new IssuedSiteToken(rawToken, successor));
+    }
+
     public void cancel(UUID owner) {
         UUID trustedOwner = Objects.requireNonNull(owner, "owner");
         sessions.remove(trustedOwner);

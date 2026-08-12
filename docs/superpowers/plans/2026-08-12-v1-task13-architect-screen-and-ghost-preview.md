@@ -12,4 +12,3 @@
 4. **Promote the S3 rendering path.** Add the production `GhostPreviewRenderer` facade, extend the proven layer model for footprint and entrance markers, and preserve one-buffer ownership with dispose-on-revision replacement.
 5. **Add the Architect screen and client networking.** Register clientbound receivers, render requirement/result summaries, and provide Generate/Regenerate, Rotate, Move, and Confirm controls. Confirm sends only the server session ID/hash plus a selected Hut ID.
 6. **Verify production behavior.** Run focused unit tests, the full clean unit/build/server-GameTest gate, the S1 layout check, `git diff --check`, and the client GameTest bootstrap. The client evidence must retain the S3 1,000/5,000-block performance/lifecycle checks; Task 12 GameTests remain the server revalidation and confirmation authority evidence.
-

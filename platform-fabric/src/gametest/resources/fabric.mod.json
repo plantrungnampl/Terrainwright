@@ -12,7 +12,8 @@
       "dev.ssa.fabric.preview.PreviewAuthorityGameTest"
     ],
     "fabric-client-gametest": [
-      "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest"
+      "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest",
+      "dev.ssa.fabric.client.preview.ArchitectPreviewClientGameTest"
     ]
   }
 }

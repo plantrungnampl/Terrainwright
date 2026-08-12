@@ -37,12 +37,20 @@ final class PreviewPayloadCodecTest {
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 UUID.randomUUID());
         PreviewPayloads.StartSurvey start = new PreviewPayloads.StartSurvey(new BlockPos(1, 64, 2));
+        PreviewPayloads.CancelSurvey cancel = new PreviewPayloads.CancelSurvey();
+        PreviewPayloads.SurveyStatus status = new PreviewPayloads.SurveyStatus(
+                PreviewPayloads.SurveyStatus.Action.START, true);
         PreviewPayloads.SelectSurveySite select = new PreviewPayloads.SelectSurveySite(new BlockPos(9, 70, 11));
         PreviewPayloads.SurveyTokenResult token = new PreviewPayloads.SurveyTokenResult("opaque-token");
+        PreviewPayloads.PreviewFailure failure = new PreviewPayloads.PreviewFailure(
+                7, PreviewPayloads.PreviewFailure.Reason.SURVEY_EXPIRED);
 
         assertEquals(start, roundTrip(start, PreviewPayloads.StartSurvey.CODEC));
+        assertEquals(cancel, roundTrip(cancel, PreviewPayloads.CancelSurvey.CODEC));
+        assertEquals(status, roundTrip(status, PreviewPayloads.SurveyStatus.CODEC));
         assertEquals(select, roundTrip(select, PreviewPayloads.SelectSurveySite.CODEC));
         assertEquals(token, roundTrip(token, PreviewPayloads.SurveyTokenResult.CODEC));
+        assertEquals(failure, roundTrip(failure, PreviewPayloads.PreviewFailure.CODEC));
         assertEquals(request, roundTrip(request, PreviewPayloads.RequestPreview.CODEC));
         assertEquals(confirm, roundTrip(confirm, PreviewPayloads.ConfirmPreview.CODEC));
     }
@@ -51,7 +59,13 @@ final class PreviewPayloadCodecTest {
     void serverPreviewResultRoundTripsTheExactTrustedBlueprint() {
         var blueprint = PreviewTestFixtures.blueprint(42);
         PreviewPayloads.PreviewResult result = new PreviewPayloads.PreviewResult(
-                UUID.randomUUID(), blueprint.hash(), blueprint, 90, 500, 8);
+                UUID.randomUUID(),
+                blueprint.hash(),
+                blueprint,
+                new BlockPos(125, 71, -48),
+                90,
+                500,
+                8);
 
         PreviewPayloads.PreviewResult decoded = roundTrip(result, PreviewPayloads.PreviewResult.CODEC);
 

@@ -51,6 +51,30 @@ public final class PreviewRevision {
         }
     }
 
+    public static PreviewRevision create(
+            long revision,
+            long contentIdentity,
+            int originX,
+            int originY,
+            int originZ,
+            int rotationQuarterTurns,
+            int[] x,
+            int[] y,
+            int[] z,
+            PreviewLayer[] layers) {
+        return new PreviewRevision(
+                revision,
+                contentIdentity,
+                originX,
+                originY,
+                originZ,
+                rotationQuarterTurns,
+                x,
+                y,
+                z,
+                layers);
+    }
+
     public PreviewRevision rotateClockwise(long nextRevision) {
         int[] rotatedX = new int[blockCount()];
         int[] rotatedZ = new int[blockCount()];

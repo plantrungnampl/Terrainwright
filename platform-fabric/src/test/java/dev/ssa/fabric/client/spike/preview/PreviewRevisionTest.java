@@ -14,13 +14,19 @@ final class PreviewRevisionTest {
 
         assertEquals(1_000, small.blockCount());
         assertEquals(5_000, large.blockCount());
-        for (PreviewLayer layer : PreviewLayer.values()) {
-            assertEquals(200, small.layerCount(layer));
-            assertEquals(1_000, large.layerCount(layer));
-        }
+        assertEquals(1_000, totalLayerCount(small));
+        assertEquals(5_000, totalLayerCount(large));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> PreviewFixtures.create(3, 5_001, 10, 80, 20, 7));
+    }
+
+    private static int totalLayerCount(PreviewRevision revision) {
+        int total = 0;
+        for (PreviewLayer layer : PreviewLayer.values()) {
+            total += revision.layerCount(layer);
+        }
+        return total;
     }
 
     @Test

@@ -40,6 +40,53 @@ public final class PreviewPayloads {
         }
     }
 
+    public record CancelSurvey() implements CustomPacketPayload {
+        public static final Type<CancelSurvey> TYPE = PreviewPayloads.type("cancel_survey");
+        public static final StreamCodec<RegistryFriendlyByteBuf, CancelSurvey> CODEC = StreamCodec.of(
+                (buffer, payload) -> {},
+                buffer -> new CancelSurvey());
+
+        @Override
+        public Type<CancelSurvey> type() {
+            return TYPE;
+        }
+    }
+
+    public record SurveyStatus(Action action, boolean accepted) implements CustomPacketPayload {
+        public static final Type<SurveyStatus> TYPE = PreviewPayloads.type("survey_status");
+        public static final StreamCodec<RegistryFriendlyByteBuf, SurveyStatus> CODEC = StreamCodec.of(
+                SurveyStatus::encode,
+                SurveyStatus::decode);
+
+        public SurveyStatus {
+            Objects.requireNonNull(action, "action");
+        }
+
+        @Override
+        public Type<SurveyStatus> type() {
+            return TYPE;
+        }
+
+        private static void encode(RegistryFriendlyByteBuf buffer, SurveyStatus payload) {
+            buffer.writeVarInt(payload.action().ordinal());
+            buffer.writeBoolean(payload.accepted());
+        }
+
+        private static SurveyStatus decode(RegistryFriendlyByteBuf buffer) {
+            int ordinal = buffer.readVarInt();
+            Action[] actions = Action.values();
+            if (ordinal < 0 || ordinal >= actions.length) {
+                throw new IllegalArgumentException("Unknown Survey action");
+            }
+            return new SurveyStatus(actions[ordinal], buffer.readBoolean());
+        }
+
+        public enum Action {
+            START,
+            SELECT_SITE
+        }
+    }
+
     public record SelectSurveySite(BlockPos anchor) implements CustomPacketPayload {
         public static final Type<SelectSurveySite> TYPE = PreviewPayloads.type("select_survey_site");
         public static final StreamCodec<RegistryFriendlyByteBuf, SelectSurveySite> CODEC = StreamCodec.of(
@@ -206,6 +253,7 @@ public final class PreviewPayloads {
             UUID previewSessionId,
             String blueprintHash,
             Blueprint blueprint,
+            BlockPos origin,
             int rotation,
             long expiryRevision,
             long requestNonce) implements CustomPacketPayload {
@@ -218,6 +266,7 @@ public final class PreviewPayloads {
             Objects.requireNonNull(previewSessionId, "previewSessionId");
             Objects.requireNonNull(blueprintHash, "blueprintHash");
             Objects.requireNonNull(blueprint, "blueprint");
+            origin = Objects.requireNonNull(origin, "origin").immutable();
             if (!blueprint.hash().equals(blueprintHash)) {
                 throw new IllegalArgumentException("Preview result hash does not match its Blueprint");
             }
@@ -236,6 +285,7 @@ public final class PreviewPayloads {
             buffer.writeUUID(payload.previewSessionId());
             buffer.writeUtf(payload.blueprintHash(), 64);
             BlueprintStreamCodec.CODEC.encode(buffer, payload.blueprint());
+            writeBlockPos(buffer, payload.origin());
             buffer.writeVarInt(payload.rotation());
             buffer.writeLong(payload.expiryRevision());
             buffer.writeLong(payload.requestNonce());
@@ -246,9 +296,54 @@ public final class PreviewPayloads {
                     buffer.readUUID(),
                     buffer.readUtf(64),
                     BlueprintStreamCodec.CODEC.decode(buffer),
+                    readBlockPos(buffer),
                     buffer.readVarInt(),
                     buffer.readLong(),
                     buffer.readLong());
+        }
+    }
+
+    public record PreviewFailure(long requestNonce, Reason reason) implements CustomPacketPayload {
+        public static final Type<PreviewFailure> TYPE = PreviewPayloads.type("preview_failure");
+        public static final StreamCodec<RegistryFriendlyByteBuf, PreviewFailure> CODEC = StreamCodec.of(
+                PreviewFailure::encode,
+                PreviewFailure::decode);
+
+        public PreviewFailure {
+            Objects.requireNonNull(reason, "reason");
+            if (requestNonce < 0) {
+                throw new IllegalArgumentException("requestNonce must not be negative");
+            }
+        }
+
+        @Override
+        public Type<PreviewFailure> type() {
+            return TYPE;
+        }
+
+        private static void encode(RegistryFriendlyByteBuf buffer, PreviewFailure payload) {
+            buffer.writeLong(payload.requestNonce());
+            buffer.writeVarInt(payload.reason().ordinal());
+        }
+
+        private static PreviewFailure decode(RegistryFriendlyByteBuf buffer) {
+            long nonce = buffer.readLong();
+            int ordinal = buffer.readVarInt();
+            Reason[] reasons = Reason.values();
+            if (ordinal < 0 || ordinal >= reasons.length) {
+                throw new IllegalArgumentException("Unknown preview failure reason");
+            }
+            return new PreviewFailure(nonce, reasons[ordinal]);
+        }
+
+        public enum Reason {
+            RATE_LIMITED,
+            INVALID_SURVEY,
+            SURVEY_EXPIRED,
+            WRONG_DIMENSION,
+            TERRAIN_UNAVAILABLE,
+            GENERATION_FAILED,
+            SERVER_BUSY
         }
     }
 

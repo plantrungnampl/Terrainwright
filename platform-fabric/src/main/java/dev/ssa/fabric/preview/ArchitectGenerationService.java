@@ -192,7 +192,7 @@ public final class ArchitectGenerationService {
                     activeRequests.remove(owner);
                 }
             }
-            current.response().complete(RequestOutcome.rejected(Failure.SERVER_BUSY));
+            current.response().complete(RequestOutcome.rejected(Failure.SERVER_BUSY, token));
         }
         return response;
     }
@@ -212,11 +212,15 @@ public final class ArchitectGenerationService {
             activeRequests.remove(owner);
         }
         if (failure != null || !(result instanceof GenerationResult.Success success)) {
-            requestState.response().complete(RequestOutcome.rejected(Failure.GENERATION_FAILED));
+            requestState.response().complete(RequestOutcome.rejected(Failure.GENERATION_FAILED, token));
             return;
         }
 
         long revision = revisionClock.getAsLong();
+        if (revision > token.expiresAtRevision()) {
+            requestState.response().complete(RequestOutcome.rejected(Failure.SURVEY_EXPIRED));
+            return;
+        }
         SiteToken snapshotBoundToken = new SiteToken(
                 token.ownerId(),
                 token.dimensionId(),
@@ -237,7 +241,7 @@ public final class ArchitectGenerationService {
                 request.requestNonce(),
                 terrain.width(),
                 terrain.depth());
-        requestState.response().complete(RequestOutcome.ready(session));
+        requestState.response().complete(RequestOutcome.ready(session, token));
     }
 
     private void purgeCancelledWorkers() {
@@ -259,11 +263,13 @@ public final class ArchitectGenerationService {
     public record RequestOutcome(
             Status status,
             Optional<PreviewSession> session,
-            Optional<Failure> failure) {
+            Optional<Failure> failure,
+            Optional<SiteToken> consumedToken) {
         public RequestOutcome {
             Objects.requireNonNull(status, "status");
             session = Objects.requireNonNull(session, "session");
             failure = Objects.requireNonNull(failure, "failure");
+            consumedToken = Objects.requireNonNull(consumedToken, "consumedToken");
             if ((status == Status.PREVIEW_READY) != session.isPresent()) {
                 throw new IllegalArgumentException("Only a ready request may include a PreviewSession");
             }
@@ -272,16 +278,28 @@ public final class ArchitectGenerationService {
             }
         }
 
-        private static RequestOutcome ready(PreviewSession session) {
-            return new RequestOutcome(Status.PREVIEW_READY, Optional.of(session), Optional.empty());
+        private static RequestOutcome ready(PreviewSession session, SiteToken consumedToken) {
+            return new RequestOutcome(
+                    Status.PREVIEW_READY,
+                    Optional.of(session),
+                    Optional.empty(),
+                    Optional.of(consumedToken));
         }
 
         private static RequestOutcome rejected(Failure failure) {
-            return new RequestOutcome(Status.REJECTED, Optional.empty(), Optional.of(failure));
+            return new RequestOutcome(Status.REJECTED, Optional.empty(), Optional.of(failure), Optional.empty());
+        }
+
+        private static RequestOutcome rejected(Failure failure, SiteToken consumedToken) {
+            return new RequestOutcome(
+                    Status.REJECTED,
+                    Optional.empty(),
+                    Optional.of(failure),
+                    Optional.of(consumedToken));
         }
 
         private static RequestOutcome replaced() {
-            return new RequestOutcome(Status.REPLACED, Optional.empty(), Optional.empty());
+            return new RequestOutcome(Status.REPLACED, Optional.empty(), Optional.empty(), Optional.empty());
         }
     }
 
@@ -294,6 +312,7 @@ public final class ArchitectGenerationService {
     public enum Failure {
         SERVER_THREAD_REQUIRED,
         INVALID_SURVEY_TOKEN,
+        SURVEY_EXPIRED,
         WRONG_DIMENSION,
         TERRAIN_UNAVAILABLE,
         GENERATION_FAILED,

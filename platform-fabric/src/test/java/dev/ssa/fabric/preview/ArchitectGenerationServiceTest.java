@@ -267,6 +267,40 @@ final class ArchitectGenerationServiceTest {
         }
     }
 
+    @Test
+    void generationFinishingAfterSurveyExpiryCannotPublishPreview() {
+        PreviewSessionService sessions = new PreviewSessionService();
+        TokenAuthorityStub tokens = new TokenAuthorityStub();
+        TestExecutor worker = new TestExecutor();
+        TestExecutor server = new TestExecutor();
+        SiteToken token = tokens.add("survey-expiring", 10);
+        java.util.concurrent.atomic.AtomicLong revision = new java.util.concurrent.atomic.AtomicLong(9);
+        ArchitectGenerationService service = new ArchitectGenerationService(
+                tokens,
+                (level, anchor, width, depth) -> Optional.empty(),
+                sessions,
+                worker,
+                revision::get);
+
+        var response = service.requestCaptured(
+                OWNER,
+                request("survey-expiring", 13),
+                token,
+                terrain("terrain-expiry"),
+                () -> new GenerationResult.Success(PreviewTestFixtures.blueprint(13), diagnostics()),
+                server);
+
+        worker.runNext();
+        revision.set(11);
+        server.runNext();
+
+        assertEquals(ArchitectGenerationService.Status.REJECTED, response.join().status());
+        assertEquals(
+                ArchitectGenerationService.Failure.SURVEY_EXPIRED,
+                response.join().failure().orElseThrow());
+        assertTrue(sessions.activeSession(OWNER).isEmpty());
+    }
+
     private static RequestPreview request(String token, long nonce) {
         return new RequestPreview(
                 token,

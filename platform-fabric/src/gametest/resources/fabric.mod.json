@@ -8,7 +8,8 @@
     "fabric-gametest": [
       "dev.ssa.fabric.spike.navigation.BuilderNavigationGameTests",
       "dev.ssa.fabric.spike.persistence.MinecraftSnapshotGameTests",
-      "dev.ssa.fabric.link.HutChestLinkGameTest"
+      "dev.ssa.fabric.link.HutChestLinkGameTest",
+      "dev.ssa.fabric.preview.PreviewAuthorityGameTest"
     ],
     "fabric-client-gametest": [
       "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest"

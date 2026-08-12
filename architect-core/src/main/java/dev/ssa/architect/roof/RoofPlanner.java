@@ -28,6 +28,53 @@ public final class RoofPlanner {
             StylePack style,
             BlockStateSpec roofState,
             BlockStateSpec supportState) {
+        Objects.requireNonNull(style, "style");
+        int overhang = style.roofRules().overhangRange().minimum();
+        return planBounded(
+                footprint,
+                roofBaseY,
+                style,
+                roofState,
+                supportState,
+                -overhang,
+                footprint.width() + overhang,
+                -overhang,
+                footprint.depth() + overhang);
+    }
+
+    public List<BlueprintBlock> planWithinSnapshot(
+            Footprint footprint,
+            int roofBaseY,
+            StylePack style,
+            BlockStateSpec roofState,
+            BlockStateSpec supportState,
+            int snapshotWidth,
+            int snapshotDepth) {
+        if (snapshotWidth <= 0 || snapshotDepth <= 0) {
+            throw new IllegalArgumentException("Snapshot dimensions must be positive");
+        }
+        return planBounded(
+                footprint,
+                roofBaseY,
+                style,
+                roofState,
+                supportState,
+                0,
+                snapshotWidth,
+                0,
+                snapshotDepth);
+    }
+
+    private List<BlueprintBlock> planBounded(
+            Footprint footprint,
+            int roofBaseY,
+            StylePack style,
+            BlockStateSpec roofState,
+            BlockStateSpec supportState,
+            int minimumX,
+            int maximumXExclusive,
+            int minimumZ,
+            int maximumZExclusive) {
         Objects.requireNonNull(footprint, "footprint");
         Objects.requireNonNull(style, "style");
         Objects.requireNonNull(roofState, "roofState");
@@ -35,7 +82,13 @@ public final class RoofPlanner {
 
         StylePack.RoofRules rules = style.roofRules();
         int overhang = rules.overhangRange().minimum();
-        Set<Footprint.Cell> roofCells = expandedCells(footprint, overhang);
+        Set<Footprint.Cell> roofCells = expandedCells(
+                footprint,
+                overhang,
+                minimumX,
+                maximumXExclusive,
+                minimumZ,
+                maximumZExclusive);
         int minX = roofCells.stream().mapToInt(Footprint.Cell::x).min().orElseThrow();
         int maxX = roofCells.stream().mapToInt(Footprint.Cell::x).max().orElseThrow();
         int minZ = roofCells.stream().mapToInt(Footprint.Cell::z).min().orElseThrow();
@@ -210,10 +263,20 @@ public final class RoofPlanner {
         return null;
     }
 
-    private static Set<Footprint.Cell> expandedCells(Footprint footprint, int overhang) {
+    private static Set<Footprint.Cell> expandedCells(
+            Footprint footprint,
+            int overhang,
+            int minimumX,
+            int maximumXExclusive,
+            int minimumZ,
+            int maximumZExclusive) {
         Set<Footprint.Cell> expanded = new HashSet<>();
-        for (int x = -overhang; x < footprint.width() + overhang; x++) {
-            for (int z = -overhang; z < footprint.depth() + overhang; z++) {
+        int startX = Math.max(-overhang, minimumX);
+        int endX = Math.min(footprint.width() + overhang, maximumXExclusive);
+        int startZ = Math.max(-overhang, minimumZ);
+        int endZ = Math.min(footprint.depth() + overhang, maximumZExclusive);
+        for (int x = startX; x < endX; x++) {
+            for (int z = startZ; z < endZ; z++) {
                 Footprint.Cell candidate = new Footprint.Cell(x, z);
                 if (distanceToFootprint(candidate, footprint.cells()) <= overhang) {
                     expanded.add(candidate);

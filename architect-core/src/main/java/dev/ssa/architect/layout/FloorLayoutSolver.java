@@ -1,5 +1,6 @@
 package dev.ssa.architect.layout;
 
+import dev.ssa.architect.model.EntrancePreference;
 import dev.ssa.architect.room.RoomGraph;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,14 +13,25 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 public final class FloorLayoutSolver {
     private static final int MAX_CANDIDATES_PER_DECISION = 128;
     private static final int MAX_SEARCH_ATTEMPTS = 250_000;
 
     public Optional<FloorLayout> solve(RoomGraph graph, Footprint footprint, long seed) {
+        return solve(graph, footprint, EntrancePreference.AUTO, seed);
+    }
+
+    public Optional<FloorLayout> solve(
+            RoomGraph graph,
+            Footprint footprint,
+            EntrancePreference entrancePreference,
+            long seed) {
         Objects.requireNonNull(graph, "graph");
         Objects.requireNonNull(footprint, "footprint");
+        Objects.requireNonNull(entrancePreference, "entrancePreference");
+        checkCancelled();
         if (!hasEnoughAreaPerFloor(graph, footprint)) {
             return Optional.empty();
         }
@@ -27,7 +39,12 @@ public final class FloorLayoutSolver {
         List<RoomGraph.Node> order = breadthFirstOrder(graph);
         Map<String, List<Candidate>> candidatesByRoom = new HashMap<>();
         for (RoomGraph.Node node : order) {
-            List<Candidate> candidates = candidatesFor(node, footprint);
+            List<Candidate> candidates = candidatesFor(
+                    node,
+                    footprint,
+                    node.id().equals(graph.entranceRoomId())
+                            ? entrancePreference
+                            : EntrancePreference.AUTO);
             if (candidates.isEmpty()) {
                 return Optional.empty();
             }
@@ -71,7 +88,10 @@ public final class FloorLayoutSolver {
         return order;
     }
 
-    private static List<Candidate> candidatesFor(RoomGraph.Node node, Footprint footprint) {
+    private static List<Candidate> candidatesFor(
+            RoomGraph.Node node,
+            Footprint footprint,
+            EntrancePreference entrancePreference) {
         List<Candidate> candidates = new ArrayList<>();
         int minimumDimension = node.minimumArea() >= 4 ? 2 : 1;
         int maximumArea = Math.min(
@@ -93,12 +113,87 @@ public final class FloorLayoutSolver {
                         if (node.exteriorPreference() == RoomGraph.ExteriorPreference.REQUIRED && !boundary) {
                             continue;
                         }
-                        candidates.add(new Candidate(cells, x, z, width, depth, boundary));
+                        int exteriorBayCount = exteriorBayCount(cells, footprint);
+                        if (exteriorBayCount < minimumExteriorBays(node)) {
+                            continue;
+                        }
+                        if (entrancePreference != EntrancePreference.AUTO
+                                && !hasExteriorBayFacing(cells, footprint, entrancePreference)) {
+                            continue;
+                        }
+                        candidates.add(new Candidate(
+                                cells,
+                                x,
+                                z,
+                                width,
+                                depth,
+                                boundary));
                     }
                 }
             }
         }
         return List.copyOf(candidates);
+    }
+
+    private static boolean hasExteriorBayFacing(
+            Set<Footprint.Cell> cells,
+            Footprint footprint,
+            EntrancePreference direction) {
+        for (Footprint.Cell cell : cells) {
+            List<Footprint.Cell> neighbors = List.of(
+                    new Footprint.Cell(cell.x(), cell.z() - 1),
+                    new Footprint.Cell(cell.x() + 1, cell.z()),
+                    new Footprint.Cell(cell.x(), cell.z() + 1),
+                    new Footprint.Cell(cell.x() - 1, cell.z()));
+            List<Footprint.Cell> exterior = neighbors.stream()
+                    .filter(neighbor -> !footprint.cells().contains(neighbor))
+                    .toList();
+            if (exterior.size() == 1
+                    && exterior.getFirst().equals(step(cell, direction))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Footprint.Cell step(
+            Footprint.Cell cell,
+            EntrancePreference direction) {
+        return switch (direction) {
+            case NORTH -> new Footprint.Cell(cell.x(), cell.z() - 1);
+            case EAST -> new Footprint.Cell(cell.x() + 1, cell.z());
+            case SOUTH -> new Footprint.Cell(cell.x(), cell.z() + 1);
+            case WEST -> new Footprint.Cell(cell.x() - 1, cell.z());
+            case AUTO -> throw new IllegalArgumentException("AUTO has no fixed direction");
+        };
+    }
+
+    private static int minimumExteriorBays(RoomGraph.Node node) {
+        return switch (node.type().path()) {
+            case "living" -> 2;
+            case "entrance", "kitchen", "bedroom" -> 1;
+            default -> 0;
+        };
+    }
+
+    private static int exteriorBayCount(Set<Footprint.Cell> cells, Footprint footprint) {
+        int bays = 0;
+        for (Footprint.Cell cell : cells) {
+            int exteriorDirections = 0;
+            for (Footprint.Cell neighbor : Set.of(
+                    new Footprint.Cell(cell.x() - 1, cell.z()),
+                    new Footprint.Cell(cell.x() + 1, cell.z()),
+                    new Footprint.Cell(cell.x(), cell.z() - 1),
+                    new Footprint.Cell(cell.x(), cell.z() + 1))) {
+                if (!footprint.cells().contains(neighbor)) {
+                    exteriorDirections++;
+                }
+            }
+            if (exteriorDirections == 1) {
+                bays++;
+            }
+        }
+        return bays;
     }
 
     private static Set<Footprint.Cell> rectangleCells(int startX, int startZ, int width, int depth) {
@@ -122,6 +217,7 @@ public final class FloorLayoutSolver {
         if (index == order.size()) {
             return true;
         }
+        checkCancelled();
         if (budget.attempts >= MAX_SEARCH_ATTEMPTS) {
             return false;
         }
@@ -137,6 +233,7 @@ public final class FloorLayoutSolver {
 
         int limit = Math.min(MAX_CANDIDATES_PER_DECISION, eligible.size());
         for (int candidateIndex = 0; candidateIndex < limit; candidateIndex++) {
+            checkCancelled();
             if (++budget.attempts > MAX_SEARCH_ATTEMPTS) {
                 return false;
             }
@@ -148,6 +245,12 @@ public final class FloorLayoutSolver {
             placed.remove(node.id());
         }
         return false;
+    }
+
+    private static void checkCancelled() {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new CancellationException("Floor layout solving was cancelled");
+        }
     }
 
     private static boolean isEligible(

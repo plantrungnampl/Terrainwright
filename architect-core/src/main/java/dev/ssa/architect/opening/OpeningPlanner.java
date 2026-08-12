@@ -2,6 +2,7 @@ package dev.ssa.architect.opening;
 
 import dev.ssa.architect.layout.FloorLayout;
 import dev.ssa.architect.layout.Footprint;
+import dev.ssa.architect.model.EntrancePreference;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.room.RoomGraph;
 import dev.ssa.architect.style.StylePack;
@@ -21,10 +22,29 @@ public final class OpeningPlanner {
             int floorHeight,
             StylePack style,
             long seed) {
+        return plan(
+                graph,
+                layout,
+                footprint,
+                floorHeight,
+                style,
+                EntrancePreference.AUTO,
+                seed);
+    }
+
+    public OpeningPlan plan(
+            RoomGraph graph,
+            FloorLayout layout,
+            Footprint footprint,
+            int floorHeight,
+            StylePack style,
+            EntrancePreference entrancePreference,
+            long seed) {
         Objects.requireNonNull(graph, "graph");
         Objects.requireNonNull(layout, "layout");
         Objects.requireNonNull(footprint, "footprint");
         Objects.requireNonNull(style, "style");
+        Objects.requireNonNull(entrancePreference, "entrancePreference");
         if (floorHeight < 3) {
             throw new IllegalArgumentException("Floor height must leave room for doors and windows");
         }
@@ -32,25 +52,66 @@ public final class OpeningPlanner {
             throw new IllegalArgumentException("Opening planner requires a layout that realizes the room graph");
         }
 
-        List<Opening> openings = new ArrayList<>();
-        Set<GridPos> occupied = new HashSet<>();
-        addEntrance(graph, layout, footprint, floorHeight, openings, occupied, seed);
-        addInteriorDoors(graph, layout, floorHeight, openings, occupied);
-        addWindows(graph, layout, footprint, floorHeight, style, openings, occupied, seed);
-        return new OpeningPlan(openings);
+        OpeningPlanUnavailableException lastFailure = null;
+        for (ExteriorCandidate entrance : entranceCandidates(
+                graph,
+                layout,
+                footprint,
+                entrancePreference,
+                seed)) {
+            List<Opening> openings = new ArrayList<>();
+            Set<GridPos> occupied = new HashSet<>();
+            addEntrance(graph, layout, floorHeight, openings, occupied, entrance);
+            try {
+                addInteriorDoors(
+                        graph,
+                        layout,
+                        floorHeight,
+                        openings,
+                        occupied,
+                        () -> addWindowsIfPossible(
+                                graph,
+                                layout,
+                                footprint,
+                                floorHeight,
+                                style,
+                                openings,
+                                occupied,
+                                seed));
+                return new OpeningPlan(openings);
+            } catch (OpeningPlanUnavailableException exception) {
+                lastFailure = exception;
+            }
+        }
+        throw Objects.requireNonNull(lastFailure, "entrance candidates");
+    }
+
+    private static List<ExteriorCandidate> entranceCandidates(
+            RoomGraph graph,
+            FloorLayout layout,
+            Footprint footprint,
+            EntrancePreference preference,
+            long seed) {
+        FloorLayout.PlacedRoom room = layout.rooms().get(graph.entranceRoomId());
+        List<ExteriorCandidate> candidates = exteriorCandidates(room, footprint).stream()
+                .filter(candidate -> preference == EntrancePreference.AUTO
+                        || candidate.direction().name().equals(preference.name()))
+                .toList();
+        if (candidates.isEmpty()) {
+            throw new OpeningPlanUnavailableException(
+                    "Entrance room has no exterior bay for preference " + preference);
+        }
+        return seededOrder(candidates, seed, graph.entranceRoomId());
     }
 
     private static void addEntrance(
             RoomGraph graph,
             FloorLayout layout,
-            Footprint footprint,
             int floorHeight,
             List<Opening> openings,
             Set<GridPos> occupied,
-            long seed) {
+            ExteriorCandidate selected) {
         FloorLayout.PlacedRoom room = layout.rooms().get(graph.entranceRoomId());
-        List<ExteriorCandidate> candidates = exteriorCandidates(room, footprint);
-        ExteriorCandidate selected = seededOrder(candidates, seed, graph.entranceRoomId()).getFirst();
         GridPos position = position(selected.cell(), room.floor(), floorHeight, 1);
         reserveDoor(occupied, position);
         openings.add(new Opening(
@@ -66,36 +127,91 @@ public final class OpeningPlanner {
             FloorLayout layout,
             int floorHeight,
             List<Opening> openings,
-            Set<GridPos> occupied) {
-        graph.edges().stream()
+            Set<GridPos> occupied,
+            java.util.function.BooleanSupplier finish) {
+        List<RoomGraph.Edge> edges = graph.edges().stream()
                 .filter(edge -> edge.transition() == RoomGraph.Transition.DOOR)
                 .sorted(Comparator.comparing(RoomGraph.Edge::firstRoomId)
                         .thenComparing(RoomGraph.Edge::secondRoomId))
-                .forEach(edge -> {
-                    FloorLayout.PlacedRoom first = layout.rooms().get(edge.firstRoomId());
-                    FloorLayout.PlacedRoom second = layout.rooms().get(edge.secondRoomId());
-                    DoorCandidate selected = doorCandidates(first, second).stream()
-                            .filter(candidate -> {
-                                GridPos position = position(
-                                        candidate.firstCell(),
-                                        first.floor(),
-                                        floorHeight,
-                                        1);
-                                return doorClear(occupied, position)
-                                        && openingBayClear(openings, position);
-                            })
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException(
-                                    "No unoccupied shared wall for room transition: " + edge));
-                    GridPos position = position(selected.firstCell(), first.floor(), floorHeight, 1);
-                    reserveDoor(occupied, position);
-                    openings.add(new Opening(
-                            edge.firstRoomId(),
-                            Optional.of(edge.secondRoomId()),
-                            OpeningType.INTERIOR_DOOR,
-                            position,
-                            selected.direction()));
-                });
+                .toList();
+        if (!addInteriorDoor(edges, 0, layout, floorHeight, openings, occupied, finish)) {
+            throw new OpeningPlanUnavailableException(
+                    "No unoccupied shared wall arrangement for room transitions");
+        }
+    }
+
+    private static boolean addInteriorDoor(
+            List<RoomGraph.Edge> edges,
+            int edgeIndex,
+            FloorLayout layout,
+            int floorHeight,
+            List<Opening> openings,
+            Set<GridPos> occupied,
+            java.util.function.BooleanSupplier finish) {
+        if (edgeIndex == edges.size()) {
+            return finish.getAsBoolean();
+        }
+        RoomGraph.Edge edge = edges.get(edgeIndex);
+        FloorLayout.PlacedRoom first = layout.rooms().get(edge.firstRoomId());
+        FloorLayout.PlacedRoom second = layout.rooms().get(edge.secondRoomId());
+        for (DoorCandidate candidate : doorCandidates(first, second)) {
+            GridPos position = position(candidate.firstCell(), first.floor(), floorHeight, 1);
+            if (!doorClear(occupied, position) || !openingBayClear(openings, position)) {
+                continue;
+            }
+            reserveDoor(occupied, position);
+            openings.add(new Opening(
+                    edge.firstRoomId(),
+                    Optional.of(edge.secondRoomId()),
+                    OpeningType.INTERIOR_DOOR,
+                    position,
+                    candidate.direction()));
+            if (addInteriorDoor(
+                    edges,
+                    edgeIndex + 1,
+                    layout,
+                    floorHeight,
+                    openings,
+                    occupied,
+                    finish)) {
+                return true;
+            }
+            openings.removeLast();
+            occupied.remove(position);
+            occupied.remove(new GridPos(position.x(), position.y() + 1, position.z()));
+        }
+        return false;
+    }
+
+    private static boolean addWindowsIfPossible(
+            RoomGraph graph,
+            FloorLayout layout,
+            Footprint footprint,
+            int floorHeight,
+            StylePack style,
+            List<Opening> openings,
+            Set<GridPos> occupied,
+            long seed) {
+        List<Opening> completed = new ArrayList<>(openings);
+        Set<GridPos> completedOccupied = new HashSet<>(occupied);
+        try {
+            addWindows(
+                    graph,
+                    layout,
+                    footprint,
+                    floorHeight,
+                    style,
+                    completed,
+                    completedOccupied,
+                    seed);
+        } catch (OpeningPlanUnavailableException exception) {
+            return false;
+        }
+        openings.clear();
+        openings.addAll(completed);
+        occupied.clear();
+        occupied.addAll(completedOccupied);
+        return true;
     }
 
     private static void addWindows(
@@ -110,15 +226,24 @@ public final class OpeningPlanner {
         graph.nodes().stream()
                 .sorted(Comparator.comparing(RoomGraph.Node::id))
                 .forEach(node -> {
-                    int requested = requestedWindows(node.type().path(), style.openingRules().glazingRatio());
+                    IntRange range = windowRange(node.type().path());
+                    int requested = style.openingRules().glazingRatio() >= 0.6
+                            ? range.maximum()
+                            : range.minimum();
                     if (requested == 0) {
                         return;
                     }
                     FloorLayout.PlacedRoom room = layout.rooms().get(node.id());
-                    List<ExteriorCandidate> candidates = seededOrder(
-                            exteriorCandidates(room, footprint),
-                            seed,
-                            node.id());
+                    List<ExteriorCandidate> exterior;
+                    try {
+                        exterior = exteriorCandidates(room, footprint);
+                    } catch (OpeningPlanUnavailableException exception) {
+                        if (range.minimum() == 0) {
+                            return;
+                        }
+                        throw exception;
+                    }
+                    List<ExteriorCandidate> candidates = seededOrder(exterior, seed, node.id());
                     int added = 0;
                     for (ExteriorCandidate candidate : candidates) {
                         GridPos position = position(candidate.cell(), room.floor(), floorHeight, 2);
@@ -136,8 +261,8 @@ public final class OpeningPlanner {
                             }
                         }
                     }
-                    if (added != requested) {
-                        throw new IllegalStateException(
+                    if (added < range.minimum()) {
+                        throw new OpeningPlanUnavailableException(
                                 "Room does not expose enough exterior wall for windows: " + node.id());
                     }
                 });
@@ -181,13 +306,14 @@ public final class OpeningPlanner {
                 .thenComparing(candidate -> candidate.cell().z())
                 .thenComparing(candidate -> candidate.direction().ordinal()));
         if (candidates.isEmpty()) {
-            throw new IllegalStateException("Room does not touch the exterior: " + room.roomId());
+            throw new OpeningPlanUnavailableException(
+                    "Room does not touch the exterior: " + room.roomId());
         }
         List<ExteriorCandidate> clearOfCorners = candidates.stream()
                 .filter(candidate -> !candidate.corner())
                 .toList();
         if (clearOfCorners.isEmpty()) {
-            throw new IllegalStateException(
+            throw new OpeningPlanUnavailableException(
                     "Room exposes only corner opening positions: " + room.roomId());
         }
         return clearOfCorners;
@@ -204,8 +330,8 @@ public final class OpeningPlanner {
         return List.copyOf(ordered);
     }
 
-    private static int requestedWindows(String roomType, double glazingRatio) {
-        IntRange range = switch (roomType) {
+    private static IntRange windowRange(String roomType) {
+        return switch (roomType) {
             case "bedroom" -> new IntRange(1, 2);
             case "living" -> new IntRange(2, 4);
             case "kitchen" -> new IntRange(1, 2);
@@ -213,7 +339,6 @@ public final class OpeningPlanner {
             case "stairs" -> new IntRange(0, 2);
             default -> new IntRange(0, 0);
         };
-        return glazingRatio >= 0.6 ? range.maximum() : range.minimum();
     }
 
     private static GridPos position(
@@ -336,6 +461,12 @@ public final class OpeningPlanner {
         public long count(OpeningType type) {
             Objects.requireNonNull(type, "type");
             return openings.stream().filter(opening -> opening.type() == type).count();
+        }
+    }
+
+    public static final class OpeningPlanUnavailableException extends IllegalStateException {
+        public OpeningPlanUnavailableException(String message) {
+            super(message);
         }
     }
 

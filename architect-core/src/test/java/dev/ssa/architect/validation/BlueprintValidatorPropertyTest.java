@@ -16,6 +16,7 @@ import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
 import dev.ssa.architect.model.StyleId;
 import dev.ssa.architect.model.TerrainSnapshot;
+import dev.ssa.architect.scoring.ScoreBreakdown;
 import dev.ssa.architect.style.MedievalStyle;
 import dev.ssa.architect.terrain.TerrainAdaptationPlanner;
 import dev.ssa.architect.terrain.TerrainBudget;
@@ -68,6 +69,43 @@ final class BlueprintValidatorPropertyTest {
                 room("living", "living", 0, Set.of(new GridPos(1, 1, 0)), Set.of("entrance", "bedroom")),
                 room("bedroom", "bedroom", 1, Set.of(new GridPos(2, 5, 0)), Set.of("living")));
         assertIssue(blueprint(1L, invalidStairs, blocks(), flatTerrain(), 2), "INVALID_STAIRS");
+    }
+
+    @Test
+    void rejectsAdjacentRoomsWithoutAPhysicalBoundary() {
+        List<BlueprintBlock> openPlan = without(
+                blocks(),
+                block -> block.relativePosition().equals(new GridPos(0, 1, 0)));
+
+        assertIssue(blueprint(1L, rooms(), openPlan, flatTerrain(), 1), "ROOM_BOUNDARY");
+    }
+
+    @Test
+    void rejectsLowRailingAsAFullHeightRoomBoundary() {
+        List<BlueprintBlock> openAboveRailing = replace(
+                without(
+                        blocks(),
+                        block -> block.relativePosition().equals(new GridPos(0, 2, 0))),
+                new GridPos(0, 1, 0),
+                block(
+                        new GridPos(0, 1, 0),
+                        BlockRole.ENVELOPE,
+                        MaterialRole.RAILING,
+                        OAK_LOG,
+                        BuildPhase.WALLS,
+                        Set.of()));
+
+        assertIssue(blueprint(1L, rooms(), openAboveRailing, flatTerrain(), 1), "ROOM_BOUNDARY");
+    }
+
+    @Test
+    void rejectsRoomOpeningIntoUnassignedFootprintSpace() {
+        List<BlueprintBlock> openToVoid = without(
+                blocks(),
+                block -> block.relativePosition().equals(new GridPos(2, 1, 0))
+                        || block.relativePosition().equals(new GridPos(2, 2, 0)));
+
+        assertIssue(blueprint(1L, rooms(), openToVoid, flatTerrain(), 1), "ROOM_BOUNDARY");
     }
 
     @Test
@@ -308,6 +346,7 @@ final class BlueprintValidatorPropertyTest {
                 blocks,
                 BuildPhase.canonicalOrder(),
                 terrainPlan,
+                ScoreBreakdown.unscored(),
                 BlueprintValidation.valid(),
                 Blueprint.CURRENT_FORMAT_VERSION);
     }

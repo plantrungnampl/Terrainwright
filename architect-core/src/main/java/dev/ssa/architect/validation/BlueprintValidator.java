@@ -104,7 +104,71 @@ public final class BlueprintValidator {
                         "UNREACHABLE_ROOM",
                         "Room is unreachable from the entrance: " + room.id()));
 
+        validateRoomBoundaries(blueprint, roomsById, issues);
         validateStairs(blueprint, roomsById, issues);
+    }
+
+    private static void validateRoomBoundaries(
+            Blueprint blueprint,
+            Map<String, Room> roomsById,
+            List<BlueprintValidation.Issue> issues) {
+        Map<GridPos, Room> roomByCell = new HashMap<>();
+        roomsById.values().forEach(room -> room.cells().forEach(cell -> roomByCell.put(cell, room)));
+        Map<GridPos, BlueprintBlock> blocksByPosition = new HashMap<>();
+        blueprint.blocks().forEach(block -> blocksByPosition.put(block.relativePosition(), block));
+        Set<Column> footprintColumns = blueprint.footprint().stream()
+                .map(position -> new Column(position.x(), position.z()))
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        roomsById.values().stream()
+                .sorted(Comparator.comparing(Room::id))
+                .forEach(room -> room.cells().stream().sorted(POSITION_ORDER).forEach(cell -> {
+                    for (GridPos neighbor : horizontalNeighbors(cell)) {
+                        Room adjacent = roomByCell.get(neighbor);
+                        if ((adjacent == null
+                                        && !footprintColumns.contains(
+                                                new Column(neighbor.x(), neighbor.z())))
+                                || (adjacent != null && (adjacent.id().equals(room.id())
+                                        || room.id().compareTo(adjacent.id()) >= 0))) {
+                            continue;
+                        }
+                        GridPos boundaryPosition = adjacent == null ? neighbor : cell;
+                        BlueprintBlock lowerBoundary = blocksByPosition.get(boundaryPosition);
+                        BlueprintBlock upperBoundary = blocksByPosition.get(
+                                new GridPos(
+                                        boundaryPosition.x(),
+                                        boundaryPosition.y() + 1,
+                                        boundaryPosition.z()));
+                        boolean openStairLanding = adjacent != null
+                                && room.connectedRoomIds().contains(adjacent.id())
+                                && (isStair(room) || isStair(adjacent))
+                                && (lowerBoundary == null || upperBoundary == null);
+                        if (!openStairLanding
+                                && (!isPhysicalRoomBoundary(lowerBoundary)
+                                        || !isPhysicalRoomBoundary(upperBoundary))) {
+                            error(issues, "ROOM_BOUNDARY",
+                                    "Adjacent rooms lack a physical wall or opening: "
+                                            + room.id() + " <-> "
+                                            + (adjacent == null ? "unassigned" : adjacent.id())
+                                            + " at " + cell);
+                        }
+                    }
+                }));
+    }
+
+    private static boolean isPhysicalRoomBoundary(BlueprintBlock block) {
+        return block != null
+                && (block.blockRole() == BlockRole.INTERIOR
+                || block.blockRole() == BlockRole.ENVELOPE
+                || block.blockRole() == BlockRole.OPENING
+                || block.blockRole() == BlockRole.STRUCTURAL);
+    }
+
+    private static Set<GridPos> horizontalNeighbors(GridPos position) {
+        return Set.of(
+                new GridPos(position.x() - 1, position.y(), position.z()),
+                new GridPos(position.x() + 1, position.y(), position.z()),
+                new GridPos(position.x(), position.y(), position.z() - 1),
+                new GridPos(position.x(), position.y(), position.z() + 1));
     }
 
     private static void validateStairs(

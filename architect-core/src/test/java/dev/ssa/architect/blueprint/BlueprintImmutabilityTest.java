@@ -8,6 +8,7 @@ import dev.ssa.architect.model.BlockStateSpec;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
 import dev.ssa.architect.model.StyleId;
+import dev.ssa.architect.scoring.ScoreBreakdown;
 import dev.ssa.architect.terrain.TerrainPlan;
 import dev.ssa.architect.validation.BlueprintValidation;
 import java.util.ArrayList;
@@ -130,6 +131,7 @@ final class BlueprintImmutabilityTest {
                         false,
                         TerrainPlan.SalvagePolicy.DISCARD_NO_DROPS,
                         List.of()),
+                ScoreBreakdown.unscored(),
                 BlueprintValidation.valid(),
                 formatVersion);
     }

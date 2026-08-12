@@ -8,7 +8,7 @@ public enum BuildPhase {
     FLOOR_FRAME,
     WALL_FRAME,
     WALLS,
-    UPPER_FLOORS,
+    UPPER_FLOOR,
     STAIRS,
     ROOF,
     WINDOWS_DOORS,

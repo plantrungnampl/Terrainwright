@@ -1,0 +1,668 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-survival-architect.local/schemas/v1/blueprint.schema.json",
+  "title": "Smart Survival Architect V1 Blueprint",
+  "$comment": "Structural validation only. Trusted semantic validation must also prove dependency references, reachability, roof coverage, palette capability compatibility, phase ordering, terrain/world-revision compatibility and canonical hashing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "formatVersion",
+    "id",
+    "seed",
+    "styleId",
+    "localBounds",
+    "footprint",
+    "floors",
+    "rooms",
+    "blocks",
+    "buildPhases",
+    "materialManifest",
+    "terrainPlan",
+    "navigationHints",
+    "validationSummary",
+    "scoreBreakdown"
+  ],
+  "properties": {
+    "formatVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "styleId": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+    },
+    "localBounds": {
+      "$ref": "#/$defs/bounds3d"
+    },
+    "footprint": {
+      "$ref": "#/$defs/footprint"
+    },
+    "floors": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/floor"
+      }
+    },
+    "rooms": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/room"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20000,
+      "items": {
+        "$ref": "#/$defs/blueprintBlock"
+      }
+    },
+    "buildPhases": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "SITE_PREPARATION",
+          "FOUNDATION",
+          "FLOOR_FRAME",
+          "WALL_FRAME",
+          "WALLS",
+          "UPPER_FLOOR",
+          "STAIRS",
+          "ROOF",
+          "WINDOWS_DOORS",
+          "INTERIOR",
+          "DECORATION",
+          "CLEANUP"
+        ]
+      }
+    },
+    "materialManifest": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/materialRequirement"
+      }
+    },
+    "terrainPlan": {
+      "$ref": "#/$defs/terrainPlan"
+    },
+    "navigationHints": {
+      "$ref": "#/$defs/navigationHints"
+    },
+    "validationSummary": {
+      "$ref": "#/$defs/validationSummary"
+    },
+    "scoreBreakdown": {
+      "$ref": "#/$defs/scoreBreakdown"
+    },
+    "contentProvenance": {
+      "$ref": "#/$defs/contentProvenance"
+    }
+  },
+  "$defs": {
+    "pos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "z": {
+          "type": "integer"
+        }
+      }
+    },
+    "bounds3d": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/pos"
+        },
+        "max": {
+          "$ref": "#/$defs/pos"
+        }
+      }
+    },
+    "footprintCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        }
+      }
+    },
+    "footprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "depth",
+        "shape",
+        "cells"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 9,
+          "maximum": 31
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 9,
+          "maximum": 31
+        },
+        "shape": {
+          "enum": [
+            "RECTANGLE",
+            "L_SHAPE",
+            "T_SHAPE"
+          ]
+        },
+        "cells": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 961,
+          "items": {
+            "$ref": "#/$defs/footprintCell"
+          }
+        }
+      }
+    },
+    "floor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "baseY",
+        "clearHeight"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "baseY": {
+          "type": "integer"
+        },
+        "clearHeight": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 8
+        }
+      }
+    },
+    "room": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "floorIndex",
+        "bounds",
+        "connectionIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+        },
+        "type": {
+          "enum": [
+            "ENTRANCE",
+            "LIVING_ROOM",
+            "KITCHEN",
+            "STORAGE",
+            "BEDROOM",
+            "CORRIDOR",
+            "STAIRS",
+            "BALCONY"
+          ]
+        },
+        "floorIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "bounds": {
+          "$ref": "#/$defs/bounds3d"
+        },
+        "connectionIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+          }
+        }
+      }
+    },
+    "blockState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockId",
+        "properties"
+      ],
+      "properties": {
+        "blockId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+        },
+        "properties": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "maxProperties": 24
+        }
+      }
+    },
+    "blueprintBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pos",
+        "semanticRole",
+        "materialRole",
+        "blockState",
+        "phase",
+        "dependencyIds",
+        "optional"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+        },
+        "pos": {
+          "$ref": "#/$defs/pos"
+        },
+        "semanticRole": {
+          "enum": [
+            "STRUCTURAL",
+            "FOUNDATION",
+            "FLOOR",
+            "WALL",
+            "OPENING",
+            "ROOF",
+            "INTERIOR",
+            "DECORATION"
+          ]
+        },
+        "materialRole": {
+          "enum": [
+            "FOUNDATION_STONE",
+            "FOUNDATION_FILL",
+            "STRUCTURAL_WOOD",
+            "STRUCTURAL_PRIMARY",
+            "WALL_PRIMARY",
+            "WALL_SECONDARY",
+            "FLOOR_PRIMARY",
+            "FLOOR_SECONDARY",
+            "ROOF_PRIMARY",
+            "ROOF_ACCENT",
+            "TRIM",
+            "WINDOW",
+            "DOOR",
+            "RAILING",
+            "STAIR",
+            "INTERIOR_PRIMARY",
+            "LIGHTING",
+            "TEMP_SCAFFOLD"
+          ]
+        },
+        "blockState": {
+          "$ref": "#/$defs/blockState"
+        },
+        "phase": {
+          "enum": [
+            "SITE_PREPARATION",
+            "FOUNDATION",
+            "FLOOR_FRAME",
+            "WALL_FRAME",
+            "WALLS",
+            "UPPER_FLOOR",
+            "STAIRS",
+            "ROOF",
+            "WINDOWS_DOORS",
+            "INTERIOR",
+            "DECORATION",
+            "CLEANUP"
+          ]
+        },
+        "dependencyIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+          }
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "atomicGroupId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+        }
+      }
+    },
+    "materialRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "materialRole",
+        "resolvedBlockId",
+        "count",
+        "required"
+      ],
+      "properties": {
+        "materialRole": {
+          "enum": [
+            "FOUNDATION_STONE",
+            "FOUNDATION_FILL",
+            "STRUCTURAL_WOOD",
+            "STRUCTURAL_PRIMARY",
+            "WALL_PRIMARY",
+            "WALL_SECONDARY",
+            "FLOOR_PRIMARY",
+            "FLOOR_SECONDARY",
+            "ROOF_PRIMARY",
+            "ROOF_ACCENT",
+            "TRIM",
+            "WINDOW",
+            "DOOR",
+            "RAILING",
+            "STAIR",
+            "INTERIOR_PRIMARY",
+            "LIGHTING",
+            "TEMP_SCAFFOLD"
+          ]
+        },
+        "resolvedBlockId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "terrainCellChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pos",
+        "beforeState",
+        "afterState",
+        "dropPolicy",
+        "xpPolicy"
+      ],
+      "properties": {
+        "pos": {
+          "$ref": "#/$defs/pos"
+        },
+        "beforeState": {
+          "$ref": "#/$defs/blockState"
+        },
+        "afterState": {
+          "$ref": "#/$defs/blockState"
+        },
+        "dropPolicy": {
+          "const": "SUPPRESS"
+        },
+        "xpPolicy": {
+          "const": "SUPPRESS"
+        }
+      }
+    },
+    "terrainPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy",
+        "removedBlockCount",
+        "filledBlockCount",
+        "maxVerticalCut",
+        "maxVerticalFill",
+        "modifyWater",
+        "modifyLava",
+        "salvagePolicy",
+        "changes"
+      ],
+      "properties": {
+        "strategy": {
+          "enum": [
+            "FLAT",
+            "CUT",
+            "FILL",
+            "PILLAR",
+            "MIXED"
+          ]
+        },
+        "removedBlockCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 150
+        },
+        "filledBlockCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 180
+        },
+        "maxVerticalCut": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "maxVerticalFill": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "modifyWater": {
+          "const": false
+        },
+        "modifyLava": {
+          "const": false
+        },
+        "salvagePolicy": {
+          "const": "DISCARD_NO_DROPS"
+        },
+        "changes": {
+          "type": "array",
+          "maxItems": 330,
+          "items": {
+            "$ref": "#/$defs/terrainCellChange"
+          }
+        }
+      }
+    },
+    "workZone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bounds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:/-]{1,160}$"
+        },
+        "bounds": {
+          "$ref": "#/$defs/bounds3d"
+        }
+      }
+    },
+    "navigationHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrancePos",
+        "workZones"
+      ],
+      "properties": {
+        "entrancePos": {
+          "$ref": "#/$defs/pos"
+        },
+        "workZones": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/workZone"
+          }
+        }
+      }
+    },
+    "validationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valid",
+        "hardErrors",
+        "warnings"
+      ],
+      "properties": {
+        "valid": {
+          "const": true
+        },
+        "hardErrors": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "maxLength": 240
+          }
+        }
+      }
+    },
+    "scoreBreakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layoutQuality",
+        "terrainFit",
+        "styleConsistency",
+        "materialEfficiency",
+        "accessibility",
+        "scenicOrientation",
+        "total"
+      ],
+      "properties": {
+        "layoutQuality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "terrainFit": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "styleConsistency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "materialEfficiency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "accessibility": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "scenicOrientation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "total": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "contentProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stylePackageId",
+        "stylePackageHash"
+      ],
+      "properties": {
+        "stylePackageId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_./-]+$"
+        },
+        "stylePackageHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16,128}$"
+        }
+      }
+    }
+  }
+}

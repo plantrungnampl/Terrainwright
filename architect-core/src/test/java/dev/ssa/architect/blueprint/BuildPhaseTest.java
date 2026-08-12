@@ -15,7 +15,7 @@ final class BuildPhaseTest {
                         BuildPhase.FLOOR_FRAME,
                         BuildPhase.WALL_FRAME,
                         BuildPhase.WALLS,
-                        BuildPhase.UPPER_FLOORS,
+                        BuildPhase.UPPER_FLOOR,
                         BuildPhase.STAIRS,
                         BuildPhase.ROOF,
                         BuildPhase.WINDOWS_DOORS,

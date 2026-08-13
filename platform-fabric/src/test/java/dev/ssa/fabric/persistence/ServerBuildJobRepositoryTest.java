@@ -6,12 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.ssa.architect.blueprint.BuildPhase;
+import dev.ssa.architect.material.MaterialRole;
 import dev.ssa.architect.model.BlockStateSpec;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
 import dev.ssa.construction.job.BuildJob;
 import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.journal.JournalEntry;
+import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.schedule.WorkZone;
+import dev.ssa.construction.task.BuildTask;
+import dev.ssa.construction.task.TaskOperation;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
 import dev.ssa.fabric.link.ContainerBinding;
 import java.util.List;
@@ -42,6 +47,7 @@ final class ServerBuildJobRepositoryTest {
         ServerBuildJobRepository repository = new ServerBuildJobRepository();
 
         repository.saveJob(job);
+        repository.savePlan(job.jobId(), plan());
         repository.saveHutState(new ServerBuildJobRepository.HutState(
                 HUT_ID,
                 OWNER_ID,
@@ -57,6 +63,9 @@ final class ServerBuildJobRepositoryTest {
 
         assertEquals(repository.jobs(), decoded.jobs());
         assertEquals(repository.huts(), decoded.huts());
+        assertEquals(
+                BuilderPlanCodec.encode(repository.findPlan(job.jobId()).orElseThrow()),
+                BuilderPlanCodec.encode(decoded.findPlan(job.jobId()).orElseThrow()));
         assertTrue(repository.isDirty());
         assertFalse(decoded.isDirty());
     }
@@ -131,5 +140,21 @@ final class ServerBuildJobRepositoryTest {
                 List.of(journal),
                 revision,
                 BuildJob.CURRENT_FORMAT_VERSION);
+    }
+
+    private static TaskGraph plan() {
+        GridPos position = new GridPos(10, 64, 10);
+        return new TaskGraph(List.of(new BuildTask(
+                "task-1",
+                position,
+                TaskOperation.PLACE,
+                Optional.of(new BuildTask.MaterialRequirement(
+                        MaterialRole.STRUCTURAL_WOOD,
+                        BlockStateSpec.of(NamespacedId.parse("minecraft:oak_planks"), Map.of()))),
+                Set.of(),
+                BuildPhase.FOUNDATION,
+                WorkZone.containing(position),
+                false,
+                Optional.empty())));
     }
 }

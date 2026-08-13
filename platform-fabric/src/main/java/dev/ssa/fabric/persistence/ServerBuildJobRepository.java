@@ -12,6 +12,7 @@ import dev.ssa.construction.job.BuildJob.Diagnostic;
 import dev.ssa.construction.job.BuildJob.Severity;
 import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.journal.JournalEntry;
+import dev.ssa.construction.plan.TaskGraph;
 import dev.ssa.fabric.SmartSurvivalArchitectMod;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Cause;
@@ -143,7 +144,10 @@ public final class ServerBuildJobRepository extends SavedData {
     private static final Codec<Payload> PAYLOAD_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.fieldOf("format_version").forGetter(Payload::formatVersion),
             BUILD_JOB_CODEC.listOf().fieldOf("jobs").forGetter(Payload::jobs),
-            HUT_STATE_CODEC.listOf().fieldOf("huts").forGetter(Payload::huts))
+            HUT_STATE_CODEC.listOf().fieldOf("huts").forGetter(Payload::huts),
+            Codec.unboundedMap(Codec.STRING, Codec.STRING)
+                    .optionalFieldOf("builder_plans", Map.of())
+                    .forGetter(Payload::encodedPlans))
             .apply(instance, Payload::new));
 
     public static final Codec<ServerBuildJobRepository> CODEC = PAYLOAD_CODEC.comapFlatMap(
@@ -157,14 +161,19 @@ public final class ServerBuildJobRepository extends SavedData {
 
     private final Map<String, BuildJob> jobs;
     private final Map<UUID, HutState> huts;
+    private final Map<String, TaskGraph> plans;
 
     public ServerBuildJobRepository() {
-        this(Map.of(), Map.of());
+        this(Map.of(), Map.of(), Map.of());
     }
 
-    private ServerBuildJobRepository(Map<String, BuildJob> jobs, Map<UUID, HutState> huts) {
+    private ServerBuildJobRepository(
+            Map<String, BuildJob> jobs,
+            Map<UUID, HutState> huts,
+            Map<String, TaskGraph> plans) {
         this.jobs = new LinkedHashMap<>(jobs);
         this.huts = new LinkedHashMap<>(huts);
+        this.plans = new LinkedHashMap<>(plans);
     }
 
     public static ServerBuildJobRepository get(ServerLevel level) {
@@ -179,12 +188,20 @@ public final class ServerBuildJobRepository extends SavedData {
         return Map.copyOf(huts);
     }
 
+    public Map<String, TaskGraph> plans() {
+        return Map.copyOf(plans);
+    }
+
     public Optional<BuildJob> findJob(String jobId) {
         return Optional.ofNullable(jobs.get(Objects.requireNonNull(jobId, "jobId")));
     }
 
     public Optional<HutState> findHut(UUID hutId) {
         return Optional.ofNullable(huts.get(Objects.requireNonNull(hutId, "hutId")));
+    }
+
+    public Optional<TaskGraph> findPlan(String jobId) {
+        return Optional.ofNullable(plans.get(Objects.requireNonNull(jobId, "jobId")));
     }
 
     public void saveJob(BuildJob job) {
@@ -213,6 +230,26 @@ public final class ServerBuildJobRepository extends SavedData {
         rejectStaleOrConflicting("Hut state", current, hut, HutState::revision);
         if (!hut.equals(current)) {
             huts.put(hut.hutId(), hut);
+            setDirty();
+        }
+    }
+
+    public void savePlan(String jobId, TaskGraph plan) {
+        Objects.requireNonNull(jobId, "jobId");
+        Objects.requireNonNull(plan, "plan");
+        BuildJob job = jobs.get(jobId);
+        if (job == null) {
+            throw new IllegalStateException("Builder plan references an unknown BuildJob: " + jobId);
+        }
+        if (!plan.tasks().keySet().containsAll(job.completedTaskIds())) {
+            throw new IllegalStateException("Builder plan omits completed BuildJob tasks: " + jobId);
+        }
+        TaskGraph current = plans.get(jobId);
+        if (current != null && !BuilderPlanCodec.encode(current).equals(BuilderPlanCodec.encode(plan))) {
+            throw new IllegalStateException("Builder plan cannot change after confirmation: " + jobId);
+        }
+        if (current == null) {
+            plans.put(jobId, plan);
             setDirty();
         }
     }
@@ -248,7 +285,9 @@ public final class ServerBuildJobRepository extends SavedData {
         List<HutState> orderedHuts = huts.values().stream()
                 .sorted(Comparator.comparing(state -> state.hutId().toString()))
                 .toList();
-        return new Payload(CURRENT_FORMAT_VERSION, orderedJobs, orderedHuts);
+        Map<String, String> encodedPlans = new java.util.TreeMap<>();
+        plans.forEach((jobId, plan) -> encodedPlans.put(jobId, BuilderPlanCodec.encode(plan)));
+        return new Payload(CURRENT_FORMAT_VERSION, orderedJobs, orderedHuts, Map.copyOf(encodedPlans));
     }
 
     private static DataResult<ServerBuildJobRepository> decode(Payload payload) {
@@ -258,6 +297,17 @@ public final class ServerBuildJobRepository extends SavedData {
         try {
             Map<String, BuildJob> jobs = uniqueMap(payload.jobs(), BuildJob::jobId, "BuildJob");
             Map<UUID, HutState> huts = uniqueMap(payload.huts(), HutState::hutId, "Hut");
+            Map<String, TaskGraph> plans = new LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : new java.util.TreeMap<>(payload.encodedPlans()).entrySet()) {
+                if (!jobs.containsKey(entry.getKey())) {
+                    return DataResult.error(() -> "Builder plan references an unknown BuildJob");
+                }
+                TaskGraph plan = BuilderPlanCodec.decode(entry.getValue());
+                if (!plan.tasks().keySet().containsAll(jobs.get(entry.getKey()).completedTaskIds())) {
+                    return DataResult.error(() -> "Builder plan omits completed BuildJob tasks");
+                }
+                plans.put(entry.getKey(), plan);
+            }
             for (HutState hut : huts.values()) {
                 if (hut.activeJobId().isPresent()) {
                     BuildJob job = jobs.get(hut.activeJobId().orElseThrow());
@@ -270,7 +320,7 @@ public final class ServerBuildJobRepository extends SavedData {
                     }
                 }
             }
-            return DataResult.success(new ServerBuildJobRepository(jobs, huts));
+            return DataResult.success(new ServerBuildJobRepository(jobs, huts, plans));
         } catch (IllegalArgumentException exception) {
             return DataResult.error(exception::getMessage);
         }
@@ -306,10 +356,15 @@ public final class ServerBuildJobRepository extends SavedData {
         return stringCodec(type.getSimpleName(), value -> Enum.valueOf(type, value), Enum::name);
     }
 
-    private record Payload(int formatVersion, List<BuildJob> jobs, List<HutState> huts) {
+    private record Payload(
+            int formatVersion,
+            List<BuildJob> jobs,
+            List<HutState> huts,
+            Map<String, String> encodedPlans) {
         private Payload {
             jobs = List.copyOf(Objects.requireNonNull(jobs, "jobs"));
             huts = List.copyOf(Objects.requireNonNull(huts, "huts"));
+            encodedPlans = Map.copyOf(Objects.requireNonNull(encodedPlans, "encodedPlans"));
         }
     }
 

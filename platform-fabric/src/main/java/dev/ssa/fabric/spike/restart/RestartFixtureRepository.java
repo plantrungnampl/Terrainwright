@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Objects;
@@ -102,12 +103,13 @@ public final class RestartFixtureRepository implements OperationEvidencePort {
     }
 
     @Override
-    public synchronized void commit(OperationIntent intent) {
+    public synchronized CompletableFuture<Void> commit(OperationIntent intent) {
         State state = read();
         requireMatchingEvidence(intent, state);
         if (state.commitCount == 0) {
             write(state.withCommitCount(1));
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     public synchronized void setForeign(int evidenceIndex) {

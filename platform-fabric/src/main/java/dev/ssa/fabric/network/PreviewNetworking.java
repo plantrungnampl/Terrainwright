@@ -11,7 +11,9 @@ import dev.ssa.architect.style.ModernStyle;
 import dev.ssa.architect.style.StylePack;
 import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
+import dev.ssa.construction.plan.ConstructionPlanner;
 import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
 import dev.ssa.fabric.network.PreviewPayloads.CancelSurvey;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
@@ -241,6 +243,8 @@ public final class PreviewNetworking {
                 authority.rotation());
         ServerBuildJobRepository.HutState hut = repository.findHut(authority.hutId()).orElseThrow();
         repository.saveJob(job);
+        var plan = new ConstructionPlanner().plan(authority.blueprint());
+        repository.savePlan(job.jobId(), plan);
         repository.saveHutState(new ServerBuildJobRepository.HutState(
                 hut.hutId(),
                 hut.ownerId(),
@@ -248,6 +252,12 @@ public final class PreviewNetworking {
                 hut.containerBinding(),
                 hut.builderLifecycle(),
                 hut.revision() + 1));
+        hut.containerBinding().ifPresent(binding -> BuilderRuntimeService.start(
+                player.level(),
+                job,
+                plan,
+                binding,
+                authority.anchor().above()));
     }
 
     private static Services services(MinecraftServer server) {

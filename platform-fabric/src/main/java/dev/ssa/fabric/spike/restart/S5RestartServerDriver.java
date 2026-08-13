@@ -38,6 +38,7 @@ public final class S5RestartServerDriver {
     private final String fixtureId;
     private final S5CrashBoundary boundary;
     private final AtomicInteger blockedSchedulingTicks = new AtomicInteger();
+    private final AtomicBoolean recoveryReady = new AtomicBoolean();
     private final AtomicBoolean schedulingOpen = new AtomicBoolean();
     private final AtomicBoolean schedulingRecorded = new AtomicBoolean();
 
@@ -149,7 +150,7 @@ public final class S5RestartServerDriver {
 
         repository.markRecoveryComplete(first.outcome().name());
         recoveryRun = new RecoveryRun(first, second, activeStatus, evidenceBefore, evidenceAfter);
-        schedulingOpen.set(true);
+        recoveryReady.set(true);
     }
 
     private void validateRecovery(
@@ -196,6 +197,9 @@ public final class S5RestartServerDriver {
         }
         if (!schedulingOpen.get()) {
             blockedSchedulingTicks.incrementAndGet();
+            if (recoveryReady.get()) {
+                schedulingOpen.set(true);
+            }
             return;
         }
         if (schedulingRecorded.compareAndSet(false, true)) {

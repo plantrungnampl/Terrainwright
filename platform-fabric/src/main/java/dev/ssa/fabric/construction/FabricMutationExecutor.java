@@ -12,6 +12,7 @@ import dev.ssa.construction.operation.ObservedEvidence;
 import dev.ssa.construction.operation.RecoveryAction;
 import dev.ssa.construction.operation.RecoveryDecision;
 import dev.ssa.construction.operation.WorldDelta;
+import dev.ssa.architect.model.GridPos;
 import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.fabric.persistence.OperationIntentStore;
 import java.util.Collection;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
@@ -65,9 +67,9 @@ public final class FabricMutationExecutor {
                     if (after.action() != RecoveryAction.FINALIZE_COMMIT) {
                         throw new IllegalStateException("operation did not produce exact all-after evidence");
                     }
-                    evidence.commit(intent);
-                    listener.afterJournalCommit();
                 }, serverExecutor))
+                .thenCompose(ignored -> commit(evidence, intent))
+                .thenRunAsync(listener::afterJournalCommit, serverExecutor)
                 .thenCompose(ignored -> store.transition(intent.operationId(), OperationStatus.COMMITTED))
                 .thenCompose(ignored -> CompletableFuture.runAsync(listener::afterCommit, serverExecutor))
                 .thenCompose(ignored -> store.clear(intent.operationId()))
@@ -109,13 +111,37 @@ public final class FabricMutationExecutor {
             PermissionPort permissions,
             Collection<BoundInventory> inventories,
             CommitLog commitLog) {
-        return recover(new FabricEvidence(
-                level,
-                owner,
-                permissions,
-                inventories,
-                commitLog,
-                false));
+        return recover(level, owner, permissions, ignored -> inventories, commitLog);
+    }
+
+    public CompletableFuture<CoordinatorResult> recover(
+            ServerLevel level,
+            UUID owner,
+            PermissionPort permissions,
+            Function<OperationIntent, Collection<BoundInventory>> inventoryResolver,
+            CommitLog commitLog) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(permissions, "permissions");
+        Objects.requireNonNull(inventoryResolver, "inventoryResolver");
+        Objects.requireNonNull(commitLog, "commitLog");
+        return store.loadActive().thenCompose(active -> {
+            if (active.isEmpty()) {
+                return CompletableFuture.completedFuture(
+                        new CoordinatorResult(CoordinatorOutcome.NO_ACTIVE_INTENT, 0));
+            }
+            OperationIntent intent = active.orElseThrow();
+            return CompletableFuture.supplyAsync(
+                            () -> new FabricEvidence(
+                                    level,
+                                    owner,
+                                    permissions,
+                                    inventoryResolver.apply(intent),
+                                    commitLog,
+                                    false),
+                            serverExecutor)
+                    .thenCompose(evidence -> recover(intent, evidence, classifier.classify(intent, evidence.observe(intent))));
+        });
     }
 
     private CompletableFuture<CoordinatorResult> recover(
@@ -165,10 +191,8 @@ public final class FabricMutationExecutor {
                     if (verification.action() != RecoveryAction.FINALIZE_COMMIT) {
                         throw new IllegalStateException("completed suffix did not produce exact all-after evidence");
                     }
-                    if (!evidence.isCommitted(intent.operationId())) {
-                        evidence.commit(intent);
-                    }
                 }, serverExecutor)
+                .thenCompose(ignored -> commitIfNeeded(evidence, intent))
                 .thenCompose(ignored -> terminalAndClear(
                         intent,
                         OperationStatus.COMMITTED,
@@ -179,11 +203,7 @@ public final class FabricMutationExecutor {
             OperationIntent intent,
             OperationEvidencePort evidence,
             int completedPrefixLength) {
-        return CompletableFuture.runAsync(() -> {
-                    if (!evidence.isCommitted(intent.operationId())) {
-                        evidence.commit(intent);
-                    }
-                }, serverExecutor)
+        return commitIfNeeded(evidence, intent)
                 .thenCompose(ignored -> intent.status() == OperationStatus.COMMITTED
                         ? clear(intent, new CoordinatorResult(CoordinatorOutcome.COMMITTED, completedPrefixLength))
                         : terminalAndClear(
@@ -204,10 +224,31 @@ public final class FabricMutationExecutor {
         return store.clear(intent.operationId()).thenApply(ignored -> result);
     }
 
-    public record BoundInventory(String inventoryId, int bindingRevision, Container container) {
+    private CompletableFuture<Void> commitIfNeeded(
+            OperationEvidencePort evidence,
+            OperationIntent intent) {
+        return CompletableFuture.supplyAsync(
+                        () -> evidence.isCommitted(intent.operationId())
+                                ? CompletableFuture.<Void>completedFuture(null)
+                                : evidence.commit(intent),
+                        serverExecutor)
+                .thenCompose(Function.identity());
+    }
+
+    private CompletableFuture<Void> commit(OperationEvidencePort evidence, OperationIntent intent) {
+        return CompletableFuture.supplyAsync(() -> evidence.commit(intent), serverExecutor)
+                .thenCompose(Function.identity());
+    }
+
+    public record BoundInventory(
+            String inventoryId,
+            int bindingRevision,
+            Container container,
+            Optional<GridPos> permissionPosition) {
         public BoundInventory {
             Objects.requireNonNull(inventoryId, "inventoryId");
             Objects.requireNonNull(container, "container");
+            permissionPosition = Objects.requireNonNull(permissionPosition, "permissionPosition");
             if (inventoryId.isBlank() || inventoryId.length() > 160) {
                 throw new IllegalArgumentException("inventoryId must contain 1 to 160 characters");
             }
@@ -215,12 +256,16 @@ public final class FabricMutationExecutor {
                 throw new IllegalArgumentException("bindingRevision must not be negative");
             }
         }
+
+        public BoundInventory(String inventoryId, int bindingRevision, Container container) {
+            this(inventoryId, bindingRevision, container, Optional.empty());
+        }
     }
 
     public interface CommitLog {
         boolean isCommitted(String operationId);
 
-        void commit(OperationIntent intent);
+        CompletableFuture<Void> commit(OperationIntent intent);
     }
 
     private static final class FabricEvidence implements OperationEvidencePort {
@@ -256,9 +301,17 @@ public final class FabricMutationExecutor {
 
         @Override
         public void validate(OperationIntent intent) {
+            boolean inventoryPermissionChecked = false;
             for (OperationDelta delta : intent.deltas()) {
                 if (delta instanceof InventoryDelta inventoryDelta) {
-                    inventory(inventoryDelta);
+                    BoundInventory bound = inventory(inventoryDelta);
+                    bound.permissionPosition().ifPresent(position -> {
+                        if (!permissions.canModify(owner, position)) {
+                            throw new SecurityException(
+                                    "owner cannot modify bound inventory: " + delta.evidenceKey());
+                        }
+                    });
+                    inventoryPermissionChecked |= bound.permissionPosition().isPresent();
                     continue;
                 }
                 WorldDelta worldDelta = (WorldDelta) delta;
@@ -273,6 +326,9 @@ public final class FabricMutationExecutor {
                 if (!permissions.canModify(owner, gridPos(position))) {
                     throw new SecurityException("owner cannot modify world mutation target: " + position);
                 }
+            }
+            if (intent.kind() == OperationKind.MATERIAL_TRANSFER && !inventoryPermissionChecked) {
+                throw new IllegalStateException("material transfer requires a permission-anchored inventory");
             }
         }
 
@@ -329,8 +385,8 @@ public final class FabricMutationExecutor {
         }
 
         @Override
-        public void commit(OperationIntent intent) {
-            commitLog.commit(intent);
+        public CompletableFuture<Void> commit(OperationIntent intent) {
+            return commitLog.commit(intent);
         }
 
         private BoundInventory inventory(InventoryDelta delta) {

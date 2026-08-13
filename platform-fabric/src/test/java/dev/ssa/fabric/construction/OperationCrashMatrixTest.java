@@ -149,8 +149,9 @@ final class OperationCrashMatrixTest {
             }
 
             @Override
-            public void commit(OperationIntent committedIntent) {
+            public CompletableFuture<Void> commit(OperationIntent committedIntent) {
                 committed.set(true);
+                return CompletableFuture.completedFuture(null);
             }
         };
 
@@ -167,6 +168,68 @@ final class OperationCrashMatrixTest {
             }
         }
         assertFalse(committed.get(), "journal/task commit ran without exact all-after evidence");
+    }
+
+    @Test
+    void walCannotCommitBeforeTheAsynchronousJournalCheckpoint() throws Exception {
+        OperationIntent intent = placement();
+        Path wal = temporaryDirectory.resolve("async-journal-checkpoint.wal");
+        List<EvidenceSnapshot> evidence = new ArrayList<>(intent.deltas().stream()
+                .map(OperationDelta::before)
+                .toList());
+        CompletableFuture<Void> durableJournal = new CompletableFuture<>();
+        CountDownLatch commitStarted = new CountDownLatch(1);
+        AtomicBoolean committed = new AtomicBoolean();
+        OperationEvidencePort port = new OperationEvidencePort() {
+            @Override
+            public ObservedEvidence observe(OperationIntent observedIntent) {
+                List<EvidenceObservation> observations = new ArrayList<>();
+                for (int index = 0; index < observedIntent.deltas().size(); index++) {
+                    observations.add(new EvidenceObservation(
+                            observedIntent.deltas().get(index).evidenceKey(),
+                            evidence.get(index)));
+                }
+                return new ObservedEvidence(observations);
+            }
+
+            @Override
+            public void apply(OperationDelta delta) {
+                int index = intent.deltas().indexOf(delta);
+                evidence.set(index, delta.after());
+            }
+
+            @Override
+            public boolean isCommitted(String operationId) {
+                return committed.get();
+            }
+
+            @Override
+            public CompletableFuture<Void> commit(OperationIntent committedIntent) {
+                commitStarted.countDown();
+                return durableJournal.thenRun(() -> committed.set(true));
+            }
+        };
+
+        try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-persistence")) {
+            OperationIntentStore store = new OperationIntentStore(wal, persistence);
+            ExecutorService server = newServerExecutor();
+            try {
+                FabricMutationExecutor executor = new FabricMutationExecutor(
+                        store, server, OperationBoundaryListener.NONE);
+                CompletableFuture<CoordinatorResult> execution = executor.execute(intent, port);
+
+                assertTrue(commitStarted.await(5, TimeUnit.SECONDS));
+                assertFalse(execution.isDone());
+                assertEquals(OperationStatus.PREPARED, store.loadActive().join().orElseThrow().status());
+
+                durableJournal.complete(null);
+
+                assertEquals(CoordinatorOutcome.COMMITTED, execution.join().outcome());
+                assertTrue(store.loadActive().join().isEmpty());
+            } finally {
+                close(server);
+            }
+        }
     }
 
     @Test
@@ -568,11 +631,12 @@ final class OperationCrashMatrixTest {
         }
 
         @Override
-        public void commit(OperationIntent committedIntent) {
+        public CompletableFuture<Void> commit(OperationIntent committedIntent) {
             assertEquals(intent.operationId(), committedIntent.operationId());
             commitCount++;
             mutationThreads.add(Thread.currentThread().getName());
             persistUnchecked();
+            return CompletableFuture.completedFuture(null);
         }
 
         void setForeign(int index) throws IOException {

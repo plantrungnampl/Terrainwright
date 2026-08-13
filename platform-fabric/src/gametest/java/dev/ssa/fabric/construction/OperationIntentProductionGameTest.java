@@ -4,6 +4,7 @@ import dev.ssa.construction.operation.DropPolicy;
 import dev.ssa.construction.operation.OperationIntent;
 import dev.ssa.construction.operation.OperationKind;
 import dev.ssa.construction.operation.WorldDelta;
+import dev.ssa.architect.model.GridPos;
 import dev.ssa.fabric.persistence.OperationIntentStore;
 import dev.ssa.fabric.persistence.PersistenceExecutor;
 import java.nio.file.Path;
@@ -48,7 +49,11 @@ public final class OperationIntentProductionGameTest {
                         context.getLevel(),
                         owner,
                         (ignoredOwner, ignoredPosition) -> true,
-                        new FabricMutationExecutor.BoundInventory("linked-chest", 3, source),
+                        new FabricMutationExecutor.BoundInventory(
+                                "linked-chest",
+                                3,
+                                source,
+                                Optional.of(new GridPos(1, 1, 1))),
                         0,
                         new FabricMutationExecutor.BoundInventory("builder-carried", 5, destination),
                         0,
@@ -104,6 +109,60 @@ public final class OperationIntentProductionGameTest {
         await(context, result, evidence -> {
             context.assertTrue(!evidence.activeIntent(), "Permission failure wrote a PREPARED intent");
             context.assertTrue(evidence.worldUnchanged(), "Permission failure changed the world");
+        }, persistence);
+    }
+
+    @GameTest(maxTicks = 200)
+    public void materialPermissionFailureCreatesNoPreparedIntent(GameTestHelper context) {
+        PersistenceExecutor persistence = new PersistenceExecutor("ssa-operation-gametest");
+        OperationIntentStore store = new OperationIntentStore(walPath("material-permission"), persistence);
+        FabricMutationExecutor mutations = new FabricMutationExecutor(
+                store,
+                context.getLevel().getServer()::execute,
+                OperationBoundaryListener.NONE);
+        SimpleContainer source = new SimpleContainer(1);
+        SimpleContainer destination = new SimpleContainer(1);
+        source.setItem(0, new ItemStack(Items.OAK_PLANKS, 2));
+        BlockPos chestPosition = context.absolutePos(new BlockPos(1, 1, 1));
+
+        CompletableFuture<DeniedTransferEvidence> result = new MaterialTransferService(mutations)
+                .transfer(
+                        "denied-material-operation",
+                        "job-material",
+                        Optional.of("task-wall"),
+                        1,
+                        context.getLevel(),
+                        UUID.randomUUID(),
+                        (ignoredOwner, ignoredPosition) -> false,
+                        new FabricMutationExecutor.BoundInventory(
+                                "linked-chest",
+                                1,
+                                source,
+                                Optional.of(new GridPos(
+                                        chestPosition.getX(),
+                                        chestPosition.getY(),
+                                        chestPosition.getZ()))),
+                        0,
+                        new FabricMutationExecutor.BoundInventory("builder-carried", 1, destination),
+                        0,
+                        1,
+                        new RecordingCommitLog())
+                .handle((ignored, failure) -> {
+                    if (failure == null || !hasSecurityCause(failure)) {
+                        throw new AssertionError("Inventory permission rejection did not fail before mutation", failure);
+                    }
+                    return failure;
+                })
+                .thenCompose(ignored -> store.loadActive())
+                .thenApply(active -> new DeniedTransferEvidence(
+                        active.isPresent(),
+                        source.getItem(0).getCount(),
+                        destination.getItem(0).getCount()));
+
+        await(context, result, evidence -> {
+            context.assertTrue(!evidence.activeIntent(), "Permission failure wrote a material PREPARED intent");
+            context.assertValueEqual(evidence.sourceCount(), 2, "Denied material source count");
+            context.assertValueEqual(evidence.destinationCount(), 0, "Denied material destination count");
         }, persistence);
     }
 
@@ -285,10 +344,11 @@ public final class OperationIntentProductionGameTest {
         }
 
         @Override
-        public void commit(OperationIntent intent) {
+        public CompletableFuture<Void> commit(OperationIntent intent) {
             if (!operationIds.add(intent.operationId())) {
                 throw new IllegalStateException("operation journal committed twice: " + intent.operationId());
             }
+            return CompletableFuture.completedFuture(null);
         }
     }
 
@@ -301,6 +361,9 @@ public final class OperationIntentProductionGameTest {
     }
 
     private record DeniedEvidence(boolean activeIntent, boolean worldUnchanged) {
+    }
+
+    private record DeniedTransferEvidence(boolean activeIntent, int sourceCount, int destinationCount) {
     }
 
     private record WorldEvidence(

@@ -6,9 +6,11 @@ import dev.ssa.fabric.SmartSurvivalArchitectMod;
 import dev.ssa.fabric.client.preview.GhostPreviewRenderer;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.preview.PreviewTransform;
+import dev.ssa.fabric.client.entity.BuilderRenderer;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
 import dev.ssa.fabric.block.BuilderHutBlockEntity;
 import dev.ssa.fabric.block.ModBlocks;
+import dev.ssa.fabric.entity.ModEntityTypes;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import dev.ssa.fabric.network.PreviewPayloads.CancelSurvey;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
@@ -24,6 +26,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.core.BlockPos;
@@ -44,6 +47,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
     @Override
     public void onInitializeClient() {
         LOGGER.info("SSA_S1_CLIENT_READY");
+        EntityRendererRegistry.register(ModEntityTypes.BUILDER, BuilderRenderer::new);
         GhostPreviewRenderer.initialize();
         ClientPlayNetworking.registerGlobalReceiver(SurveyTokenResult.TYPE, SmartSurvivalArchitectClient::receiveToken);
         ClientPlayNetworking.registerGlobalReceiver(SurveyStatus.TYPE, SmartSurvivalArchitectClient::receiveSurveyStatus);

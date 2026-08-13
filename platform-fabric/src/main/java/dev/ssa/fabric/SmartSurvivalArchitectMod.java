@@ -3,6 +3,8 @@ package dev.ssa.fabric;
 import dev.ssa.fabric.block.ModBlockIds;
 import dev.ssa.fabric.block.ModBlockEntityTypes;
 import dev.ssa.fabric.block.ModBlocks;
+import dev.ssa.fabric.entity.ModEntityTypes;
+import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.network.PreviewNetworking;
 import dev.ssa.fabric.spike.navigation.SpikeEntityTypes;
 import dev.ssa.fabric.spike.restart.S5RestartServerDriver;
@@ -19,6 +21,8 @@ public final class SmartSurvivalArchitectMod implements ModInitializer {
     public void onInitialize() {
         ModBlocks.initialize();
         ModBlockEntityTypes.initialize();
+        ModEntityTypes.initialize();
+        BuilderRuntimeService.initialize();
         PreviewNetworking.initialize();
         SpikeEntityTypes.initialize();
         S5RestartServerDriver.initializeIfRequested();

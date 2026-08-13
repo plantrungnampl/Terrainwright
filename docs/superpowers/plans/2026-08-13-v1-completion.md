@@ -35,11 +35,11 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - `RecoveryController.nextAttempt(observation, target)` returns `RETRY_ROUTE`, `LOCAL_RESET`, `SCAFFOLD`, or `BLOCKED`.
 - `ScaffoldPlan` contains at most 24 temporary placements, maximum height 12, and provenance for every temporary block.
 
-- [ ] Write a test proving the detector reaches `BLOCKED` after the configured bounded attempts without a teleport call.
-- [ ] Run `./gradlew :construction-core:test --tests '*ScaffoldPlanTest'`; confirm the new test fails because the recovery API is absent.
-- [ ] Implement the pure plan and recovery ladder, then wire it into the existing controller.
-- [ ] Add GameTests for a two-floor target that completes with temporary scaffolding and an impossible target that stops with no further world mutations.
-- [ ] Run the focused tests, then `./gradlew :construction-core:test :platform-fabric:test`; commit `feat: add bounded builder recovery and scaffolding`.
+- [x] Write a test proving the detector reaches `BLOCKED` after the configured bounded attempts without a teleport call.
+- [x] Run `./gradlew :construction-core:test --tests '*ScaffoldPlanTest'`; confirm the new test fails because the recovery API is absent.
+- [x] Implement the pure plan and recovery ladder, then wire it into the existing controller.
+- [x] Add GameTests for a two-floor target that completes with temporary scaffolding and an impossible target that stops with no further world mutations.
+- [x] Run the focused tests, then `./gradlew :construction-core:test :platform-fabric:test`; commit `feat: add bounded builder recovery and scaffolding`.
 
 ### Task 2: Add durable lifecycle, chunk suspension, and restart reconciliation
 

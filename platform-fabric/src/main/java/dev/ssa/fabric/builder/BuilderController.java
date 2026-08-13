@@ -18,6 +18,9 @@ import dev.ssa.construction.operation.OperationKind;
 import dev.ssa.construction.operation.StackSnapshot;
 import dev.ssa.construction.operation.WorldDelta;
 import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.scaffold.ScaffoldPlan;
+import dev.ssa.construction.scaffold.ScaffoldProvenance;
+import dev.ssa.construction.scaffold.ScaffoldProvenance.Cell;
 import dev.ssa.construction.task.BuildTask;
 import dev.ssa.construction.task.TaskOperation;
 import dev.ssa.fabric.construction.CoordinatorOutcome;
@@ -51,6 +54,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
@@ -70,6 +74,8 @@ public final class BuilderController {
     private final BuilderStateMachine stateMachine = new BuilderStateMachine();
     private final WorkBatchPlanner batchPlanner = new WorkBatchPlanner();
     private final FabricNavigationAdapter navigation;
+    private final RecoveryController navigationRecovery = new RecoveryController(2);
+    private final FabricScaffoldPlanner scaffoldPlanner = new FabricScaffoldPlanner();
 
     private WorkOrder order;
     private JobCommitLog commitLog;
@@ -81,6 +87,9 @@ public final class BuilderController {
     private CompletableFuture<CoordinatorResult> inFlight;
     private InFlightAction inFlightAction;
     private String failureReason = "";
+    private ScaffoldProvenance activeScaffold;
+    private int scaffoldCellIndex = -1;
+    private ScaffoldMode scaffoldMode;
 
     public BuilderController(
             BuilderEntity builder,
@@ -105,6 +114,7 @@ public final class BuilderController {
         this.order = Objects.requireNonNull(order, "order");
         BuildJob job = job();
         order.taskGraph().frontier(job.completedTaskIds());
+        repository.savePlan(job.jobId(), order.taskGraph());
         this.commitLog = new JobCommitLog(order.taskGraph());
         stateMachine.transition(BuilderStateMachine.State.RECOVERING);
     }
@@ -138,6 +148,8 @@ public final class BuilderController {
                     startPlacement(level);
                 }
             }
+            case NAVIGATE_SCAFFOLD -> tickScaffoldNavigation(level);
+            case EXECUTE_SCAFFOLD -> startScaffoldMutation(level);
             case SELECT_NEXT_TASK -> selectNextTask(level);
             case NO_CHEST, SUSPENDED_CHUNK_UNLOADED -> resumeIfAvailable(level);
             case BLOCKED, IDLE -> {
@@ -171,14 +183,21 @@ public final class BuilderController {
                 return true;
             }
             switch (completedAction) {
-                case RECOVERY -> prepareJobAfterRecovery();
+                case RECOVERY -> prepareJobAfterRecovery(level);
                 case TRANSFER -> {
                     // Recompute the remaining exact material need on the next server tick.
                 }
                 case PLACEMENT -> {
                     nextPlacementTick = level.getGameTime() + PLACEMENT_COOLDOWN_TICKS;
-                    stateMachine.transition(BuilderStateMachine.State.SELECT_NEXT_TASK);
+                    if (hasPlacedScaffoldCells()) {
+                        beginScaffoldCleanup(level);
+                    } else {
+                        stateMachine.transition(BuilderStateMachine.State.SELECT_NEXT_TASK);
+                    }
                 }
+                case SCAFFOLD_PLACE -> continueScaffoldPlacement(level);
+                case SCAFFOLD_REMOVE -> continueScaffoldCleanup(level);
+                case SCAFFOLD_PLAN -> stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
             }
             return false;
         } catch (RuntimeException failure) {
@@ -204,7 +223,7 @@ public final class BuilderController {
         inFlightAction = InFlightAction.RECOVERY;
     }
 
-    private void prepareJobAfterRecovery() {
+    private void prepareJobAfterRecovery(ServerLevel level) {
         BuildJob current = job();
         if (current.state() == BuildJobState.COMPLETED) {
             stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
@@ -217,7 +236,21 @@ public final class BuilderController {
                 || current.state() == BuildJobState.SUSPENDED_CHUNK_UNLOADED) {
             saveJob(current.transitionTo(BuildJobState.PREPARING));
         }
+        List<ScaffoldProvenance> activeScaffolds = repository.scaffolds().values().stream()
+                .filter(scaffold -> scaffold.jobId().equals(current.jobId()) && !scaffold.isCleaned())
+                .sorted(java.util.Comparator.comparing(ScaffoldProvenance::planId))
+                .toList();
+        if (activeScaffolds.size() > 1) {
+            block("BuildJob has ambiguous active scaffold provenance", Optional.empty());
+            return;
+        }
+        activeScaffold = activeScaffolds.isEmpty() ? null : activeScaffolds.getFirst();
         stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
+        if (activeScaffold != null
+                && job().completedTaskIds().contains(activeScaffold.taskId())
+                && hasPlacedScaffoldCells()) {
+            beginScaffoldCleanup(level);
+        }
     }
 
     private void checkMaterials(ServerLevel level) {
@@ -237,6 +270,12 @@ public final class BuilderController {
         WorkBatch batch = planned.orElseThrow();
         batchTasks = batch.taskIds().stream().map(order.taskGraph()::task).toList();
         batchIndex = 0;
+        if (activeScaffold != null && !activeScaffold.taskId().equals(currentTask().id())) {
+            block(
+                    "Active scaffold belongs to a different Builder task: " + activeScaffold.taskId(),
+                    currentTaskPosition());
+            return;
+        }
         for (BuildTask task : batchTasks) {
             if (task.operation() != TaskOperation.PLACE || task.atomicGroupId().isPresent()) {
                 block("Task 15 supports only non-atomic PLACE tasks: " + task.id(), Optional.of(task.position()));
@@ -244,9 +283,23 @@ public final class BuilderController {
             }
         }
         batchMaterials = materialCounts(batch.materialCounts());
+        if (hasUnplacedScaffoldCells()) {
+            Map<Item, Integer> withScaffold = new LinkedHashMap<>(batchMaterials);
+            Cell first = activeScaffold.cells().stream()
+                    .filter(cell -> cell.placementOperationId().isEmpty())
+                    .findFirst()
+                    .orElseThrow();
+            withScaffold.merge(
+                    materialItem(first.state()),
+                    (int) activeScaffold.cells().stream()
+                            .filter(cell -> cell.placementOperationId().isEmpty())
+                            .count(),
+                    Integer::sum);
+            batchMaterials = Map.copyOf(withScaffold);
+        }
         Map<Item, Integer> additional = additionalMaterialCounts();
         if (additional.isEmpty()) {
-            navigateToCurrentTask(level);
+            navigateToPendingWork(level);
             return;
         }
         Optional<Container> chest = linkedContainer(level);
@@ -278,7 +331,7 @@ public final class BuilderController {
     private void startNextTransfer(ServerLevel level) {
         Map<Item, Integer> additional = additionalMaterialCounts();
         if (additional.isEmpty()) {
-            navigateToCurrentTask(level);
+            navigateToPendingWork(level);
             return;
         }
         Optional<Container> optionalChest = linkedContainer(level);
@@ -309,7 +362,35 @@ public final class BuilderController {
         inFlightAction = InFlightAction.TRANSFER;
     }
 
+    private void navigateToPendingWork(ServerLevel level) {
+        if (hasUnplacedScaffoldCells()) {
+            beginScaffoldPlacement(level);
+        } else if (activeScaffold != null && hasPlacedScaffoldCells()) {
+            navigateToCurrentTaskFromScaffold(level);
+        } else {
+            navigateToCurrentTask(level);
+        }
+    }
+
     private void navigateToCurrentTask(ServerLevel level) {
+        startCurrentTaskNavigation(level, Optional.empty());
+    }
+
+    private void navigateToCurrentTaskFromScaffold(ServerLevel level) {
+        if (!activeScaffold.taskId().equals(currentTask().id())) {
+            block(
+                    "Active scaffold belongs to a different Builder task: " + activeScaffold.taskId(),
+                    currentTaskPosition());
+            return;
+        }
+        Cell top = activeScaffold.cells().getLast();
+        startCurrentTaskNavigation(level, Optional.of(scaffoldPosition(top).above()));
+    }
+
+    private void startCurrentTaskNavigation(ServerLevel level, Optional<BlockPos> scaffoldStandingPosition) {
+        if (activeScaffold == null) {
+            navigationRecovery.reset();
+        }
         BuildJob current = job();
         if (current.state() == BuildJobState.WAIT_MATERIAL) {
             saveJob(current.transitionTo(BuildJobState.FETCHING_MATERIAL));
@@ -319,12 +400,19 @@ public final class BuilderController {
             saveJob(current.transitionTo(BuildJobState.NAVIGATING));
         }
         if (stateMachine.state() == BuilderStateMachine.State.CHECK_MATERIALS
-                || stateMachine.state() == BuilderStateMachine.State.FETCH_MATERIAL) {
+                || stateMachine.state() == BuilderStateMachine.State.FETCH_MATERIAL
+                || stateMachine.state() == BuilderStateMachine.State.EXECUTE_SCAFFOLD) {
             stateMachine.transition(BuilderStateMachine.State.NAVIGATE_SITE);
         } else if (stateMachine.state() == BuilderStateMachine.State.SELECT_NEXT_TASK) {
             stateMachine.transition(BuilderStateMachine.State.NAVIGATE_SITE);
         }
-        navigation.begin(level, absolutePosition(job(), currentTask().position()));
+        BlockPos target = absolutePosition(job(), currentTask().position());
+        if (scaffoldStandingPosition.isPresent()) {
+            navigationRecovery.reset();
+            navigation.beginFromScaffold(level, target, scaffoldStandingPosition.orElseThrow());
+        } else {
+            navigation.begin(level, target);
+        }
     }
 
     private void tickSiteNavigation(ServerLevel level) {
@@ -335,11 +423,192 @@ public final class BuilderController {
                 transitionJobTo(BuildJobState.BUILDING);
                 stateMachine.transition(BuilderStateMachine.State.EXECUTE_TASK);
             }
-            case BLOCKED -> block(
-                    "No legal interaction position for Builder task: " + navigation.diagnostic(),
-                    currentTaskPosition());
+            case BLOCKED -> recoverSiteNavigation(level);
             case SUSPENDED_CHUNK_UNLOADED -> suspendForChunkUnload(level);
         }
+    }
+
+    private void recoverSiteNavigation(ServerLevel level) {
+        BlockPos target = absolutePosition(job(), currentTask().position());
+        if (activeScaffold != null && hasPlacedScaffoldCells()) {
+            block(
+                    "Builder remained unreachable after bounded scaffolding: " + navigation.diagnostic(),
+                    currentTaskPosition());
+            return;
+        }
+        Optional<ScaffoldPlan> plan = scaffoldPlanner.plan(level, builder, target);
+        switch (navigationRecovery.next(plan.isPresent())) {
+            case RETRY_ROUTE -> navigation.begin(level, target);
+            case LOCAL_RESET -> {
+                builder.getNavigation().stop();
+                navigation.begin(level, target);
+            }
+            case SCAFFOLD -> {
+                ScaffoldProvenance provenance = ScaffoldProvenance.planned(
+                        job().jobId(),
+                        "scaffold-" + UUID.randomUUID(),
+                        currentTask().id(),
+                        plan.orElseThrow());
+                repository.saveScaffold(provenance);
+                activeScaffold = provenance;
+                inFlight = level.getDataStorage().scheduleSave()
+                        .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.NO_ACTIVE_INTENT, 0));
+                inFlightAction = InFlightAction.SCAFFOLD_PLAN;
+            }
+            case BLOCKED -> block(
+                    "No legal interaction position after bounded recovery: " + navigation.diagnostic(),
+                    currentTaskPosition());
+        }
+    }
+
+    private void beginScaffoldPlacement(ServerLevel level) {
+        activeScaffold = reloadActiveScaffold();
+        scaffoldMode = ScaffoldMode.PLACE;
+        scaffoldCellIndex = firstUnplacedScaffoldCell();
+        transitionJobTo(BuildJobState.NAVIGATING);
+        stateMachine.transition(BuilderStateMachine.State.NAVIGATE_SCAFFOLD);
+        navigation.begin(level, scaffoldPosition(activeScaffold.cells().get(scaffoldCellIndex)));
+    }
+
+    private void beginScaffoldCleanup(ServerLevel level) {
+        activeScaffold = reloadActiveScaffold();
+        scaffoldMode = ScaffoldMode.REMOVE;
+        scaffoldCellIndex = lastPlacedScaffoldCell();
+        stateMachine.transition(BuilderStateMachine.State.NAVIGATE_SCAFFOLD);
+        navigation.begin(level, scaffoldPosition(activeScaffold.cells().get(scaffoldCellIndex)));
+    }
+
+    private void tickScaffoldNavigation(ServerLevel level) {
+        switch (navigation.tick(level)) {
+            case MOVING -> {
+            }
+            case ARRIVED -> stateMachine.transition(BuilderStateMachine.State.EXECUTE_SCAFFOLD);
+            case BLOCKED -> block(
+                    "Builder could not reach temporary scaffold cell: " + navigation.diagnostic(),
+                    Optional.of(activeScaffold.cells().get(scaffoldCellIndex).position()));
+            case SUSPENDED_CHUNK_UNLOADED -> suspendForChunkUnload(level);
+        }
+    }
+
+    private void startScaffoldMutation(ServerLevel level) {
+        if (scaffoldMode == ScaffoldMode.PLACE) {
+            startScaffoldPlacement(level);
+        } else if (scaffoldMode == ScaffoldMode.REMOVE) {
+            startScaffoldRemoval(level);
+        } else {
+            throw new IllegalStateException("Builder has no scaffold mutation mode");
+        }
+    }
+
+    private void startScaffoldPlacement(ServerLevel level) {
+        Cell cell = activeScaffold.cells().get(scaffoldCellIndex);
+        Item item = materialItem(cell.state());
+        int inventorySlot = findBuilderMaterialSlot(item)
+                .orElseThrow(() -> new IllegalStateException("Builder lost temporary scaffold material"));
+        BlockPos position = scaffoldPosition(cell);
+        BlockState beforeState = level.getBlockState(position);
+        if (!beforeState.isAir()) {
+            block("Temporary scaffold target contains a foreign block", Optional.of(cell.position()));
+            return;
+        }
+        MinecraftSnapshotAdapter snapshots = new MinecraftSnapshotAdapter(level.registryAccess());
+        ItemStack beforeStack = builder.carriedItems().getItem(inventorySlot).copy();
+        ItemStack afterStack = beforeStack.getCount() == 1
+                ? ItemStack.EMPTY
+                : beforeStack.copyWithCount(beforeStack.getCount() - 1);
+        OperationIntent intent = OperationIntent.prepared(
+                "scaffold-place-" + UUID.randomUUID(),
+                job().jobId(),
+                Optional.of(scaffoldTaskId(ScaffoldMode.PLACE, scaffoldCellIndex)),
+                Optional.empty(),
+                job().revision(),
+                OperationKind.WORLD_MUTATION,
+                List.of(
+                        new InventoryDelta(
+                                builderInventoryId(),
+                                BUILDER_INVENTORY_REVISION,
+                                inventorySlot,
+                                snapshots.snapshot(beforeStack),
+                                snapshots.snapshot(afterStack)),
+                        new WorldDelta(
+                                level.dimension().identifier().toString(),
+                                position.getX(),
+                                position.getY(),
+                                position.getZ(),
+                                snapshots.snapshot(beforeState),
+                                snapshots.snapshot(restore(cell.state())),
+                                DropPolicy.NOT_APPLICABLE)));
+        inFlight = mutations.execute(
+                intent, level, owner(job()), permissions, List.of(builderBinding()), commitLog);
+        inFlightAction = InFlightAction.SCAFFOLD_PLACE;
+    }
+
+    private void startScaffoldRemoval(ServerLevel level) {
+        Cell cell = activeScaffold.cells().get(scaffoldCellIndex);
+        Item item = materialItem(cell.state());
+        int inventorySlot = findBuilderInsertSlot(item)
+                .orElseThrow(() -> new IllegalStateException("Builder inventory cannot receive cleaned scaffold"));
+        BlockPos position = scaffoldPosition(cell);
+        BlockState beforeState = level.getBlockState(position);
+        BlockState intendedState = restore(cell.state());
+        if (!beforeState.equals(intendedState)) {
+            block(
+                    "Temporary scaffold state differs at cleanup; actual="
+                            + specification(beforeState) + ", intended=" + specification(intendedState),
+                    Optional.of(cell.position()));
+            return;
+        }
+        MinecraftSnapshotAdapter snapshots = new MinecraftSnapshotAdapter(level.registryAccess());
+        ItemStack beforeStack = builder.carriedItems().getItem(inventorySlot).copy();
+        ItemStack afterStack = beforeStack.isEmpty()
+                ? new ItemStack(item, 1)
+                : beforeStack.copyWithCount(beforeStack.getCount() + 1);
+        OperationIntent intent = OperationIntent.prepared(
+                "scaffold-remove-" + UUID.randomUUID(),
+                job().jobId(),
+                Optional.of(scaffoldTaskId(ScaffoldMode.REMOVE, scaffoldCellIndex)),
+                Optional.empty(),
+                job().revision(),
+                OperationKind.WORLD_MUTATION,
+                List.of(
+                        new InventoryDelta(
+                                builderInventoryId(),
+                                BUILDER_INVENTORY_REVISION,
+                                inventorySlot,
+                                snapshots.snapshot(beforeStack),
+                                snapshots.snapshot(afterStack)),
+                        new WorldDelta(
+                                level.dimension().identifier().toString(),
+                                position.getX(),
+                                position.getY(),
+                                position.getZ(),
+                                snapshots.snapshot(beforeState),
+                                snapshots.snapshot(Blocks.AIR.defaultBlockState()),
+                                DropPolicy.SUPPRESS)));
+        inFlight = mutations.execute(
+                intent, level, owner(job()), permissions, List.of(builderBinding()), commitLog);
+        inFlightAction = InFlightAction.SCAFFOLD_REMOVE;
+    }
+
+    private void continueScaffoldPlacement(ServerLevel level) {
+        activeScaffold = reloadActiveScaffold();
+        if (hasUnplacedScaffoldCells()) {
+            beginScaffoldPlacement(level);
+            return;
+        }
+        navigateToCurrentTaskFromScaffold(level);
+    }
+
+    private void continueScaffoldCleanup(ServerLevel level) {
+        activeScaffold = reloadActiveScaffold();
+        if (hasPlacedScaffoldCells()) {
+            beginScaffoldCleanup(level);
+            return;
+        }
+        activeScaffold = null;
+        scaffoldMode = null;
+        scaffoldCellIndex = -1;
+        stateMachine.transition(BuilderStateMachine.State.SELECT_NEXT_TASK);
     }
 
     private void startPlacement(ServerLevel level) {
@@ -351,7 +620,9 @@ public final class BuilderController {
         BlockPos position = absolutePosition(current, task.position());
         BlockState beforeState = level.getBlockState(position);
         if (!beforeState.isAir()) {
-            block("PLACE task found a non-air foreign block", Optional.of(task.position()));
+            block(
+                    "PLACE task found a non-air foreign block: " + specification(beforeState),
+                    Optional.of(task.position()));
             return;
         }
         BlockState afterState = restore(task.materialRequirement().orElseThrow().state());
@@ -611,6 +882,65 @@ public final class BuilderController {
         return Optional.empty();
     }
 
+    private Optional<Integer> findBuilderInsertSlot(Item item) {
+        for (int slot = 0; slot < builder.carriedItems().getContainerSize(); slot++) {
+            ItemStack stack = builder.carriedItems().getItem(slot);
+            if (isCanonicalMaterial(stack, item) && stack.getCount() < stack.getMaxStackSize()) {
+                return Optional.of(slot);
+            }
+        }
+        for (int slot = 0; slot < builder.carriedItems().getContainerSize(); slot++) {
+            if (builder.carriedItems().getItem(slot).isEmpty()) {
+                return Optional.of(slot);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean hasUnplacedScaffoldCells() {
+        return activeScaffold != null && activeScaffold.cells().stream()
+                .anyMatch(cell -> cell.placementOperationId().isEmpty());
+    }
+
+    private boolean hasPlacedScaffoldCells() {
+        return activeScaffold != null && activeScaffold.cells().stream().anyMatch(Cell::isPlaced);
+    }
+
+    private int firstUnplacedScaffoldCell() {
+        for (int index = 0; index < activeScaffold.cells().size(); index++) {
+            if (activeScaffold.cells().get(index).placementOperationId().isEmpty()) {
+                return index;
+            }
+        }
+        throw new IllegalStateException("Scaffold plan has no unplaced cell");
+    }
+
+    private int lastPlacedScaffoldCell() {
+        for (int index = activeScaffold.cells().size() - 1; index >= 0; index--) {
+            if (activeScaffold.cells().get(index).isPlaced()) {
+                return index;
+            }
+        }
+        throw new IllegalStateException("Scaffold plan has no placed cell");
+    }
+
+    private ScaffoldProvenance reloadActiveScaffold() {
+        if (activeScaffold == null) {
+            throw new IllegalStateException("Builder has no active scaffold provenance");
+        }
+        return repository.findScaffold(activeScaffold.planId())
+                .orElseThrow(() -> new IllegalStateException("Active scaffold provenance is missing"));
+    }
+
+    private String scaffoldTaskId(ScaffoldMode mode, int index) {
+        return "scaffold:" + activeScaffold.planId() + ":"
+                + (mode == ScaffoldMode.PLACE ? "place" : "remove") + ":" + index;
+    }
+
+    private static BlockPos scaffoldPosition(Cell cell) {
+        return new BlockPos(cell.position().x(), cell.position().y(), cell.position().z());
+    }
+
     private int carriedCanonicalItemCount(Item item) {
         int count = 0;
         for (int slot = 0; slot < builder.carriedItems().getContainerSize(); slot++) {
@@ -815,6 +1145,13 @@ public final class BuilderController {
             if (durableCheckpoints.contains(operationId)) {
                 return true;
             }
+            boolean scaffoldCommitted = repository.scaffolds().values().stream()
+                    .flatMap(scaffold -> scaffold.cells().stream())
+                    .anyMatch(cell -> cell.placementOperationId().filter(operationId::equals).isPresent()
+                            || cell.removalOperationId().filter(operationId::equals).isPresent());
+            if (scaffoldCommitted) {
+                return true;
+            }
             return job().blockJournal().stream()
                     .anyMatch(entry -> entry.operationId().equals(operationId));
         }
@@ -833,6 +1170,9 @@ public final class BuilderController {
             }
             String taskId = intent.taskId()
                     .orElseThrow(() -> new IllegalStateException("World mutation intent has no task identity"));
+            if (taskId.startsWith("scaffold:")) {
+                return commitScaffold(intent, taskId);
+            }
             BuildTask task = graph.task(taskId);
             List<WorldDelta> worldDeltas = intent.deltas().stream()
                     .filter(WorldDelta.class::isInstance)
@@ -872,6 +1212,47 @@ public final class BuilderController {
                     specification(snapshots.restore(world.after())),
                     current.revision() + 1);
             saveJob(current.recordCompletion(taskId, entry));
+            return checkpoint(intent.operationId());
+        }
+
+        private CompletableFuture<Void> commitScaffold(OperationIntent intent, String taskId) {
+            ScaffoldTask scaffoldTask = ScaffoldTask.parse(taskId);
+            ScaffoldProvenance provenance = repository.findScaffold(scaffoldTask.planId())
+                    .orElseThrow(() -> new IllegalStateException("Scaffold operation has no provenance"));
+            if (!provenance.jobId().equals(intent.jobId())) {
+                throw new IllegalStateException("Scaffold provenance belongs to a different BuildJob");
+            }
+            if (scaffoldTask.index() < 0 || scaffoldTask.index() >= provenance.cells().size()) {
+                throw new IllegalStateException("Scaffold operation cell index is out of bounds");
+            }
+            List<WorldDelta> worldDeltas = intent.deltas().stream()
+                    .filter(WorldDelta.class::isInstance)
+                    .map(WorldDelta.class::cast)
+                    .toList();
+            if (worldDeltas.size() != 1) {
+                throw new IllegalStateException("Scaffold operation must mutate exactly one world cell");
+            }
+            WorldDelta world = worldDeltas.getFirst();
+            Cell cell = provenance.cells().get(scaffoldTask.index());
+            if (!scaffoldPosition(cell).equals(new BlockPos(world.x(), world.y(), world.z()))) {
+                throw new IllegalStateException("Scaffold operation position does not match provenance");
+            }
+            MinecraftSnapshotAdapter snapshots = new MinecraftSnapshotAdapter(builder.registryAccess());
+            BlockState before = snapshots.restore(world.before());
+            BlockState after = snapshots.restore(world.after());
+            ScaffoldProvenance updated;
+            if (scaffoldTask.mode() == ScaffoldMode.PLACE) {
+                if (!before.isAir() || !after.equals(restore(cell.state()))) {
+                    throw new IllegalStateException("Scaffold placement evidence does not match provenance");
+                }
+                updated = provenance.recordPlaced(scaffoldTask.index(), intent.operationId());
+            } else {
+                if (!before.equals(restore(cell.state())) || !after.isAir()) {
+                    throw new IllegalStateException("Scaffold cleanup evidence does not match provenance");
+                }
+                updated = provenance.recordRemoved(scaffoldTask.index(), intent.operationId());
+            }
+            repository.saveScaffold(updated);
             return checkpoint(intent.operationId());
         }
 
@@ -935,7 +1316,34 @@ public final class BuilderController {
     private enum InFlightAction {
         RECOVERY,
         TRANSFER,
-        PLACEMENT
+        PLACEMENT,
+        SCAFFOLD_PLACE,
+        SCAFFOLD_REMOVE,
+        SCAFFOLD_PLAN
+    }
+
+    private enum ScaffoldMode {
+        PLACE,
+        REMOVE
+    }
+
+    private record ScaffoldTask(String planId, ScaffoldMode mode, int index) {
+        private static ScaffoldTask parse(String taskId) {
+            String[] parts = taskId.split(":", -1);
+            if (parts.length != 4 || !parts[0].equals("scaffold") || parts[1].isBlank()) {
+                throw new IllegalStateException("Invalid scaffold task identity: " + taskId);
+            }
+            ScaffoldMode mode = switch (parts[2]) {
+                case "place" -> ScaffoldMode.PLACE;
+                case "remove" -> ScaffoldMode.REMOVE;
+                default -> throw new IllegalStateException("Invalid scaffold task action: " + taskId);
+            };
+            try {
+                return new ScaffoldTask(parts[1], mode, Integer.parseInt(parts[3]));
+            } catch (NumberFormatException exception) {
+                throw new IllegalStateException("Invalid scaffold task index: " + taskId, exception);
+            }
+        }
     }
 
     private record TransferSlots(int sourceSlot, int destinationSlot, int count) {

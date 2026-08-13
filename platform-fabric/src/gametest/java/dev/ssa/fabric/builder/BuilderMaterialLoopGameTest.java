@@ -13,6 +13,7 @@ import dev.ssa.construction.operation.OperationIntent;
 import dev.ssa.construction.operation.OperationKind;
 import dev.ssa.construction.operation.WorldDelta;
 import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.scaffold.ScaffoldProvenance;
 import dev.ssa.construction.schedule.WorkZone;
 import dev.ssa.construction.task.BuildTask;
 import dev.ssa.construction.task.TaskOperation;
@@ -47,6 +48,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.phys.Vec3;
 
 public final class BuilderMaterialLoopGameTest {
     @GameTest(maxTicks = 800, padding = 16)
@@ -205,6 +207,171 @@ public final class BuilderMaterialLoopGameTest {
         finishWhenComplete(context, fixture, () -> {
             context.assertTrue(observedWait.get(), "Missing bundle never entered WAIT_MATERIAL");
             assertCompletedWall(context, fixture);
+        });
+    }
+
+    @GameTest(maxTicks = 1200, padding = 16)
+    public void builderUsesAndCleansBoundedScaffoldingForAnUpperTarget(GameTestHelper context) {
+        Layout layout = layout(context);
+        clearElevatedWorkColumns(context, layout, 3);
+        Fixture fixture = start(context, layout, 1, "scaffold-upper", elevatedBlockGraph(3), true);
+        fixture.chest().setItem(1, new ItemStack(Items.SCAFFOLDING, 3));
+        fixture.chest().setChanged();
+        context.runAtTickTime(1100, () -> failWithProgress(context, fixture));
+
+        finishWhenComplete(context, fixture, () -> {
+            BlockPos target = fixture.layout().wallOrigin().above(3);
+            context.assertBlockPresent(Blocks.OAK_PLANKS, target);
+            for (int y = fixture.layout().wallOrigin().getY(); y < target.getY(); y++) {
+                context.assertBlockPresent(
+                        Blocks.AIR,
+                        fixture.layout().wallOrigin().west().atY(y));
+            }
+            List<dev.ssa.construction.scaffold.ScaffoldProvenance> jobScaffolds =
+                    fixture.repository().scaffolds().values().stream()
+                            .filter(scaffold -> scaffold.jobId().equals(fixture.jobId()))
+                            .toList();
+            context.assertValueEqual(jobScaffolds.size(), 1,
+                    "scaffold provenance count for job " + fixture.jobId()
+                            + "; all=" + fixture.repository().scaffolds().values().stream()
+                                    .map(scaffold -> scaffold.jobId() + "/" + scaffold.planId())
+                                    .toList());
+            context.assertTrue(jobScaffolds.getFirst().isCleaned(),
+                    "temporary scaffold provenance was not cleaned");
+            context.assertValueEqual(fixture.builder().carriedItemCount(Items.SCAFFOLDING), 3,
+                    "returned scaffold material");
+        });
+    }
+
+    @GameTest(maxTicks = 1400, padding = 16)
+    public void restartAfterFinalScaffoldPlacementResumesAndCleansTheDurablePlan(GameTestHelper context) {
+        Layout layout = layout(context);
+        clearElevatedWorkColumns(context, layout, 3);
+        Fixture initial = start(context, layout, 1, "scaffold-restart", elevatedBlockGraph(3), true);
+        initial.chest().setItem(1, new ItemStack(Items.SCAFFOLDING, 3));
+        initial.chest().setChanged();
+        AtomicReference<Fixture> active = new AtomicReference<>(initial);
+        AtomicBoolean restarted = new AtomicBoolean();
+        AtomicBoolean pausedAtCheckpoint = new AtomicBoolean();
+        AtomicReference<CompletableFuture<Optional<OperationIntent>>> restartReady = new AtomicReference<>();
+        AtomicReference<CompletableFuture<?>> walCheck = new AtomicReference<>();
+
+        context.onEachTick(() -> {
+            Fixture fixture = active.get();
+            BuildJob job = fixture.repository().findJob(fixture.jobId()).orElseThrow();
+            if (!restarted.get()) {
+                Optional<ScaffoldProvenance> placed = fixture.repository().scaffolds().values().stream()
+                        .filter(scaffold -> scaffold.jobId().equals(fixture.jobId()))
+                        .filter(scaffold -> scaffold.cells().stream()
+                                .allMatch(cell -> cell.placementOperationId().isPresent()
+                                        && cell.removalOperationId().isEmpty()))
+                        .findFirst();
+                if (placed.isEmpty() || !job.completedTaskIds().isEmpty()) {
+                    return;
+                }
+                if (pausedAtCheckpoint.compareAndSet(false, true)) {
+                    fixture.builder().setNoAi(true);
+                    restartReady.set(fixture.store().loadActive());
+                }
+                CompletableFuture<Optional<OperationIntent>> ready = restartReady.get();
+                if (!ready.isDone()) {
+                    return;
+                }
+                if (ready.join().isPresent()) {
+                    restartReady.set(fixture.store().loadActive());
+                    return;
+                }
+                context.assertBlockPresent(Blocks.AIR, layout.wallOrigin().above(3));
+                active.set(restartController(context, fixture));
+                restarted.set(true);
+                return;
+            }
+            if (fixture.controller().state() == BuilderStateMachine.State.BLOCKED) {
+                fixture.persistence().close();
+                context.fail("Reloaded Builder blocked: " + fixture.controller().failureReason());
+                return;
+            }
+            if (job.state() != BuildJobState.COMPLETED) {
+                return;
+            }
+            CompletableFuture<?> check = walCheck.updateAndGet(current ->
+                    current == null ? fixture.store().loadActive() : current);
+            if (!check.isDone()) {
+                return;
+            }
+            context.assertTrue(((Optional<?>) check.join()).isEmpty(),
+                    "Restarted scaffold flow left an active OperationIntent");
+            context.assertBlockPresent(Blocks.OAK_PLANKS, layout.wallOrigin().above(3));
+            ScaffoldProvenance provenance = fixture.repository().scaffolds().values().stream()
+                    .filter(scaffold -> scaffold.jobId().equals(fixture.jobId()))
+                    .findFirst()
+                    .orElseThrow();
+            context.assertTrue(provenance.isCleaned(), "Restarted scaffold was not cleaned");
+            context.assertTrue(restarted.get(), "Scaffold flow completed without exercising restart");
+            fixture.builder().discard();
+            fixture.persistence().close();
+            context.succeed();
+        });
+    }
+
+    @GameTest(maxTicks = 340, padding = 16)
+    public void offGroundStationaryNavigationStopsWithinTheRecoveryBound(GameTestHelper context) {
+        Layout layout = layout(context);
+        createFloor(context, layout);
+        BuilderEntity builder = context.spawn(ModEntityTypes.BUILDER, layout.builderStart());
+        FabricNavigationAdapter navigation = new FabricNavigationAdapter(
+                builder,
+                new InteractionPositionResolver());
+        navigation.begin(context.getLevel(), context.absolutePos(layout.wallOrigin()));
+        BlockPos frozen = context.absolutePos(layout.builderStart()).above(3);
+
+        context.onEachTick(() -> {
+            builder.setPos(frozen.getX() + 0.5, frozen.getY(), frozen.getZ() + 0.5);
+            builder.setDeltaMovement(Vec3.ZERO);
+            builder.setOnGround(false);
+            switch (navigation.tick(context.getLevel())) {
+                case MOVING -> {
+                }
+                case BLOCKED -> {
+                    context.assertTrue(context.getTick() <= 320,
+                            "off-ground navigation exceeded its bounded watchdog");
+                    builder.discard();
+                    context.succeed();
+                }
+                case ARRIVED -> context.fail("Frozen off-ground Builder unexpectedly arrived");
+                case SUSPENDED_CHUNK_UNLOADED -> context.fail("Fixture target unexpectedly stopped ticking");
+            }
+        });
+    }
+
+    @GameTest(maxTicks = 300, padding = 16)
+    public void builderFailsSafelyWhenScaffoldWouldExceedTheV1Limit(GameTestHelper context) {
+        Layout layout = layout(context);
+        clearElevatedWorkColumns(context, layout, 15);
+        Fixture fixture = start(context, layout, 1, "scaffold-impossible", elevatedBlockGraph(15), true);
+        AtomicBoolean validationScheduled = new AtomicBoolean();
+        context.runAtTickTime(280, () -> failWithProgress(context, fixture));
+
+        context.onEachTick(() -> {
+            if (fixture.controller().state() != BuilderStateMachine.State.BLOCKED
+                    || !validationScheduled.compareAndSet(false, true)) {
+                return;
+            }
+            int mutationCount = fixture.boundaries().durablePrepareCount();
+            context.runAfterDelay(20, () -> {
+                context.assertValueEqual(fixture.controller().state(), BuilderStateMachine.State.BLOCKED,
+                        "stable impossible-target state");
+                context.assertValueEqual(fixture.boundaries().durablePrepareCount(), mutationCount,
+                        "mutations after bounded failure");
+                long scaffoldCount = fixture.repository().scaffolds().values().stream()
+                        .filter(scaffold -> scaffold.jobId().equals(fixture.jobId()))
+                        .count();
+                context.assertValueEqual(scaffoldCount, 0L, "impossible scaffold provenance count");
+                context.assertBlockPresent(Blocks.AIR, fixture.layout().wallOrigin().above(15));
+                fixture.builder().discard();
+                fixture.persistence().close();
+                context.succeed();
+            });
         });
     }
 
@@ -387,6 +554,51 @@ public final class BuilderMaterialLoopGameTest {
                 workOrder);
     }
 
+    private static Fixture restartController(GameTestHelper context, Fixture fixture) {
+        BuilderEntity previous = fixture.builder();
+        UUID builderId = previous.getUUID();
+        Vec3 position = previous.position();
+        List<ItemStack> carried = new ArrayList<>();
+        for (int slot = 0; slot < previous.carriedItems().getContainerSize(); slot++) {
+            carried.add(previous.carriedItems().getItem(slot).copy());
+        }
+        previous.discard();
+
+        ServerLevel level = context.getLevel();
+        BuilderEntity reloaded = new BuilderEntity(ModEntityTypes.BUILDER, level);
+        reloaded.setUUID(builderId);
+        reloaded.setPos(position.x(), position.y(), position.z());
+        for (int slot = 0; slot < carried.size(); slot++) {
+            reloaded.carriedItems().setItem(slot, carried.get(slot));
+        }
+        context.assertTrue(level.addFreshEntity(reloaded), "Reloaded scaffold Builder was rejected");
+
+        FabricMutationExecutor mutations = new FabricMutationExecutor(
+                fixture.store(),
+                level.getServer()::execute,
+                fixture.boundaries());
+        BuilderController controller = new BuilderController(
+                reloaded,
+                mutations,
+                new MaterialTransferService(mutations),
+                fixture.repository(),
+                new BuilderChestLinkService((ignoredOwner, ignoredPosition) -> true),
+                (ignoredOwner, ignoredPosition) -> true);
+        reloaded.attachController(controller);
+        controller.assign(fixture.workOrder());
+        return new Fixture(
+                reloaded,
+                controller,
+                fixture.chest(),
+                fixture.store(),
+                fixture.persistence(),
+                fixture.repository(),
+                fixture.jobId(),
+                fixture.boundaries(),
+                fixture.layout(),
+                fixture.workOrder());
+    }
+
     private static TaskGraph wallGraph() {
         BlockStateSpec planks = BlockStateSpec.of(NamespacedId.parse("minecraft:oak_planks"), Map.of());
         List<BuildTask> tasks = new ArrayList<>();
@@ -408,6 +620,21 @@ public final class BuilderMaterialLoopGameTest {
 
     private static TaskGraph oneBlockGraph() {
         return new TaskGraph(List.of(wallGraph().task("wall-0")));
+    }
+
+    private static TaskGraph elevatedBlockGraph(int height) {
+        BlockStateSpec planks = BlockStateSpec.of(NamespacedId.parse("minecraft:oak_planks"), Map.of());
+        GridPos position = new GridPos(0, height, 0);
+        return new TaskGraph(List.of(new BuildTask(
+                "upper-0",
+                position,
+                TaskOperation.PLACE,
+                Optional.of(new BuildTask.MaterialRequirement(MaterialRole.WALL_PRIMARY, planks)),
+                java.util.Set.of(),
+                BuildPhase.UPPER_FLOOR,
+                WorkZone.containing(position),
+                false,
+                Optional.empty())));
     }
 
     private static BlockPos[] findEntityTickingBoundary(GameTestHelper context) {
@@ -540,6 +767,14 @@ public final class BuilderMaterialLoopGameTest {
                 context.setBlock(x, 2, z, Blocks.AIR);
                 context.setBlock(x, 3, z, Blocks.AIR);
             }
+        }
+    }
+
+    private static void clearElevatedWorkColumns(
+            GameTestHelper context, Layout layout, int height) {
+        for (int offset = 0; offset <= height; offset++) {
+            context.setBlock(layout.wallOrigin().above(offset), Blocks.AIR);
+            context.setBlock(layout.wallOrigin().west().above(offset), Blocks.AIR);
         }
     }
 

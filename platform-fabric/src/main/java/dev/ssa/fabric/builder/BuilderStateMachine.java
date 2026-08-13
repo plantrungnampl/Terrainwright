@@ -37,6 +37,8 @@ public final class BuilderStateMachine {
         FETCH_MATERIAL,
         NAVIGATE_SITE,
         EXECUTE_TASK,
+        NAVIGATE_SCAFFOLD,
+        EXECUTE_SCAFFOLD,
         SELECT_NEXT_TASK,
         NO_CHEST,
         SUSPENDED_CHUNK_UNLOADED,
@@ -52,6 +54,7 @@ public final class BuilderStateMachine {
                 case CHECK_MATERIALS -> next == WAIT_MATERIAL
                         || next == NAVIGATE_CHEST
                         || next == NAVIGATE_SITE
+                        || next == NAVIGATE_SCAFFOLD
                         || next == IDLE
                         || next == NO_CHEST
                         || next == SUSPENDED_CHUNK_UNLOADED
@@ -64,14 +67,25 @@ public final class BuilderStateMachine {
                         || next == SUSPENDED_CHUNK_UNLOADED
                         || next == BLOCKED;
                 case FETCH_MATERIAL -> next == NAVIGATE_SITE
+                        || next == NAVIGATE_SCAFFOLD
                         || next == WAIT_MATERIAL
                         || next == NO_CHEST
                         || next == SUSPENDED_CHUNK_UNLOADED
                         || next == BLOCKED;
                 case NAVIGATE_SITE -> next == EXECUTE_TASK
+                        || next == CHECK_MATERIALS
                         || next == SUSPENDED_CHUNK_UNLOADED
                         || next == BLOCKED;
                 case EXECUTE_TASK -> next == SELECT_NEXT_TASK
+                        || next == NAVIGATE_SCAFFOLD
+                        || next == SUSPENDED_CHUNK_UNLOADED
+                        || next == BLOCKED;
+                case NAVIGATE_SCAFFOLD -> next == EXECUTE_SCAFFOLD
+                        || next == SUSPENDED_CHUNK_UNLOADED
+                        || next == BLOCKED;
+                case EXECUTE_SCAFFOLD -> next == NAVIGATE_SCAFFOLD
+                        || next == NAVIGATE_SITE
+                        || next == SELECT_NEXT_TASK
                         || next == SUSPENDED_CHUNK_UNLOADED
                         || next == BLOCKED;
                 case SELECT_NEXT_TASK -> next == CHECK_MATERIALS

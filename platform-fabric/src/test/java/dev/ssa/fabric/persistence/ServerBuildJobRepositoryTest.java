@@ -14,6 +14,8 @@ import dev.ssa.construction.job.BuildJob;
 import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.journal.JournalEntry;
 import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.scaffold.ScaffoldPlan;
+import dev.ssa.construction.scaffold.ScaffoldProvenance;
 import dev.ssa.construction.schedule.WorkZone;
 import dev.ssa.construction.task.BuildTask;
 import dev.ssa.construction.task.TaskOperation;
@@ -48,6 +50,14 @@ final class ServerBuildJobRepositoryTest {
 
         repository.saveJob(job);
         repository.savePlan(job.jobId(), plan());
+        repository.saveScaffold(ScaffoldProvenance.planned(
+                job.jobId(),
+                "scaffold-1",
+                "task-1",
+                new ScaffoldPlan(List.of(new ScaffoldPlan.Placement(
+                        new GridPos(11, 64, 10),
+                        BlockStateSpec.of(NamespacedId.parse("minecraft:scaffolding"), Map.of())))))
+                .recordPlaced(0, "scaffold-place-1"));
         repository.saveHutState(new ServerBuildJobRepository.HutState(
                 HUT_ID,
                 OWNER_ID,
@@ -63,6 +73,7 @@ final class ServerBuildJobRepositoryTest {
 
         assertEquals(repository.jobs(), decoded.jobs());
         assertEquals(repository.huts(), decoded.huts());
+        assertEquals(repository.scaffolds(), decoded.scaffolds());
         assertEquals(
                 BuilderPlanCodec.encode(repository.findPlan(job.jobId()).orElseThrow()),
                 BuilderPlanCodec.encode(decoded.findPlan(job.jobId()).orElseThrow()));
@@ -101,6 +112,26 @@ final class ServerBuildJobRepositoryTest {
 
         assertThrows(IllegalStateException.class, () -> repository.saveHutState(foreignHut));
         assertTrue(repository.huts().isEmpty());
+    }
+
+    @Test
+    void scaffoldMustReferenceADurableTaskAndBeTheOnlyActivePlanForItsJob() {
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        BuildJob job = job(1);
+        repository.saveJob(job);
+        repository.savePlan(job.jobId(), plan());
+
+        assertThrows(IllegalStateException.class, () -> repository.saveScaffold(scaffold(
+                job.jobId(), "unknown-task-plan", "unknown-task")));
+
+        ScaffoldProvenance first = scaffold(job.jobId(), "scaffold-1", "task-1");
+        repository.saveScaffold(first);
+        assertThrows(IllegalStateException.class, () -> repository.saveScaffold(scaffold(
+                job.jobId(), "scaffold-2", "task-1")));
+
+        repository.saveScaffold(first.recordPlaced(0, "place-1").recordRemoved(0, "remove-1"));
+        repository.saveScaffold(scaffold(job.jobId(), "scaffold-2", "task-1"));
+        assertEquals(2, repository.scaffolds().size());
     }
 
     private static BuildJob job(long revision) {
@@ -156,5 +187,15 @@ final class ServerBuildJobRepositoryTest {
                 WorkZone.containing(position),
                 false,
                 Optional.empty())));
+    }
+
+    private static ScaffoldProvenance scaffold(String jobId, String planId, String taskId) {
+        return ScaffoldProvenance.planned(
+                jobId,
+                planId,
+                taskId,
+                new ScaffoldPlan(List.of(new ScaffoldPlan.Placement(
+                        new GridPos(11, 64, 10),
+                        BlockStateSpec.of(NamespacedId.parse("minecraft:scaffolding"), Map.of())))));
     }
 }

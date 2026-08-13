@@ -61,4 +61,22 @@ final class BuilderStateMachineTest {
         assertEquals(BuilderStateMachine.State.RECOVERING, missingChest.state());
         assertEquals(BuilderStateMachine.State.RECOVERING, unloaded.state());
     }
+
+    @Test
+    void scaffoldPlacementAndCleanupRemainExplicitRuntimeStates() {
+        BuilderStateMachine machine = new BuilderStateMachine();
+        machine.transition(BuilderStateMachine.State.RECOVERING);
+        machine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
+        machine.transition(BuilderStateMachine.State.NAVIGATE_SITE);
+        machine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
+        machine.transition(BuilderStateMachine.State.NAVIGATE_SCAFFOLD);
+        machine.transition(BuilderStateMachine.State.EXECUTE_SCAFFOLD);
+        machine.transition(BuilderStateMachine.State.NAVIGATE_SITE);
+        machine.transition(BuilderStateMachine.State.EXECUTE_TASK);
+        machine.transition(BuilderStateMachine.State.NAVIGATE_SCAFFOLD);
+        machine.transition(BuilderStateMachine.State.EXECUTE_SCAFFOLD);
+        machine.transition(BuilderStateMachine.State.SELECT_NEXT_TASK);
+
+        assertEquals(BuilderStateMachine.State.SELECT_NEXT_TASK, machine.state());
+    }
 }

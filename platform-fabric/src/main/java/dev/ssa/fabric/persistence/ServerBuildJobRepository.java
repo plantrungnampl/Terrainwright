@@ -13,6 +13,8 @@ import dev.ssa.construction.job.BuildJob.Severity;
 import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.journal.JournalEntry;
 import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.scaffold.ScaffoldProvenance;
+import dev.ssa.construction.scaffold.ScaffoldProvenance.Cell;
 import dev.ssa.fabric.SmartSurvivalArchitectMod;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Cause;
@@ -141,13 +143,28 @@ public final class ServerBuildJobRepository extends SavedData {
             LIFECYCLE_CODEC.optionalFieldOf("builder_lifecycle").forGetter(HutState::builderLifecycle),
             Codec.LONG.fieldOf("revision").forGetter(HutState::revision))
             .apply(instance, HutState::new));
+    private static final Codec<Cell> SCAFFOLD_CELL_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            GRID_POS_CODEC.fieldOf("position").forGetter(Cell::position),
+            BLOCK_STATE_CODEC.fieldOf("state").forGetter(Cell::state),
+            Codec.STRING.optionalFieldOf("placement_operation_id").forGetter(Cell::placementOperationId),
+            Codec.STRING.optionalFieldOf("removal_operation_id").forGetter(Cell::removalOperationId))
+            .apply(instance, Cell::new));
+    private static final Codec<ScaffoldProvenance> SCAFFOLD_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    Codec.STRING.fieldOf("job_id").forGetter(ScaffoldProvenance::jobId),
+                    Codec.STRING.fieldOf("plan_id").forGetter(ScaffoldProvenance::planId),
+                    Codec.STRING.fieldOf("task_id").forGetter(ScaffoldProvenance::taskId),
+                    SCAFFOLD_CELL_CODEC.listOf().fieldOf("cells").forGetter(ScaffoldProvenance::cells),
+                    Codec.LONG.fieldOf("revision").forGetter(ScaffoldProvenance::revision))
+                    .apply(instance, ScaffoldProvenance::new));
     private static final Codec<Payload> PAYLOAD_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.fieldOf("format_version").forGetter(Payload::formatVersion),
             BUILD_JOB_CODEC.listOf().fieldOf("jobs").forGetter(Payload::jobs),
             HUT_STATE_CODEC.listOf().fieldOf("huts").forGetter(Payload::huts),
             Codec.unboundedMap(Codec.STRING, Codec.STRING)
                     .optionalFieldOf("builder_plans", Map.of())
-                    .forGetter(Payload::encodedPlans))
+                    .forGetter(Payload::encodedPlans),
+            SCAFFOLD_CODEC.listOf().optionalFieldOf("scaffolds", List.of()).forGetter(Payload::scaffolds))
             .apply(instance, Payload::new));
 
     public static final Codec<ServerBuildJobRepository> CODEC = PAYLOAD_CODEC.comapFlatMap(
@@ -162,18 +179,21 @@ public final class ServerBuildJobRepository extends SavedData {
     private final Map<String, BuildJob> jobs;
     private final Map<UUID, HutState> huts;
     private final Map<String, TaskGraph> plans;
+    private final Map<String, ScaffoldProvenance> scaffolds;
 
     public ServerBuildJobRepository() {
-        this(Map.of(), Map.of(), Map.of());
+        this(Map.of(), Map.of(), Map.of(), Map.of());
     }
 
     private ServerBuildJobRepository(
             Map<String, BuildJob> jobs,
             Map<UUID, HutState> huts,
-            Map<String, TaskGraph> plans) {
+            Map<String, TaskGraph> plans,
+            Map<String, ScaffoldProvenance> scaffolds) {
         this.jobs = new LinkedHashMap<>(jobs);
         this.huts = new LinkedHashMap<>(huts);
         this.plans = new LinkedHashMap<>(plans);
+        this.scaffolds = new LinkedHashMap<>(scaffolds);
     }
 
     public static ServerBuildJobRepository get(ServerLevel level) {
@@ -192,6 +212,10 @@ public final class ServerBuildJobRepository extends SavedData {
         return Map.copyOf(plans);
     }
 
+    public Map<String, ScaffoldProvenance> scaffolds() {
+        return Map.copyOf(scaffolds);
+    }
+
     public Optional<BuildJob> findJob(String jobId) {
         return Optional.ofNullable(jobs.get(Objects.requireNonNull(jobId, "jobId")));
     }
@@ -202,6 +226,10 @@ public final class ServerBuildJobRepository extends SavedData {
 
     public Optional<TaskGraph> findPlan(String jobId) {
         return Optional.ofNullable(plans.get(Objects.requireNonNull(jobId, "jobId")));
+    }
+
+    public Optional<ScaffoldProvenance> findScaffold(String planId) {
+        return Optional.ofNullable(scaffolds.get(Objects.requireNonNull(planId, "planId")));
     }
 
     public void saveJob(BuildJob job) {
@@ -254,6 +282,23 @@ public final class ServerBuildJobRepository extends SavedData {
         }
     }
 
+    public void saveScaffold(ScaffoldProvenance scaffold) {
+        Objects.requireNonNull(scaffold, "scaffold");
+        ScaffoldProvenance current = scaffolds.get(scaffold.planId());
+        rejectStaleOrConflicting(
+                "Scaffold provenance", current, scaffold, ScaffoldProvenance::revision);
+        Map<String, ScaffoldProvenance> proposed = new LinkedHashMap<>(scaffolds);
+        proposed.put(scaffold.planId(), scaffold);
+        String validationError = scaffoldValidationError(scaffold, jobs, plans, proposed);
+        if (validationError != null) {
+            throw new IllegalStateException(validationError);
+        }
+        if (!scaffold.equals(current)) {
+            scaffolds.put(scaffold.planId(), scaffold);
+            setDirty();
+        }
+    }
+
     public void removeHut(UUID hutId) {
         if (huts.remove(Objects.requireNonNull(hutId, "hutId")) != null) {
             setDirty();
@@ -287,7 +332,15 @@ public final class ServerBuildJobRepository extends SavedData {
                 .toList();
         Map<String, String> encodedPlans = new java.util.TreeMap<>();
         plans.forEach((jobId, plan) -> encodedPlans.put(jobId, BuilderPlanCodec.encode(plan)));
-        return new Payload(CURRENT_FORMAT_VERSION, orderedJobs, orderedHuts, Map.copyOf(encodedPlans));
+        List<ScaffoldProvenance> orderedScaffolds = scaffolds.values().stream()
+                .sorted(Comparator.comparing(ScaffoldProvenance::planId))
+                .toList();
+        return new Payload(
+                CURRENT_FORMAT_VERSION,
+                orderedJobs,
+                orderedHuts,
+                Map.copyOf(encodedPlans),
+                orderedScaffolds);
     }
 
     private static DataResult<ServerBuildJobRepository> decode(Payload payload) {
@@ -308,6 +361,14 @@ public final class ServerBuildJobRepository extends SavedData {
                 }
                 plans.put(entry.getKey(), plan);
             }
+            Map<String, ScaffoldProvenance> scaffolds = uniqueMap(
+                    payload.scaffolds(), ScaffoldProvenance::planId, "Scaffold plan");
+            for (ScaffoldProvenance scaffold : scaffolds.values()) {
+                String validationError = scaffoldValidationError(scaffold, jobs, plans, scaffolds);
+                if (validationError != null) {
+                    return DataResult.error(() -> validationError);
+                }
+            }
             for (HutState hut : huts.values()) {
                 if (hut.activeJobId().isPresent()) {
                     BuildJob job = jobs.get(hut.activeJobId().orElseThrow());
@@ -320,7 +381,7 @@ public final class ServerBuildJobRepository extends SavedData {
                     }
                 }
             }
-            return DataResult.success(new ServerBuildJobRepository(jobs, huts, plans));
+            return DataResult.success(new ServerBuildJobRepository(jobs, huts, plans, scaffolds));
         } catch (IllegalArgumentException exception) {
             return DataResult.error(exception::getMessage);
         }
@@ -337,6 +398,28 @@ public final class ServerBuildJobRepository extends SavedData {
             }
         }
         return result;
+    }
+
+    private static String scaffoldValidationError(
+            ScaffoldProvenance scaffold,
+            Map<String, BuildJob> jobs,
+            Map<String, TaskGraph> plans,
+            Map<String, ScaffoldProvenance> scaffolds) {
+        if (!jobs.containsKey(scaffold.jobId())) {
+            return "Scaffold references an unknown BuildJob: " + scaffold.jobId();
+        }
+        TaskGraph plan = plans.get(scaffold.jobId());
+        if (plan == null || !plan.tasks().containsKey(scaffold.taskId())) {
+            return "Scaffold references a task outside its durable Builder plan: " + scaffold.taskId();
+        }
+        long activeForJob = scaffolds.values().stream()
+                .filter(candidate -> candidate.jobId().equals(scaffold.jobId()))
+                .filter(candidate -> !candidate.isCleaned())
+                .count();
+        if (!scaffold.isCleaned() && activeForJob != 1) {
+            return "BuildJob must have exactly one active scaffold plan: " + scaffold.jobId();
+        }
+        return null;
     }
 
     private static <T> Codec<T> stringCodec(
@@ -360,11 +443,13 @@ public final class ServerBuildJobRepository extends SavedData {
             int formatVersion,
             List<BuildJob> jobs,
             List<HutState> huts,
-            Map<String, String> encodedPlans) {
+            Map<String, String> encodedPlans,
+            List<ScaffoldProvenance> scaffolds) {
         private Payload {
             jobs = List.copyOf(Objects.requireNonNull(jobs, "jobs"));
             huts = List.copyOf(Objects.requireNonNull(huts, "huts"));
             encodedPlans = Map.copyOf(Objects.requireNonNull(encodedPlans, "encodedPlans"));
+            scaffolds = List.copyOf(Objects.requireNonNull(scaffolds, "scaffolds"));
         }
     }
 

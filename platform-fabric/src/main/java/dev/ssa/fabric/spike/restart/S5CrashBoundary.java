@@ -1,6 +1,6 @@
 package dev.ssa.fabric.spike.restart;
 
-import dev.ssa.fabric.spike.persistence.CoordinatorOutcome;
+import dev.ssa.fabric.construction.CoordinatorOutcome;
 import java.util.Arrays;
 import java.util.Set;
 

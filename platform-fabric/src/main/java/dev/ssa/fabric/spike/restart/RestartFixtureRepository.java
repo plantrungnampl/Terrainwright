@@ -1,13 +1,13 @@
 package dev.ssa.fabric.spike.restart;
 
-import dev.ssa.construction.spike.persistence.BlockStateSnapshot;
-import dev.ssa.construction.spike.persistence.EvidenceObservation;
-import dev.ssa.construction.spike.persistence.EvidenceSnapshot;
-import dev.ssa.construction.spike.persistence.OperationDelta;
-import dev.ssa.construction.spike.persistence.OperationIntent;
-import dev.ssa.construction.spike.persistence.ObservedEvidence;
-import dev.ssa.construction.spike.persistence.StackSnapshot;
-import dev.ssa.fabric.spike.persistence.OperationEvidencePort;
+import dev.ssa.construction.operation.BlockStateSnapshot;
+import dev.ssa.construction.operation.EvidenceObservation;
+import dev.ssa.construction.operation.EvidenceSnapshot;
+import dev.ssa.construction.operation.OperationDelta;
+import dev.ssa.construction.operation.OperationIntent;
+import dev.ssa.construction.operation.ObservedEvidence;
+import dev.ssa.construction.operation.StackSnapshot;
+import dev.ssa.fabric.construction.OperationEvidencePort;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

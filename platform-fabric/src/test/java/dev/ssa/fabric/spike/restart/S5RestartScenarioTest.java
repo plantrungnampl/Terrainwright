@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.ssa.fabric.spike.persistence.CoordinatorOutcome;
-import dev.ssa.fabric.spike.persistence.DurableAcknowledgement;
-import dev.ssa.fabric.spike.persistence.OperationBoundaryListener;
-import dev.ssa.construction.spike.persistence.OperationStatus;
+import dev.ssa.fabric.construction.CoordinatorOutcome;
+import dev.ssa.fabric.persistence.DurableAcknowledgement;
+import dev.ssa.fabric.construction.OperationBoundaryListener;
+import dev.ssa.construction.operation.OperationStatus;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;

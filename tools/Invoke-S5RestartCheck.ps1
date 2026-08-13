@@ -35,11 +35,23 @@ New-Item -ItemType Directory -Force -Path $ssaFixturesDirectory | Out-Null
 $ssaProcessLog = New-Object System.Collections.Generic.List[string]
 $ssaProcessLogPath = Join-Path $ssaEvidenceDirectory 'process.log'
 
+function Write-SsaUtf8Lines {
+    param(
+        [string]$Path,
+        [string[]]$Lines
+    )
+
+    $ssaText = [string]::Join("`n", $Lines) + "`n"
+    [System.IO.File]::WriteAllText($Path, $ssaText, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 function Save-SsaProcessLog {
-    [System.IO.File]::WriteAllLines(
-        $ssaProcessLogPath,
-        [string[]]$ssaProcessLog,
-        (New-Object System.Text.UTF8Encoding($false)))
+    $ssaLines = [System.Collections.Generic.List[string]]::new()
+    $ssaLines.AddRange([string[]]$ssaProcessLog)
+    while ($ssaLines.Count -gt 0 -and $ssaLines[$ssaLines.Count - 1].Length -eq 0) {
+        $ssaLines.RemoveAt($ssaLines.Count - 1)
+    }
+    Write-SsaUtf8Lines -Path $ssaProcessLogPath -Lines ([string[]]$ssaLines)
 }
 
 function Invoke-SsaBuild {
@@ -75,11 +87,10 @@ function Invoke-SsaBuild {
         "EXIT_CODE=$ssaExitCode",
         "RESULT=$(if ($ssaExitCode -eq 0) { 'PASS' } else { 'FAIL' })",
         ''
-    ) + ($ssaOutput.TrimEnd() -split '\r?\n')
-    [System.IO.File]::WriteAllLines(
-        (Join-Path $ssaEvidenceDirectory 'build.log'),
-        [string[]]$ssaBuildLog,
-        (New-Object System.Text.UTF8Encoding($false)))
+    ) + ($ssaOutput.TrimEnd() -split '\r?\n' | ForEach-Object { $_.TrimEnd() })
+    Write-SsaUtf8Lines `
+        -Path (Join-Path $ssaEvidenceDirectory 'build.log') `
+        -Lines ([string[]]$ssaBuildLog)
     if ($ssaExitCode -ne 0 -or $ssaOutput -notmatch 'BUILD SUCCESSFUL') {
         throw 'S5 clean test build failed.'
     }
@@ -235,8 +246,12 @@ foreach ($ssaCase in $ssaCases) {
         }
     }
 
-    Copy-Item -LiteralPath $ssaFixturePath -Destination (Join-Path $ssaFixturesDirectory "$ssaBoundary-fixture.properties") -Force
-    Copy-Item -LiteralPath $ssaResultPath -Destination (Join-Path $ssaFixturesDirectory "$ssaBoundary-result.properties") -Force
+    Write-SsaUtf8Lines `
+        -Path (Join-Path $ssaFixturesDirectory "$ssaBoundary-fixture.properties") `
+        -Lines ([string[]](Get-Content -LiteralPath $ssaFixturePath | ForEach-Object { $_.TrimEnd() }))
+    Write-SsaUtf8Lines `
+        -Path (Join-Path $ssaFixturesDirectory "$ssaBoundary-result.properties") `
+        -Lines ([string[]](Get-Content -LiteralPath $ssaResultPath | ForEach-Object { $_.TrimEnd() }))
 }
 
 $ssaLayoutOutput = & (Join-Path $ssaRoot 'tools\verify-s1-layout.ps1') 2>&1 | Out-String

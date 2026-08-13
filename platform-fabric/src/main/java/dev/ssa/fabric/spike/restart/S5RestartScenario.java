@@ -1,15 +1,15 @@
 package dev.ssa.fabric.spike.restart;
 
-import dev.ssa.construction.spike.persistence.BlockStateSnapshot;
-import dev.ssa.construction.spike.persistence.DropPolicy;
-import dev.ssa.construction.spike.persistence.InventoryDelta;
-import dev.ssa.construction.spike.persistence.OperationIntent;
-import dev.ssa.construction.spike.persistence.OperationKind;
-import dev.ssa.construction.spike.persistence.StackSnapshot;
-import dev.ssa.construction.spike.persistence.WorldDelta;
-import dev.ssa.fabric.spike.persistence.AppendProbe;
-import dev.ssa.fabric.spike.persistence.DurableAcknowledgement;
-import dev.ssa.fabric.spike.persistence.OperationBoundaryListener;
+import dev.ssa.construction.operation.BlockStateSnapshot;
+import dev.ssa.construction.operation.DropPolicy;
+import dev.ssa.construction.operation.InventoryDelta;
+import dev.ssa.construction.operation.OperationIntent;
+import dev.ssa.construction.operation.OperationKind;
+import dev.ssa.construction.operation.StackSnapshot;
+import dev.ssa.construction.operation.WorldDelta;
+import dev.ssa.fabric.persistence.AppendProbe;
+import dev.ssa.fabric.persistence.DurableAcknowledgement;
+import dev.ssa.fabric.construction.OperationBoundaryListener;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;

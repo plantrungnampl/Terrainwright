@@ -1,6 +1,6 @@
 package dev.ssa.fabric.spike.restart;
 
-import dev.ssa.construction.spike.persistence.BlockStateSnapshot;
+import dev.ssa.construction.operation.BlockStateSnapshot;
 import java.util.Objects;
 
 public record RestartFixture(

@@ -22,6 +22,7 @@ import dev.ssa.fabric.network.PreviewPayloads.StartSurvey;
 import dev.ssa.fabric.network.PreviewPayloads.SurveyTokenResult;
 import dev.ssa.fabric.network.PreviewPayloads.SurveyStatus;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
+import dev.ssa.fabric.permission.FabricPermissionAdapter;
 import dev.ssa.fabric.preview.ArchitectGenerationService;
 import dev.ssa.fabric.preview.PreviewSessionService;
 import dev.ssa.fabric.survey.SurveyModeService;
@@ -256,13 +257,7 @@ public final class PreviewNetworking {
     }
 
     private static Services createServices(MinecraftServer server) {
-        PermissionPort permissions = (owner, position) -> {
-            ServerPlayer player = server.getPlayerList().getPlayer(owner);
-            return player != null
-                    && player.level().mayInteract(
-                            player,
-                            new BlockPos(position.x(), position.y(), position.z()));
-        };
+        PermissionPort permissions = new FabricPermissionAdapter(server);
         SurveyModeService surveys = new SurveyModeService(permissions);
         PreviewSessionService sessions = new PreviewSessionService();
         FabricTerrainScanner scanner = new FabricTerrainScanner();

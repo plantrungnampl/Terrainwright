@@ -1,13 +1,13 @@
 package dev.ssa.fabric.spike.restart;
 
-import dev.ssa.construction.spike.persistence.OperationIntent;
-import dev.ssa.construction.spike.persistence.OperationStatus;
-import dev.ssa.fabric.spike.persistence.CoordinatorOutcome;
-import dev.ssa.fabric.spike.persistence.CoordinatorResult;
-import dev.ssa.fabric.spike.persistence.FileOperationIntentStore;
-import dev.ssa.fabric.spike.persistence.OperationBoundaryListener;
-import dev.ssa.fabric.spike.persistence.OperationCoordinator;
-import dev.ssa.fabric.spike.persistence.PersistenceExecutor;
+import dev.ssa.construction.operation.OperationIntent;
+import dev.ssa.construction.operation.OperationStatus;
+import dev.ssa.fabric.construction.CoordinatorOutcome;
+import dev.ssa.fabric.construction.CoordinatorResult;
+import dev.ssa.fabric.persistence.OperationIntentStore;
+import dev.ssa.fabric.construction.OperationBoundaryListener;
+import dev.ssa.fabric.construction.FabricMutationExecutor;
+import dev.ssa.fabric.persistence.PersistenceExecutor;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -101,13 +101,13 @@ public final class S5RestartServerDriver {
         S5RestartScenario scenario = new S5RestartScenario(boundary, this::haltAtBoundary);
 
         try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-s5-persistence")) {
-            FileOperationIntentStore store = new FileOperationIntentStore(walPath, persistence, scenario.appendProbe());
+            OperationIntentStore store = new OperationIntentStore(walPath, persistence, scenario.appendProbe());
             if (boundary == S5CrashBoundary.FOREIGN_EVIDENCE) {
                 store.prepare(intent).join();
                 repository.setForeign(0);
                 haltAtBoundary(boundary);
             }
-            OperationCoordinator coordinator = new OperationCoordinator(store, server::execute, scenario.listener());
+            FabricMutationExecutor coordinator = new FabricMutationExecutor(store, server::execute, scenario.listener());
             coordinator.execute(intent, repository).join();
         }
         throw new IllegalStateException("S5 operation completed without reaching " + boundary.externalName());
@@ -128,8 +128,8 @@ public final class S5RestartServerDriver {
         CoordinatorResult second;
         Optional<OperationStatus> activeStatus;
         try (PersistenceExecutor persistence = new PersistenceExecutor("ssa-s5-persistence")) {
-            FileOperationIntentStore store = new FileOperationIntentStore(walPath, persistence);
-            OperationCoordinator coordinator = new OperationCoordinator(
+            OperationIntentStore store = new OperationIntentStore(walPath, persistence);
+            FabricMutationExecutor coordinator = new FabricMutationExecutor(
                     store, server::execute, OperationBoundaryListener.NONE);
             first = coordinator.recover(repository).join();
             second = coordinator.recover(repository).join();

@@ -21,6 +21,16 @@ if (-not $ssaJdkHome -or -not (Test-Path -LiteralPath (Join-Path $ssaJdkHome 'bi
 
 New-Item -ItemType Directory -Force -Path $ssaEvidenceDirectory | Out-Null
 
+function Write-SsaUtf8Lines {
+    param(
+        [string]$Path,
+        [string[]]$Lines
+    )
+
+    $ssaText = [string]::Join("`n", $Lines) + "`n"
+    [System.IO.File]::WriteAllText($Path, $ssaText, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 function Invoke-SsaGradle {
     param(
         [string]$Name,
@@ -62,10 +72,7 @@ function Invoke-SsaGradle {
         ''
     )
     $ssaLines = $ssaOutput.TrimEnd() -split '\r?\n' | ForEach-Object { $_.TrimEnd() }
-    [System.IO.File]::WriteAllLines(
-        $ssaLogPath,
-        [string[]]($ssaHeader + $ssaLines),
-        (New-Object System.Text.UTF8Encoding($false)))
+    Write-SsaUtf8Lines -Path $ssaLogPath -Lines ([string[]]($ssaHeader + $ssaLines))
 
     if ($ssaExitCode -ne 0 -or $ssaOutput -notmatch 'BUILD SUCCESSFUL') {
         throw "S4 $Name failed. Evidence: $ssaLogPath"
@@ -156,10 +163,7 @@ if ($ssaDiffExitCode -ne 0) {
 $ssaVerification.Add('DIFF_CHECK=PASS')
 $ssaVerification.Add($ssaDiffOutput.Trim())
 $ssaVerification.Add("FINISHED=$((Get-Date).ToString('o'))")
-[System.IO.File]::WriteAllLines(
-    $ssaVerificationLog,
-    [string[]]$ssaVerification,
-    (New-Object System.Text.UTF8Encoding($false)))
+Write-SsaUtf8Lines -Path $ssaVerificationLog -Lines ([string[]]$ssaVerification)
 
 Write-Output 'PASS S4 clean test build, layout, and diff verification'
 Write-Output "PASS S4 crash matrix: 3 operations, all required boundaries, exact/idempotent recovery"

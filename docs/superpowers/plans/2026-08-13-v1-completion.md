@@ -132,10 +132,10 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - `StyleDataLoader` validates required semantic roles, block existence, capability, finite weights, and complete fallback before publishing a palette.
 - `FabricPermissionAdapter` is the single protection hook used by preview confirmation, material transfer, world mutation, and undo.
 
-- [ ] Add a red fixture with an absent optional mod block and assert fallback to a compatible vanilla role.
-- [ ] Implement loader validation; reject arbitrary aliases and incomplete palettes.
-- [ ] Add protection-denied tests for preview confirmation, chest transfer, placement, and undo.
-- [ ] Run the GameTest and clean module tests; commit `feat: add safe style overrides and protection adapter`.
+- [x] Add a red fixture with an absent optional mod block and assert fallback to a compatible vanilla role.
+- [x] Implement loader validation; reject arbitrary aliases and incomplete palettes.
+- [x] Add protection-denied tests for preview confirmation, chest transfer, placement, and undo.
+- [x] Run the GameTest and clean module tests; commit `feat: add safe style overrides and protection adapter`.
 
 ### Task 7: Release metrics, regression matrix, and documentation
 

@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "id": "smart_survival_architect:modern",
+  "displayName": "Modern",
+  "version": "1.0.0",
+  "geometryRules": {
+    "trustedGeneratorProfile": "MODERN",
+    "symmetryBias": 0.25,
+    "asymmetryBias": 0.75,
+    "wallThickness": 1,
+    "floorHeight": 4
+  },
+  "proportionRules": {
+    "minWidthDepthRatio": 0.8,
+    "maxWidthDepthRatio": 2.2,
+    "overhangBlocks": 0
+  },
+  "footprintWeights": { "RECTANGLE": 0.75, "L_SHAPE": 0.2, "T_SHAPE": 0.05 },
+  "foundationRules": { "flatWeight": 0.7, "cutWeight": 0.15, "fillWeight": 0.15, "pillarWeight": 0.0 },
+  "framingRules": { "exposeStructuralFrame": false, "postSpacing": 5 },
+  "roofRules": {
+    "candidates": [
+      { "type": "FLAT", "weight": 0.8, "minPitchDegrees": 0, "maxPitchDegrees": 0, "overhangBlocks": 0 },
+      { "type": "SHED", "weight": 0.2, "minPitchDegrees": 5, "maxPitchDegrees": 15, "overhangBlocks": 1 }
+    ]
+  },
+  "openingRules": { "minWindowSpacing": 1, "maxWindowWidth": 5, "largeOpeningBias": 0.9 },
+  "roomBiases": { "openPlanBias": 0.9, "storageNearKitchenBias": 0.7, "bedroomPrivacyBias": 0.55 },
+  "decorationRules": { "density": 0.25, "allowOptionalDecoration": true },
+  "materialPalette": {
+    "ROOF_PRIMARY": [
+      { "blockId": "minecraft:smooth_quartz_slab", "requiredCapabilities": ["SLAB"], "weight": 1.0, "stateTemplate": { "type": "bottom" } }
+    ]
+  },
+  "fallbackPalette": {
+    "FOUNDATION_STONE": [{ "blockId": "minecraft:smooth_stone", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FOUNDATION_FILL": [{ "blockId": "minecraft:dirt", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "STRUCTURAL_WOOD": [{ "blockId": "minecraft:stripped_oak_log", "requiredCapabilities": ["ORIENTABLE_AXIS"], "weight": 1.0, "stateTemplate": { "axis": "y" } }],
+    "STRUCTURAL_PRIMARY": [{ "blockId": "minecraft:iron_block", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "WALL_PRIMARY": [{ "blockId": "minecraft:white_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "WALL_SECONDARY": [{ "blockId": "minecraft:gray_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FLOOR_PRIMARY": [{ "blockId": "minecraft:smooth_stone", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FLOOR_SECONDARY": [{ "blockId": "minecraft:oak_planks", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "ROOF_PRIMARY": [{ "blockId": "minecraft:smooth_quartz_slab", "requiredCapabilities": ["SLAB"], "weight": 1.0, "stateTemplate": { "type": "bottom" } }],
+    "ROOF_ACCENT": [{ "blockId": "minecraft:gray_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "TRIM": [{ "blockId": "minecraft:black_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "WINDOW": [{ "blockId": "minecraft:glass", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "DOOR": [{ "blockId": "minecraft:iron_door", "requiredCapabilities": ["DOOR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }],
+    "RAILING": [{ "blockId": "minecraft:glass_pane", "requiredCapabilities": ["PANE"], "weight": 1.0, "stateTemplate": {} }],
+    "STAIR": [{ "blockId": "minecraft:quartz_stairs", "requiredCapabilities": ["STAIR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }],
+    "INTERIOR_PRIMARY": [{ "blockId": "minecraft:white_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "LIGHTING": [{ "blockId": "minecraft:sea_lantern", "requiredCapabilities": ["LIGHT_SOURCE"], "weight": 1.0, "stateTemplate": {} }],
+    "TEMP_SCAFFOLD": [{ "blockId": "minecraft:scaffolding", "requiredCapabilities": [], "weight": 1.0, "stateTemplate": {} }]
+  }
+}

@@ -9,6 +9,7 @@ import dev.ssa.fabric.network.PreviewNetworking;
 import dev.ssa.fabric.network.JobNetworking;
 import dev.ssa.fabric.spike.navigation.SpikeEntityTypes;
 import dev.ssa.fabric.spike.restart.S5RestartServerDriver;
+import dev.ssa.fabric.style.StyleDataLoader;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ public final class SmartSurvivalArchitectMod implements ModInitializer {
         ModBlocks.initialize();
         ModBlockEntityTypes.initialize();
         ModEntityTypes.initialize();
+        StyleDataLoader.initialize();
         BuilderRuntimeService.initialize();
         JobNetworking.initialize();
         PreviewNetworking.initialize();

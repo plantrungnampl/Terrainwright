@@ -14,7 +14,8 @@
       "dev.ssa.fabric.undo.SafeUndoGameTest",
       "dev.ssa.fabric.link.HutChestLinkGameTest",
       "dev.ssa.fabric.preview.PreviewAuthorityGameTest",
-      "dev.ssa.fabric.network.JobControlAuthorityGameTest"
+      "dev.ssa.fabric.network.JobControlAuthorityGameTest",
+      "dev.ssa.fabric.style.PaletteFallbackGameTest"
     ],
     "fabric-client-gametest": [
       "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest",

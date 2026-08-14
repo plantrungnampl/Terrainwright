@@ -26,6 +26,48 @@ import net.minecraft.world.phys.AABB;
 
 public final class SafeUndoGameTest {
     @GameTest(maxTicks = 300)
+    public void protectionDenialPreservesEveryUndoTarget(GameTestHelper context) {
+        PersistenceExecutor persistence = new PersistenceExecutor("ssa-undo-protection-gametest");
+        OperationIntentStore store = new OperationIntentStore(
+                Path.of("build", "undo-gametest", UUID.randomUUID() + ".wal"),
+                persistence);
+        FabricMutationExecutor mutations = new FabricMutationExecutor(
+                store,
+                context.getLevel().getServer()::execute,
+                OperationBoundaryListener.NONE);
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(context.getLevel());
+        UUID owner = UUID.randomUUID();
+        BlockPos origin = context.absolutePos(BlockPos.ZERO);
+        BuildJob job = completedJob(context, owner, origin);
+        repository.saveJob(job);
+
+        BlockPos first = origin.offset(1, 1, 1);
+        BlockPos second = origin.offset(2, 1, 1);
+        BlockPos third = origin.offset(3, 1, 1);
+        context.getLevel().setBlockAndUpdate(first, Blocks.OAK_PLANKS.defaultBlockState());
+        context.getLevel().setBlockAndUpdate(second, Blocks.OAK_PLANKS.defaultBlockState());
+        context.getLevel().setBlockAndUpdate(third, Blocks.DIRT.defaultBlockState());
+
+        FabricUndoExecutor executor = new FabricUndoExecutor(
+                context.getLevel(),
+                repository,
+                (ignoredOwner, ignoredPosition) -> false,
+                mutations);
+        CompletableFuture<FabricUndoExecutor.UndoResult> result = executor.undo(job.jobId(), owner);
+
+        await(context, result, outcome -> {
+            context.assertValueEqual(outcome.restoredCells(), 0, "protected Undo restored cells");
+            context.assertValueEqual(outcome.conflicts().size(), 3, "protected Undo conflicts");
+            context.assertTrue(context.getLevel().getBlockState(first).is(Blocks.OAK_PLANKS),
+                    "protected Undo changed the first target");
+            context.assertTrue(context.getLevel().getBlockState(second).is(Blocks.OAK_PLANKS),
+                    "protected Undo changed the second target");
+            context.assertTrue(context.getLevel().getBlockState(third).is(Blocks.DIRT),
+                    "protected Undo changed the third target");
+        }, persistence);
+    }
+
+    @GameTest(maxTicks = 300)
     public void undoPreservesExternalEditsAndNeverRefundsMaterialsOrExperience(GameTestHelper context) {
         PersistenceExecutor persistence = new PersistenceExecutor("ssa-undo-gametest");
         OperationIntentStore store = new OperationIntentStore(

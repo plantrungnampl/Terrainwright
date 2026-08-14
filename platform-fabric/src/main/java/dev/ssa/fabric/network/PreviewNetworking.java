@@ -1,13 +1,8 @@
 package dev.ssa.fabric.network;
 
-import dev.ssa.architect.material.BlockCapability;
 import dev.ssa.architect.material.BlockCapabilityRegistry;
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
-import dev.ssa.architect.model.StyleId;
-import dev.ssa.architect.style.JapaneseStyle;
-import dev.ssa.architect.style.MedievalStyle;
-import dev.ssa.architect.style.ModernStyle;
 import dev.ssa.architect.style.StylePack;
 import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
@@ -28,9 +23,9 @@ import dev.ssa.fabric.permission.FabricPermissionAdapter;
 import dev.ssa.fabric.preview.ArchitectGenerationService;
 import dev.ssa.fabric.preview.PreviewSessionService;
 import dev.ssa.fabric.survey.SurveyModeService;
+import dev.ssa.fabric.style.StyleDataLoader;
 import dev.ssa.fabric.world.FabricTerrainScanner;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +50,6 @@ public final class PreviewNetworking {
     private static final int PREVIEW_QUEUE_CAPACITY = 16;
     private static final int PLAYER_REQUEST_COOLDOWN_TICKS = 5;
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID + "/preview");
-    private static final Map<StyleId, StylePack> STYLES = styles();
     private static final Map<MinecraftServer, Services> SERVICES = new WeakHashMap<>();
     private static boolean initialized;
 
@@ -142,14 +136,15 @@ public final class PreviewNetworking {
             returnRetryToken(context.player(), payload.surveyToken());
             return;
         }
-        StylePack style = STYLES.get(payload.requirements().styleId());
-        if (style == null) {
+        Optional<StyleDataLoader.LoadedStyle> loadedStyle = StyleDataLoader.find(payload.requirements().styleId());
+        if (loadedStyle.isEmpty()) {
             LOGGER.debug("Rejected unknown preview style {}", payload.requirements().styleId());
             sendFailure(context.player(), payload.requestNonce(), PreviewFailure.Reason.INVALID_SURVEY);
             returnRetryToken(context.player(), payload.surveyToken());
             return;
         }
-        BlockCapabilityRegistry registry = capabilities(style);
+        StylePack style = loadedStyle.orElseThrow().style();
+        BlockCapabilityRegistry registry = loadedStyle.orElseThrow().capabilities();
         services.generation().request(
                         context.player().level(),
                         context.player().getUUID(),
@@ -272,7 +267,7 @@ public final class PreviewNetworking {
     }
 
     private static Services createServices(MinecraftServer server) {
-        PermissionPort permissions = new FabricPermissionAdapter(server);
+        PermissionPort permissions = FabricPermissionAdapter.forServer(server);
         SurveyModeService surveys = new SurveyModeService(permissions);
         PreviewSessionService sessions = new PreviewSessionService();
         FabricTerrainScanner scanner = new FabricTerrainScanner();
@@ -301,24 +296,7 @@ public final class PreviewNetworking {
         if (removed != null) {
             removed.workers().shutdownNow();
         }
-    }
-
-    private static Map<StyleId, StylePack> styles() {
-        StylePack medieval = new MedievalStyle();
-        StylePack japanese = new JapaneseStyle();
-        StylePack modern = new ModernStyle();
-        return Map.of(
-                medieval.id(), medieval,
-                japanese.id(), japanese,
-                modern.id(), modern);
-    }
-
-    private static BlockCapabilityRegistry capabilities(StylePack style) {
-        Map<NamespacedId, java.util.Set<BlockCapability>> entries = new HashMap<>();
-        style.fallbackPalette().values().forEach(candidates -> candidates.forEach(candidate -> entries
-                .computeIfAbsent(candidate.state().blockId(), ignored -> new HashSet<>())
-                .addAll(candidate.requiredCapabilities())));
-        return BlockCapabilityRegistry.of(entries);
+        FabricPermissionAdapter.releaseServer(server);
     }
 
     private static GridPos gridPos(BlockPos position) {

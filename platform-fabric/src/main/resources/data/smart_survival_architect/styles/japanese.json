@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "id": "smart_survival_architect:japanese",
+  "displayName": "Japanese",
+  "version": "1.0.0",
+  "geometryRules": {
+    "trustedGeneratorProfile": "JAPANESE",
+    "symmetryBias": 0.85,
+    "asymmetryBias": 0.15,
+    "wallThickness": 1,
+    "floorHeight": 3
+  },
+  "proportionRules": {
+    "minWidthDepthRatio": 0.6,
+    "maxWidthDepthRatio": 1.8,
+    "overhangBlocks": 2
+  },
+  "footprintWeights": { "RECTANGLE": 0.6, "L_SHAPE": 0.3, "T_SHAPE": 0.1 },
+  "foundationRules": { "flatWeight": 0.25, "cutWeight": 0.1, "fillWeight": 0.15, "pillarWeight": 0.5 },
+  "framingRules": { "exposeStructuralFrame": true, "postSpacing": 4 },
+  "roofRules": {
+    "candidates": [
+      { "type": "PAGODA_INSPIRED", "weight": 0.7, "minPitchDegrees": 22, "maxPitchDegrees": 38, "overhangBlocks": 2 },
+      { "type": "HIP", "weight": 0.3, "minPitchDegrees": 20, "maxPitchDegrees": 35, "overhangBlocks": 2 }
+    ]
+  },
+  "openingRules": { "minWindowSpacing": 2, "maxWindowWidth": 4, "largeOpeningBias": 0.7 },
+  "roomBiases": { "openPlanBias": 0.45, "storageNearKitchenBias": 0.8, "bedroomPrivacyBias": 0.75 },
+  "decorationRules": { "density": 0.45, "allowOptionalDecoration": true },
+  "materialPalette": {
+    "ROOF_PRIMARY": [
+      { "blockId": "minecraft:deepslate_tile_stairs", "requiredCapabilities": ["STAIR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }
+    ]
+  },
+  "fallbackPalette": {
+    "FOUNDATION_STONE": [{ "blockId": "minecraft:stone_bricks", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FOUNDATION_FILL": [{ "blockId": "minecraft:dirt", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "STRUCTURAL_WOOD": [{ "blockId": "minecraft:dark_oak_log", "requiredCapabilities": ["ORIENTABLE_AXIS"], "weight": 1.0, "stateTemplate": { "axis": "y" } }],
+    "STRUCTURAL_PRIMARY": [{ "blockId": "minecraft:dark_oak_log", "requiredCapabilities": ["ORIENTABLE_AXIS"], "weight": 1.0, "stateTemplate": { "axis": "y" } }],
+    "WALL_PRIMARY": [{ "blockId": "minecraft:white_concrete", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "WALL_SECONDARY": [{ "blockId": "minecraft:spruce_planks", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FLOOR_PRIMARY": [{ "blockId": "minecraft:spruce_planks", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "FLOOR_SECONDARY": [{ "blockId": "minecraft:dark_oak_planks", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "ROOF_PRIMARY": [{ "blockId": "minecraft:deepslate_tile_stairs", "requiredCapabilities": ["STAIR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }],
+    "ROOF_ACCENT": [{ "blockId": "minecraft:deepslate_tile_slab", "requiredCapabilities": ["SLAB"], "weight": 1.0, "stateTemplate": { "type": "bottom" } }],
+    "TRIM": [{ "blockId": "minecraft:stripped_dark_oak_log", "requiredCapabilities": ["ORIENTABLE_AXIS"], "weight": 1.0, "stateTemplate": { "axis": "y" } }],
+    "WINDOW": [{ "blockId": "minecraft:glass_pane", "requiredCapabilities": ["PANE"], "weight": 1.0, "stateTemplate": {} }],
+    "DOOR": [{ "blockId": "minecraft:dark_oak_door", "requiredCapabilities": ["DOOR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }],
+    "RAILING": [{ "blockId": "minecraft:dark_oak_fence", "requiredCapabilities": ["FENCE_OR_WALL"], "weight": 1.0, "stateTemplate": {} }],
+    "STAIR": [{ "blockId": "minecraft:spruce_stairs", "requiredCapabilities": ["STAIR", "HORIZONTAL_FACING"], "weight": 1.0, "stateTemplate": { "facing": "north" } }],
+    "INTERIOR_PRIMARY": [{ "blockId": "minecraft:white_wool", "requiredCapabilities": ["FULL_CUBE"], "weight": 1.0, "stateTemplate": {} }],
+    "LIGHTING": [{ "blockId": "minecraft:lantern", "requiredCapabilities": ["LIGHT_SOURCE"], "weight": 1.0, "stateTemplate": {} }],
+    "TEMP_SCAFFOLD": [{ "blockId": "minecraft:scaffolding", "requiredCapabilities": [], "weight": 1.0, "stateTemplate": {} }]
+  }
+}

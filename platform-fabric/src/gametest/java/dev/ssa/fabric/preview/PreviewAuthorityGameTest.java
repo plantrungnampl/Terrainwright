@@ -253,6 +253,20 @@ public final class PreviewAuthorityGameTest {
         context.assertValueEqual(repository.jobs().size(), jobsBefore, "jobs after stale confirmation");
 
         level.setBlock(anchor, Blocks.STONE.defaultBlockState(), 3);
+        Optional<PreviewSessionService.ConfirmationAuthority> protectedArea = sessions.confirm(
+                level,
+                scanner,
+                (owner, position) -> false,
+                repository,
+                OWNER,
+                new ConfirmPreview(session.id(), blueprint.hash(), hutId),
+                102);
+        context.assertTrue(protectedArea.isEmpty(), "protection-denied preview confirmed");
+        context.assertTrue(
+                sessions.activeSession(OWNER).isPresent(),
+                "protection denial consumed the server preview session");
+        context.assertValueEqual(repository.jobs().size(), jobsBefore, "jobs after protection denial");
+
         Optional<PreviewSessionService.ConfirmationAuthority> valid = sessions.confirm(
                 level,
                 scanner,
@@ -260,7 +274,7 @@ public final class PreviewAuthorityGameTest {
                 repository,
                 OWNER,
                 new ConfirmPreview(session.id(), blueprint.hash(), hutId),
-                102);
+                103);
         context.assertTrue(valid.isPresent(), "unchanged authoritative preview did not confirm");
         context.assertValueEqual(repository.jobs().size(), jobsBefore, "confirmation created a BuildJob");
         context.succeed();

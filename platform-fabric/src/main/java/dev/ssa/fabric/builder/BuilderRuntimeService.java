@@ -53,7 +53,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
 
     private BuilderRuntimeService(MinecraftServer server) {
         this.server = Objects.requireNonNull(server, "server");
-        permissions = new FabricPermissionAdapter(server);
+        permissions = FabricPermissionAdapter.forServer(server);
         links = new BuilderChestLinkService(permissions);
         operationDirectory = server.getWorldPath(LevelResource.ROOT)
                 .toAbsolutePath()

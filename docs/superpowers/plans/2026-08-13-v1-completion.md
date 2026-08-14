@@ -113,10 +113,10 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - `ArchitectEngine.generate` remains deterministic for `(seed, requirements, terrain, style)` and returns a validated immutable Blueprint.
 - All three built-in styles produce distinct geometry/material identity while sharing the same construction contracts.
 
-- [ ] Add seeded property tests covering site bounds, dependency ordering, no illegal placements, and reproducibility; run them to capture the red failures.
-- [ ] Add gallery assertions for Small/Medium Medieval, Japanese, and Modern fixtures, including gentle slopes.
-- [ ] Fix only failing generation/style behavior and preserve existing immutable/core boundaries.
-- [ ] Run the property and full architect test suites; commit `test: close v1 generation and style coverage`.
+- [x] Add seeded property tests covering site bounds, dependency ordering, no illegal placements, and reproducibility; the new tests found no production failures.
+- [x] Add gallery assertions for Small/Medium Medieval, Japanese, and Modern fixtures, including gentle slopes.
+- [x] Fix only failing generation/style behavior and preserve existing immutable/core boundaries; no production fix was required.
+- [x] Run the property and full architect test suites; commit `test: close v1 generation and style coverage`.
 
 ### Task 6: Add safe palette overrides and protection hooks
 

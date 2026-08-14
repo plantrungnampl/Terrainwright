@@ -7,14 +7,19 @@ import dev.ssa.fabric.network.JobPayloads.DiagnosticView;
 import dev.ssa.fabric.network.JobPayloads.HutSnapshot;
 import dev.ssa.fabric.network.JobPayloads.JobSnapshot;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
@@ -47,8 +52,18 @@ public final class BuilderHutScreenClientGameTest implements FabricClientGameTes
                         !guidance.getMessage().getString().isBlank(),
                         "PAUSED_NO_CHEST guidance was empty");
                 assertWidgetsInsideBuilderLayout(noChestScreen, WIDTH, HEIGHT);
+                assertRequiredButtonsAccessible(noChestScreen, 5);
             });
             context.takeScreenshot("terrainwright-v101-builder-hut-screen");
+            context.runOnClient(client -> client.setScreenAndShow(null));
+
+            BuilderHutScreen compactScreen = openScreen(context, state, 320, 180);
+            context.runOnClient(client -> {
+                assertWidgetsInsideBuilderLayout(compactScreen, 320, 180);
+                assertCompactWidgetsFitWithoutOverlap(compactScreen, 320, 180);
+                assertRequiredButtonsAccessible(compactScreen, 5);
+            });
+            context.takeScreenshot("terrainwright-v101-builder-hut-compact-screen");
             context.runOnClient(client -> client.setScreenAndShow(null));
 
             assertState(
@@ -92,11 +107,15 @@ public final class BuilderHutScreenClientGameTest implements FabricClientGameTes
     }
 
     private static BuilderHutScreen openScreen(ClientGameTestContext context, JobClientState state) {
+        return openScreen(context, state, WIDTH, HEIGHT);
+    }
+
+    private static BuilderHutScreen openScreen(ClientGameTestContext context, JobClientState state, int width, int height) {
         BuilderHutScreen screen = context.computeOnClient(
                 client -> new BuilderHutScreen(state, () -> {}, () -> {}));
         context.runOnClient(client -> {
             client.setScreenAndShow(screen);
-            screen.resize(WIDTH, HEIGHT);
+            screen.resize(width, height);
         });
         context.waitTicks(2);
         return screen;
@@ -132,6 +151,68 @@ public final class BuilderHutScreenClientGameTest implements FabricClientGameTes
         assertState(
                 widget.active == expected,
                 "Unexpected active state for " + widget.getMessage() + ": " + widget.active);
+    }
+
+    private static void assertCompactWidgetsFitWithoutOverlap(Screen screen, int width, int height) {
+        List<AbstractWidget> widgets = screen.children().stream()
+                .filter(AbstractWidget.class::isInstance)
+                .map(AbstractWidget.class::cast)
+                .toList();
+        for (AbstractWidget widget : widgets) {
+            assertState(
+                    widget.getX() >= 0
+                            && widget.getY() >= 0
+                            && widget.getX() + widget.getWidth() <= width
+                            && widget.getY() + widget.getHeight() <= height,
+                    "Compact Builder widget escaped 320x180 viewport: " + widget.getMessage());
+        }
+        for (int first = 0; first < widgets.size(); first++) {
+            for (int second = first + 1; second < widgets.size(); second++) {
+                assertState(!overlaps(widgets.get(first), widgets.get(second)),
+                        "Compact Builder widgets overlap: " + widgets.get(first).getMessage()
+                                + " / " + widgets.get(second).getMessage());
+            }
+        }
+    }
+
+    private static void assertRequiredButtonsAccessible(Screen screen, int expectedCount) {
+        List<TerrainwrightButton> buttons = screen.children().stream()
+                .filter(TerrainwrightButton.class::isInstance)
+                .map(TerrainwrightButton.class::cast)
+                .toList();
+        assertState(buttons.size() == expectedCount,
+                "Missing required Terrainwright buttons: expected " + expectedCount + ", got " + buttons.size());
+        for (TerrainwrightButton button : buttons) {
+            assertState(button instanceof NarratableEntry,
+                    "Terrainwright button is not narratable: " + button.getMessage());
+        }
+
+        Set<TerrainwrightButton> expectedFocusable = new HashSet<>(buttons.stream()
+                .filter(button -> button.active)
+                .toList());
+        assertState(!expectedFocusable.isEmpty(), "No active Terrainwright buttons were available for tab traversal");
+        Set<TerrainwrightButton> traversed = new HashSet<>();
+        screen.clearFocus();
+        for (int index = 0; index < expectedFocusable.size(); index++) {
+            ComponentPath path = screen.nextFocusPath(new FocusNavigationEvent.TabNavigation(true));
+            assertState(path != null, "Tab traversal ended before reaching every active Terrainwright button");
+            path.applyFocus(true);
+            assertState(screen.getFocused() instanceof TerrainwrightButton,
+                    "Tab traversal focused a non-Terrainwright widget");
+            TerrainwrightButton focused = (TerrainwrightButton) screen.getFocused();
+            assertState(focused.active, "Tab traversal focused a disabled Terrainwright button");
+            traversed.add(focused);
+        }
+        screen.clearFocus();
+        assertState(traversed.equals(expectedFocusable),
+                "Normal tab traversal did not reach every active Terrainwright button");
+    }
+
+    private static boolean overlaps(AbstractWidget first, AbstractWidget second) {
+        return first.getX() < second.getX() + second.getWidth()
+                && first.getX() + first.getWidth() > second.getX()
+                && first.getY() < second.getY() + second.getHeight()
+                && first.getY() + first.getHeight() > second.getY();
     }
 
     private static AbstractWidget widget(Screen screen, String keySuffix) {

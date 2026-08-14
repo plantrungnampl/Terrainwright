@@ -68,6 +68,7 @@ public final class ArchitectScreen extends Screen {
     @Override
     protected void init() {
         layout = TerrainwrightScreenLayout.architect(width, height);
+        synchronizeStyleWithAuthoritativePreview();
         addConfigurationControls();
         addSecondaryActions();
         addWorkflowActions();
@@ -503,6 +504,15 @@ public final class ArchitectScreen extends Screen {
                 chimney,
                 EntrancePreference.values()[entranceIndex],
                 seed);
+    }
+
+    private void synchronizeStyleWithAuthoritativePreview() {
+        previewState.preview().ifPresent(result -> {
+            int authoritativeIndex = STYLES.indexOf(result.blueprint().styleId());
+            if (authoritativeIndex >= 0) {
+                styleIndex = authoritativeIndex;
+            }
+        });
     }
 
     private void updateActions() {

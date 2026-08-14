@@ -13,6 +13,7 @@ import dev.ssa.architect.style.JapaneseStyle;
 import dev.ssa.architect.style.StylePack;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
+import dev.ssa.fabric.client.screen.TerrainwrightButton;
 import dev.ssa.fabric.client.spike.preview.PreviewRenderMetrics;
 import dev.ssa.fabric.client.TerrainwrightClient;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
@@ -27,8 +28,12 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
@@ -148,6 +153,9 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
                     assertWidgetActive(previewScreen, "action.rotate", true);
                     assertWidgetActive(previewScreen, "action.move", true);
                     assertWidgetActive(previewScreen, "action.confirm", true);
+                    assertConfigurationStyleMatchesAuthoritativePreview(previewScreen, style.id());
+                    assertRequiredButtonsAccessible(previewScreen, 15);
+                    assertInertButtonConfirmation();
                 });
                 waitForFrames(context, framesBeforeScreen + 2);
                 int framesAfterScreen = dev.ssa.fabric.client.spike.preview.GhostPreviewRenderer.renderedFrameCount();
@@ -274,6 +282,76 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
         assertState(
                 widget.active == expected,
                 "Unexpected active state for " + widget.getMessage() + ": " + widget.active);
+    }
+
+    private static void assertConfigurationStyleMatchesAuthoritativePreview(Screen screen, dev.ssa.architect.model.StyleId style) {
+        Component expected = Component.translatable(
+                "screen.smart_survival_architect.architect.field.style",
+                Component.translatable(
+                        "screen.smart_survival_architect.architect.option.style." + style.value().path()));
+        assertState(
+                terrainwrightButtons(screen).stream().anyMatch(button -> button.getMessage().equals(expected)),
+                "Visible Architect configuration does not match authoritative preview style: expected "
+                        + expected.getString());
+    }
+
+    private static void assertRequiredButtonsAccessible(Screen screen, int expectedCount) {
+        List<TerrainwrightButton> buttons = terrainwrightButtons(screen);
+        assertState(buttons.size() == expectedCount,
+                "Missing required Terrainwright buttons: expected " + expectedCount + ", got " + buttons.size());
+        for (TerrainwrightButton button : buttons) {
+            assertState(button instanceof NarratableEntry,
+                    "Terrainwright button is not narratable: " + button.getMessage());
+        }
+
+        Set<TerrainwrightButton> expectedFocusable = new HashSet<>(buttons.stream()
+                .filter(button -> button.active)
+                .toList());
+        assertState(!expectedFocusable.isEmpty(), "No active Terrainwright buttons were available for tab traversal");
+        Set<TerrainwrightButton> traversed = new HashSet<>();
+        screen.clearFocus();
+        for (int index = 0; index < expectedFocusable.size(); index++) {
+            ComponentPath path = screen.nextFocusPath(new FocusNavigationEvent.TabNavigation(true));
+            assertState(path != null, "Tab traversal ended before reaching every active Terrainwright button");
+            path.applyFocus(true);
+            assertState(screen.getFocused() instanceof TerrainwrightButton,
+                    "Tab traversal focused a non-Terrainwright widget");
+            TerrainwrightButton focused = (TerrainwrightButton) screen.getFocused();
+            assertState(focused.active, "Tab traversal focused a disabled Terrainwright button");
+            traversed.add(focused);
+        }
+        screen.clearFocus();
+        assertState(traversed.equals(expectedFocusable),
+                "Normal tab traversal did not reach every active Terrainwright button");
+    }
+
+    private static void assertInertButtonConfirmation() {
+        int[] activations = {0};
+        TerrainwrightButton button = new TerrainwrightButton(
+                0,
+                0,
+                80,
+                20,
+                Component.literal("Inert accessibility probe"),
+                TerrainwrightButton.Style.NORMAL,
+                () -> activations[0]++);
+        button.setFocused(true);
+        assertState(button.active && button.isFocused(), "Inert accessibility probe was not active and focused");
+        assertState(button.keyPressed(new KeyEvent(257, 0, 0)),
+                "Focused active probe did not consume the confirmation key");
+        assertState(activations[0] == 1, "Focused active probe did not invoke its callback");
+
+        button.active = false;
+        assertState(!button.keyPressed(new KeyEvent(257, 0, 0)),
+                "Disabled probe consumed the confirmation key");
+        assertState(activations[0] == 1, "Disabled probe invoked its callback");
+    }
+
+    private static List<TerrainwrightButton> terrainwrightButtons(Screen screen) {
+        return screen.children().stream()
+                .filter(TerrainwrightButton.class::isInstance)
+                .map(TerrainwrightButton.class::cast)
+                .toList();
     }
 
     private static void assertCompactWidgetGeometry(Screen screen, int width, int height) {

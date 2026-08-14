@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -44,6 +45,7 @@ public final class ArchitectScreen extends Screen {
     private TerrainwrightButton rotateButton;
     private TerrainwrightButton moveButton;
     private TerrainwrightButton confirmButton;
+    private StringWidget recoveryText;
     private boolean renderedCanRequest;
     private boolean renderedPreview;
     private boolean renderedConfirmation;
@@ -69,6 +71,7 @@ public final class ArchitectScreen extends Screen {
         addConfigurationControls();
         addSecondaryActions();
         addWorkflowActions();
+        addRecoveryGuidance();
         rememberRenderedAuthority();
         updateActions();
     }
@@ -310,6 +313,22 @@ public final class ArchitectScreen extends Screen {
         return condition ? TerrainwrightButton.Style.PRIMARY : TerrainwrightButton.Style.NORMAL;
     }
 
+    private void addRecoveryGuidance() {
+        boolean generateRecovery = previewState.lastFailure().isEmpty()
+                && (previewState.canRequestPreview() || previewState.preview().isPresent());
+        TerrainwrightScreenLayout.Bounds anchor = layout.compact() && generateRecovery
+                ? layout.statusRail()
+                : layout.configurationRail();
+        TerrainwrightScreenLayout.Bounds rail = layout.secondaryActions();
+        recoveryText = addRenderableWidget(new StringWidget(
+                anchor.x(),
+                rail.y(),
+                anchor.width(),
+                rail.height(),
+                siteRecovery(previewState.preview().isPresent(), previewState.canRequestPreview()),
+                font));
+    }
+
     private void drawWorkflowRail(GuiGraphicsExtractor graphics) {
         TerrainwrightScreenLayout.Bounds rail = layout.stepRail();
         TerrainwrightUiTheme.panel(graphics, rail);
@@ -317,8 +336,8 @@ public final class ArchitectScreen extends Screen {
         boolean canRequest = previewState.canRequestPreview();
         boolean canConfirm = previewState.confirmation().isPresent();
         WorkflowState[] states = {
-            canRequest || previewAvailable ? WorkflowState.READY : WorkflowState.WAITING,
             WorkflowState.READY,
+            canRequest || previewAvailable ? WorkflowState.READY : WorkflowState.WAITING,
             previewAvailable
                     ? WorkflowState.READY
                     : canRequest ? WorkflowState.WAITING : WorkflowState.LOCKED,
@@ -327,7 +346,7 @@ public final class ArchitectScreen extends Screen {
                     : previewAvailable ? WorkflowState.WAITING : WorkflowState.LOCKED,
             canConfirm ? WorkflowState.READY : WorkflowState.LOCKED
         };
-        String[] steps = {"site", "configure", "preview", "hut", "confirm"};
+        String[] steps = {"design", "site", "preview", "hut", "confirm"};
         int gap = 2;
         int slotWidth = (rail.width() - gap * (steps.length - 1)) / steps.length;
         for (int index = 0; index < steps.length; index++) {
@@ -337,9 +356,9 @@ public final class ArchitectScreen extends Screen {
                     graphics,
                     font,
                     new TerrainwrightScreenLayout.Bounds(x, rail.y(), width, rail.height()),
-                    component(
-                            "workflow." + steps[index] + (layout.compact() ? ".compact" : ""),
-                            states[index].label(layout.compact())),
+                    layout.compact()
+                            ? component("workflow." + steps[index] + ".compact")
+                            : component("workflow." + steps[index], states[index].label(false)),
                     states[index].color);
         }
     }
@@ -418,23 +437,20 @@ public final class ArchitectScreen extends Screen {
                 graphics,
                 new TerrainwrightScreenLayout.Bounds(rail.x(), rail.y(), rail.width(), cardHeight),
                 "site",
-                siteState,
-                siteRecovery(previewAvailable, canRequest));
+                siteState);
         drawStatusCard(
                 graphics,
                 new TerrainwrightScreenLayout.Bounds(
                         rail.x(), rail.y() + cardHeight + gap, rail.width(), rail.height() - cardHeight - gap),
                 "hut",
-                hutState,
-                hutRecovery(previewAvailable, canConfirm));
+                hutState);
     }
 
     private void drawStatusCard(
             GuiGraphicsExtractor graphics,
             TerrainwrightScreenLayout.Bounds bounds,
             String name,
-            WorkflowState state,
-            Component recovery) {
+            WorkflowState state) {
         graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), TerrainwrightUiTheme.DARK_OAK_PANEL);
         graphics.fill(bounds.x(), bounds.y(), bounds.x() + 3, bounds.bottom(), state.color);
         graphics.outline(bounds.x(), bounds.y(), bounds.width(), bounds.height(), TerrainwrightUiTheme.AGED_COPPER);
@@ -446,23 +462,12 @@ public final class ArchitectScreen extends Screen {
                 bounds.x() + 5,
                 bounds.y() + 4,
                 TerrainwrightUiTheme.WARM_OFF_WHITE);
-        int recoveryY = bounds.y() + font.lineHeight + 7;
-        int maxLines = Math.max(1, (bounds.bottom() - recoveryY - 2) / font.lineHeight);
-        var lines = font.split(recovery, bounds.width() - 9);
-        for (int index = 0; index < Math.min(maxLines, lines.size()); index++) {
-            graphics.text(
-                    font,
-                    lines.get(index),
-                    bounds.x() + 5,
-                    recoveryY + index * font.lineHeight,
-                    TerrainwrightUiTheme.WARM_OFF_WHITE);
-        }
     }
 
     private Component siteRecovery(boolean previewAvailable, boolean canRequest) {
         Optional<dev.ssa.fabric.network.PreviewPayloads.PreviewFailure.Reason> failure =
                 previewState.lastFailure();
-        if (failure.isPresent()) {
+        if (failure.isPresent() && !canRequest) {
             return component(
                     "failure." + failure.orElseThrow().name().toLowerCase(Locale.ROOT)
                             + (layout.compact() ? ".compact" : ""));
@@ -470,13 +475,6 @@ public final class ArchitectScreen extends Screen {
         String recovery = previewAvailable
                 ? "preview_ready"
                 : canRequest ? "generate" : "select_site";
-        return component("recovery." + recovery + (layout.compact() ? ".compact" : ""));
-    }
-
-    private Component hutRecovery(boolean previewAvailable, boolean canConfirm) {
-        String recovery = canConfirm
-                ? "confirm"
-                : previewAvailable ? "select_hut" : "hut_locked";
         return component("recovery." + recovery + (layout.compact() ? ".compact" : ""));
     }
 
@@ -519,6 +517,7 @@ public final class ArchitectScreen extends Screen {
         moveButton.active = previewAvailable;
         Optional<ConfirmPreview> confirmation = previewState.confirmation();
         confirmButton.active = confirmation.isPresent();
+        recoveryText.setMessage(siteRecovery(previewAvailable, canRequest));
     }
 
     private boolean authorityChanged() {

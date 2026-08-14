@@ -15,6 +15,7 @@ import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
 import dev.ssa.fabric.client.spike.preview.PreviewRenderMetrics;
 import dev.ssa.fabric.client.TerrainwrightClient;
+import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +57,22 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
 
             try {
                 state.receiveSurveyToken("screen-ready-token");
+                ArchitectScreen compactScreen = context.computeOnClient(client -> new ArchitectScreen(state));
+                context.runOnClient(client -> {
+                    client.setScreenAndShow(compactScreen);
+                    compactScreen.resize(320, 180);
+                });
+                context.waitTicks(2);
+                context.runOnClient(client -> {
+                    assertCompactWidgetGeometry(compactScreen, 320, 180);
+                    assertRecoveryAdjacent(
+                            compactScreen,
+                            "recovery.generate.compact",
+                            "action.generate.compact",
+                            4);
+                });
+                context.runOnClient(client -> client.setScreenAndShow(null));
+
                 ArchitectScreen emptyScreen = context.computeOnClient(client -> new ArchitectScreen(state));
                 context.runOnClient(client -> client.setScreenAndShow(emptyScreen));
                 context.waitTicks(2);
@@ -65,6 +82,37 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
                     assertWidgetActive(emptyScreen, "action.rotate", false);
                     assertWidgetActive(emptyScreen, "action.move", false);
                     assertWidgetActive(emptyScreen, "action.confirm", false);
+                    assertRecoveryAdjacent(emptyScreen, "recovery.generate", "action.generate", 16);
+                });
+                context.runOnClient(client -> client.setScreenAndShow(null));
+
+                long failedNonce = request(state, requirements, 0);
+                assertState(
+                        state.reject(new PreviewFailure(failedNonce, PreviewFailure.Reason.SERVER_BUSY)),
+                        "Preview failure was rejected");
+                ArchitectScreen failureScreen = context.computeOnClient(client -> new ArchitectScreen(state));
+                context.runOnClient(client -> client.setScreenAndShow(failureScreen));
+                context.waitTicks(2);
+                context.runOnClient(client -> assertRecoveryAdjacent(
+                        failureScreen,
+                        "failure.server_busy",
+                        "action.select_site",
+                        8));
+                context.runOnClient(client -> client.setScreenAndShow(null));
+
+                ArchitectScreen compactFailureScreen = context.computeOnClient(client -> new ArchitectScreen(state));
+                context.runOnClient(client -> {
+                    client.setScreenAndShow(compactFailureScreen);
+                    compactFailureScreen.resize(320, 180);
+                });
+                context.waitTicks(2);
+                context.runOnClient(client -> {
+                    assertCompactWidgetGeometry(compactFailureScreen, 320, 180);
+                    assertRecoveryAdjacent(
+                            compactFailureScreen,
+                            "failure.server_busy.compact",
+                            "action.select_site.compact",
+                            4);
                 });
                 context.runOnClient(client -> client.setScreenAndShow(null));
 
@@ -222,17 +270,74 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
     }
 
     private static void assertWidgetActive(Screen screen, String keySuffix, boolean expected) {
+        AbstractWidget widget = widget(screen, keySuffix);
+        assertState(
+                widget.active == expected,
+                "Unexpected active state for " + widget.getMessage() + ": " + widget.active);
+    }
+
+    private static void assertCompactWidgetGeometry(Screen screen, int width, int height) {
+        List<AbstractWidget> widgets = screen.children().stream()
+                .filter(AbstractWidget.class::isInstance)
+                .map(AbstractWidget.class::cast)
+                .toList();
+        assertState(widgets.size() >= 15, "Compact Architect screen dropped required widgets: " + widgets.size());
+        for (AbstractWidget widget : widgets) {
+            assertState(
+                    widget.getX() >= 0
+                            && widget.getY() >= 0
+                            && widget.getX() + widget.getWidth() <= width
+                            && widget.getY() + widget.getHeight() <= height,
+                    "Compact widget escaped 320x180 viewport: " + widget.getMessage());
+        }
+        for (int first = 0; first < widgets.size(); first++) {
+            for (int second = first + 1; second < widgets.size(); second++) {
+                AbstractWidget left = widgets.get(first);
+                AbstractWidget right = widgets.get(second);
+                assertState(
+                        !overlaps(left, right),
+                        "Compact widgets overlap: " + left.getMessage() + " / " + right.getMessage());
+            }
+        }
+    }
+
+    private static void assertRecoveryAdjacent(
+            Screen screen, String recoveryKeySuffix, String actionKeySuffix, int maximumGap) {
+        AbstractWidget recovery = widget(screen, recoveryKeySuffix);
+        AbstractWidget action = widget(screen, actionKeySuffix);
+        int horizontalGap = Math.max(
+                0,
+                Math.max(
+                        action.getX() - (recovery.getX() + recovery.getWidth()),
+                        recovery.getX() - (action.getX() + action.getWidth())));
+        int verticalGap = action.getY() - (recovery.getY() + recovery.getHeight());
+        assertState(
+                horizontalGap <= maximumGap && verticalGap >= 0 && verticalGap <= maximumGap,
+                "Recovery text is not adjacent to " + action.getMessage()
+                        + ": horizontalGap=" + horizontalGap + ", verticalGap=" + verticalGap
+                        + ", recovery=" + bounds(recovery) + ", action=" + bounds(action));
+    }
+
+    private static String bounds(AbstractWidget widget) {
+        return widget.getX() + "," + widget.getY() + " " + widget.getWidth() + "x" + widget.getHeight();
+    }
+
+    private static boolean overlaps(AbstractWidget first, AbstractWidget second) {
+        return first.getX() < second.getX() + second.getWidth()
+                && first.getX() + first.getWidth() > second.getX()
+                && first.getY() < second.getY() + second.getHeight()
+                && first.getY() + first.getHeight() > second.getY();
+    }
+
+    private static AbstractWidget widget(Screen screen, String keySuffix) {
         Component message = Component.translatable(
                 "screen.smart_survival_architect.architect." + keySuffix);
-        AbstractWidget widget = screen.children().stream()
+        return screen.children().stream()
                 .filter(AbstractWidget.class::isInstance)
                 .map(AbstractWidget.class::cast)
                 .filter(candidate -> candidate.getMessage().equals(message))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Missing Architect widget: " + message));
-        assertState(
-                widget.active == expected,
-                "Unexpected active state for " + message + ": " + widget.active);
     }
 
     private static void assertState(boolean condition, String message) {

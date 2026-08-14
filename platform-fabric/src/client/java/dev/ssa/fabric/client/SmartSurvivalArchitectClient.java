@@ -24,6 +24,9 @@ import dev.ssa.fabric.network.JobPayloads.JobCommandResult;
 import dev.ssa.fabric.network.JobPayloads.JobDelta;
 import dev.ssa.fabric.network.JobPayloads.JobSnapshot;
 import dev.ssa.fabric.network.JobPayloads.RequestJobSnapshot;
+import dev.ssa.fabric.network.JobPayloads.HutSnapshot;
+import dev.ssa.fabric.network.JobPayloads.LinkBuilderChest;
+import dev.ssa.fabric.network.JobPayloads.BuilderChestLinkResult;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -51,6 +54,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
     private static final JobClientState JOB_STATE = new JobClientState();
     private static BlockPos activeArchitectTable;
     private static UUID activeBuilderHut;
+    private static BlockPos activeBuilderHutPos;
     private static SelectionMode selectionMode = SelectionMode.NONE;
 
     @Override
@@ -63,6 +67,9 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
         ClientPlayNetworking.registerGlobalReceiver(PreviewFailure.TYPE, SmartSurvivalArchitectClient::receiveFailure);
         ClientPlayNetworking.registerGlobalReceiver(PreviewResult.TYPE, SmartSurvivalArchitectClient::receivePreview);
         ClientPlayNetworking.registerGlobalReceiver(JobSnapshot.TYPE, SmartSurvivalArchitectClient::receiveJobSnapshot);
+        ClientPlayNetworking.registerGlobalReceiver(HutSnapshot.TYPE, SmartSurvivalArchitectClient::receiveHutSnapshot);
+        ClientPlayNetworking.registerGlobalReceiver(
+                BuilderChestLinkResult.TYPE, SmartSurvivalArchitectClient::receiveChestLinkResult);
         ClientPlayNetworking.registerGlobalReceiver(JobDelta.TYPE, SmartSurvivalArchitectClient::receiveJobDelta);
         ClientPlayNetworking.registerGlobalReceiver(
                 JobCommandResult.TYPE, SmartSurvivalArchitectClient::receiveJobCommandResult);
@@ -115,6 +122,14 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
             ClientPlayNetworking.send(new SelectSurveySite(position));
             return InteractionResult.SUCCESS;
         }
+        if (selectionMode == SelectionMode.CHEST) {
+            if (activeBuilderHut != null && activeBuilderHutPos != null) {
+                ClientPlayNetworking.send(new LinkBuilderChest(
+                        activeBuilderHut, activeBuilderHutPos, position));
+            }
+            selectionMode = SelectionMode.NONE;
+            return InteractionResult.SUCCESS;
+        }
         if (selectionMode == SelectionMode.HUT) {
             if (level.getBlockEntity(position) instanceof BuilderHutBlockEntity hut) {
                 PREVIEW_STATE.selectHut(hut.references().hutId());
@@ -126,7 +141,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockEntity(position) instanceof BuilderHutBlockEntity hut) {
-            openBuilderScreen(hut.references().hutId());
+            openBuilderScreen(hut.references().hutId(), position);
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockState(position).is(ModBlocks.ARCHITECT_TABLE)) {
@@ -150,6 +165,14 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
 
     private static void beginHutSelection() {
         selectionMode = SelectionMode.HUT;
+        Minecraft.getInstance().setScreenAndShow(null);
+    }
+
+    private static void beginChestSelection() {
+        if (activeBuilderHut == null || activeBuilderHutPos == null) {
+            return;
+        }
+        selectionMode = SelectionMode.CHEST;
         Minecraft.getInstance().setScreenAndShow(null);
     }
 
@@ -184,13 +207,23 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
                 SmartSurvivalArchitectClient::beginHutSelection));
     }
 
-    private static void openBuilderScreen(UUID hutId) {
+    private static void openBuilderScreen(UUID hutId, BlockPos hutPos) {
         activeBuilderHut = hutId;
+        activeBuilderHutPos = hutPos.immutable();
         JOB_STATE.clear();
         requestBuilderJob(hutId);
+        showBuilderScreen();
+    }
+
+    private static void showBuilderScreen() {
+        UUID hutId = activeBuilderHut;
+        if (hutId == null) {
+            return;
+        }
         Minecraft.getInstance().setScreenAndShow(new BuilderHutScreen(
                 JOB_STATE,
-                () -> requestBuilderJob(hutId)));
+                () -> requestBuilderJob(hutId),
+                SmartSurvivalArchitectClient::beginChestSelection));
     }
 
     private static void requestBuilderJob(UUID hutId) {
@@ -202,6 +235,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
     private static void clearWorkflow() {
         activeArchitectTable = null;
         activeBuilderHut = null;
+        activeBuilderHutPos = null;
         selectionMode = SelectionMode.NONE;
         PREVIEW_STATE.clear();
         JOB_STATE.clear();
@@ -224,6 +258,27 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
             if (payload.hutId().equals(activeBuilderHut)) {
                 JOB_STATE.accept(payload);
             }
+        });
+    }
+
+    private static void receiveHutSnapshot(HutSnapshot payload, ClientPlayNetworking.Context context) {
+        context.client().execute(() -> {
+            if (payload.hutId().equals(activeBuilderHut)) {
+                JOB_STATE.accept(payload);
+            }
+        });
+    }
+
+    private static void receiveChestLinkResult(
+            BuilderChestLinkResult payload,
+            ClientPlayNetworking.Context context) {
+        context.client().execute(() -> {
+            if (!payload.hutId().equals(activeBuilderHut)) {
+                return;
+            }
+            JOB_STATE.accept(payload);
+            requestBuilderJob(payload.hutId());
+            showBuilderScreen();
         });
     }
 
@@ -278,6 +333,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
         NONE,
         SITE_PENDING,
         SITE,
-        HUT
+        HUT,
+        CHEST
     }
 }

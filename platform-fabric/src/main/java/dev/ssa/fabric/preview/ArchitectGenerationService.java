@@ -9,6 +9,9 @@ import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
 import dev.ssa.fabric.preview.PreviewSessionService.PreviewSession;
 import dev.ssa.fabric.survey.SurveyModeService;
 import dev.ssa.fabric.survey.SurveyModeService.SiteToken;
+import dev.ssa.fabric.debug.DebugMetrics;
+import dev.ssa.fabric.debug.DebugMetrics.Counter;
+import dev.ssa.fabric.debug.DebugMetrics.Timing;
 import dev.ssa.fabric.world.FabricTerrainScanner;
 import java.util.HashMap;
 import java.util.Map;
@@ -159,15 +162,19 @@ public final class ArchitectGenerationService {
             return CompletableFuture.completedFuture(RequestOutcome.rejected(Failure.INVALID_SURVEY_TOKEN));
         }
         sessions.cancel(owner);
+        DebugMetrics.global().increment(Counter.GENERATION_REQUEST);
 
         CompletableFuture<RequestOutcome> response = new CompletableFuture<>();
         ActiveRequest current = new ActiveRequest(response);
         CompletableFuture<GenerationResult> completion = new CompletableFuture<>();
         FutureTask<Void> worker = new FutureTask<>(() -> {
+            long startedNanos = System.nanoTime();
             try {
                 completion.complete(generation.get());
             } catch (Throwable failure) {
                 completion.completeExceptionally(failure);
+            } finally {
+                DebugMetrics.global().recordNanos(Timing.GENERATION, System.nanoTime() - startedNanos);
             }
             return null;
         });
@@ -192,6 +199,7 @@ public final class ArchitectGenerationService {
                     activeRequests.remove(owner);
                 }
             }
+            DebugMetrics.global().increment(Counter.GENERATION_FAILURE);
             current.response().complete(RequestOutcome.rejected(Failure.SERVER_BUSY, token));
         }
         return response;
@@ -212,9 +220,13 @@ public final class ArchitectGenerationService {
             activeRequests.remove(owner);
         }
         if (failure != null || !(result instanceof GenerationResult.Success success)) {
+            recordCandidateRejections(result);
+            DebugMetrics.global().increment(Counter.GENERATION_FAILURE);
             requestState.response().complete(RequestOutcome.rejected(Failure.GENERATION_FAILED, token));
             return;
         }
+        recordCandidateRejections(success);
+        DebugMetrics.global().increment(Counter.GENERATION_SUCCESS);
 
         long revision = revisionClock.getAsLong();
         if (revision > token.expiresAtRevision()) {
@@ -242,6 +254,14 @@ public final class ArchitectGenerationService {
                 terrain.width(),
                 terrain.depth());
         requestState.response().complete(RequestOutcome.ready(session, token));
+    }
+
+    private static void recordCandidateRejections(GenerationResult result) {
+        if (result == null) {
+            return;
+        }
+        result.diagnostics().candidates().forEach(candidate -> candidate.rejectionCodes().forEach(
+                DebugMetrics.global()::recordCandidateRejection));
     }
 
     private void purgeCancelledWorkers() {

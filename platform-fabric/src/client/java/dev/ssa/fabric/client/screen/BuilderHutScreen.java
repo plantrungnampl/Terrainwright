@@ -17,16 +17,19 @@ public final class BuilderHutScreen extends Screen {
 
     private final JobClientState jobState;
     private final Runnable refresh;
+    private final Runnable beginChestSelection;
     private int refreshTicks;
     private Button pauseButton;
     private Button resumeButton;
     private Button stopButton;
     private Button undoButton;
+    private Button linkChestButton;
 
-    public BuilderHutScreen(JobClientState jobState, Runnable refresh) {
+    public BuilderHutScreen(JobClientState jobState, Runnable refresh, Runnable beginChestSelection) {
         super(Component.literal("Builder Hut"));
         this.jobState = Objects.requireNonNull(jobState, "jobState");
         this.refresh = Objects.requireNonNull(refresh, "refresh");
+        this.beginChestSelection = Objects.requireNonNull(beginChestSelection, "beginChestSelection");
     }
 
     @Override
@@ -34,13 +37,18 @@ public final class BuilderHutScreen extends Screen {
         int left = width / 2 - 155;
         int top = Math.max(34, height / 2 - 100);
         pauseButton = addRenderableWidget(commandButton(
-                left, top + 42, "Pause", JobCommand.Action.PAUSE));
+                left, top + 50, "Pause", JobCommand.Action.PAUSE));
         resumeButton = addRenderableWidget(commandButton(
-                left + 80, top + 42, "Resume", JobCommand.Action.RESUME));
+                left + 80, top + 50, "Resume", JobCommand.Action.RESUME));
         stopButton = addRenderableWidget(commandButton(
-                left + 160, top + 42, "Stop", JobCommand.Action.STOP));
+                left + 160, top + 50, "Stop", JobCommand.Action.STOP));
         undoButton = addRenderableWidget(commandButton(
-                left + 240, top + 42, "Safe Undo", JobCommand.Action.UNDO));
+                left + 240, top + 50, "Safe Undo", JobCommand.Action.UNDO));
+        linkChestButton = addRenderableWidget(Button.builder(
+                        Component.literal("Link / Relink Builder Chest"),
+                        ignored -> beginChestSelection.run())
+                .bounds(left, top + 76, 190, 20)
+                .build());
         updateActions();
     }
 
@@ -64,21 +72,31 @@ public final class BuilderHutScreen extends Screen {
         int left = width / 2 - 155;
         int top = Math.max(34, height / 2 - 100);
         graphics.centeredText(font, title, width / 2, top - 20, 0xffffff);
+        var hut = jobState.hutSnapshot().orElse(null);
+        if (hut != null) {
+            graphics.text(
+                    font,
+                    "Builder Chest: " + (hut.chestLinked() ? "Linked" : "Not linked"),
+                    left,
+                    top,
+                    hut.chestLinked() ? 0x9fe39f : 0xffc66d);
+        }
         JobSnapshot snapshot = jobState.snapshot().orElse(null);
         if (snapshot == null) {
-            graphics.text(font, "No owned active job was reported by this Hut.", left, top, 0xffc66d);
+            graphics.text(font, "No owned active job was reported by this Hut.", left, top + 16, 0xffc66d);
+            renderChestLinkResult(graphics, left, top + 106);
             return;
         }
-        graphics.text(font, "State: " + snapshot.state().name(), left, top, 0xb8d8ff);
+        graphics.text(font, "State: " + snapshot.state().name(), left, top + 16, 0xb8d8ff);
         graphics.text(
                 font,
                 "Progress: " + snapshot.completedTasks() + " / " + snapshot.totalTasks()
                         + " | Revision: " + snapshot.revision(),
                 left,
-                top + 16,
+                top + 32,
                 0xd0d0d0);
 
-        int lineY = top + 76;
+        int lineY = top + 106;
         if (!snapshot.missingMaterials().isEmpty()) {
             graphics.text(font, "Missing materials:", left, lineY, 0xffc66d);
             lineY += 14;
@@ -113,7 +131,9 @@ public final class BuilderHutScreen extends Screen {
                     left,
                     lineY,
                     0xff7070);
+            lineY += 14;
         }
+        renderChestLinkResult(graphics, left, lineY);
     }
 
     @Override
@@ -145,6 +165,19 @@ public final class BuilderHutScreen extends Screen {
                 && state != BuildJobState.STOPPING
                 && state.canTransitionTo(BuildJobState.STOPPING);
         undoButton.active = state == BuildJobState.STOPPED || state == BuildJobState.COMPLETED;
+        linkChestButton.active = jobState.hutSnapshot().isPresent()
+                && (state == null || state == BuildJobState.PAUSED_NO_CHEST);
+    }
+
+    private void renderChestLinkResult(GuiGraphicsExtractor graphics, int left, int lineY) {
+        jobState.lastChestLinkResult().ifPresent(result -> graphics.text(
+                font,
+                result.accepted()
+                        ? "Builder Chest linked."
+                        : "Chest link rejected: " + result.failure().name(),
+                left,
+                lineY,
+                result.accepted() ? 0x9fe39f : 0xff7070));
     }
 
     private static String guidance(BuildJobState state, boolean hasMissingMaterials) {

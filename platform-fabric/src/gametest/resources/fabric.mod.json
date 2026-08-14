@@ -15,7 +15,9 @@
       "dev.ssa.fabric.link.HutChestLinkGameTest",
       "dev.ssa.fabric.preview.PreviewAuthorityGameTest",
       "dev.ssa.fabric.network.JobControlAuthorityGameTest",
-      "dev.ssa.fabric.style.PaletteFallbackGameTest"
+      "dev.ssa.fabric.style.PaletteFallbackGameTest",
+      "dev.ssa.fabric.release.ReleaseScenarioGameTests",
+      "dev.ssa.fabric.release.SurvivalEntryGameTests"
     ],
     "fabric-client-gametest": [
       "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest",

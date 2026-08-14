@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "minecraft:book",
+    "C": "minecraft:copper_ingot",
+    "P": "minecraft:paper",
+    "T": "minecraft:crafting_table",
+    "W": "#minecraft:planks"
+  },
+  "pattern": [
+    "PBP",
+    "CTC",
+    "WWW"
+  ],
+  "result": {
+    "id": "smart_survival_architect:architect_table"
+  }
+}

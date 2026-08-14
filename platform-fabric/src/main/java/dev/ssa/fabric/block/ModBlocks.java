@@ -14,10 +14,6 @@ public final class ModBlocks {
             BuiltInRegistries.BLOCK,
             ModBlockIds.BUILDER_HUT,
             new BuilderHutBlock(BlockBehaviour.Properties.of().setId(ModBlockIds.BUILDER_HUT)));
-    public static final Block SPIKE_MARKER = Registry.register(
-            BuiltInRegistries.BLOCK,
-            ModBlockIds.SPIKE_MARKER,
-            new Block(BlockBehaviour.Properties.of().setId(ModBlockIds.SPIKE_MARKER)));
 
     private ModBlocks() {}
 

@@ -316,6 +316,11 @@ public final class ServerBuildJobRepository extends SavedData {
         if (hut == null) {
             return;
         }
+        if (hut.activeJobId().isEmpty()) {
+            huts.remove(hutId);
+            setDirty();
+            return;
+        }
         hut.activeJobId().flatMap(this::findJob).ifPresent(job -> {
             if (job.state() == BuildJobState.IDLE) {
                 job = job.transitionTo(BuildJobState.PREPARING);

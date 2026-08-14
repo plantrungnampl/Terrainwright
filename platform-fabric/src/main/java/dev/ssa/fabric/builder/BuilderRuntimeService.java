@@ -145,6 +145,22 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 .undo(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
     }
 
+    public static void relinkChest(
+            ServerLevel level,
+            UUID hutId,
+            ContainerBinding binding) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(hutId, "hutId");
+        Objects.requireNonNull(binding, "binding");
+        ServerBuildJobRepository.get(level)
+                .findHut(hutId)
+                .flatMap(ServerBuildJobRepository.HutState::builderLifecycle)
+                .map(lifecycle -> level.getEntity(lifecycle.builderId()))
+                .filter(BuilderEntity.class::isInstance)
+                .map(BuilderEntity.class::cast)
+                .ifPresent(builder -> builder.relinkChest(binding));
+    }
+
     public static void observeDeath(ServerLevel level, BuilderEntity builder) {
         service(level.getServer()).recordBuilderLoss(level, builder, true);
     }

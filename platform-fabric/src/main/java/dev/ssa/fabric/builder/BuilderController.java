@@ -29,6 +29,8 @@ import dev.ssa.fabric.construction.FabricMutationExecutor;
 import dev.ssa.fabric.construction.MaterialTransferService;
 import dev.ssa.fabric.construction.MinecraftSnapshotAdapter;
 import dev.ssa.fabric.entity.BuilderEntity;
+import dev.ssa.fabric.debug.DebugMetrics;
+import dev.ssa.fabric.debug.DebugMetrics.Counter;
 import dev.ssa.fabric.link.BuilderChestLinkService;
 import dev.ssa.fabric.link.ContainerBinding;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
@@ -138,6 +140,16 @@ public final class BuilderController {
         repository.savePlan(job.jobId(), order.taskGraph());
         this.commitLog = new JobCommitLog(order.taskGraph());
         stateMachine.transition(BuilderStateMachine.State.RECOVERING);
+    }
+
+    public void relinkChest(ContainerBinding chestBinding) {
+        Objects.requireNonNull(chestBinding, "chestBinding");
+        if (order == null || job().state() != BuildJobState.PAUSED_NO_CHEST) {
+            throw new IllegalStateException("Builder Chest relink requires a PAUSED_NO_CHEST job");
+        }
+        order = new WorkOrder(order.jobId(), order.taskGraph(), chestBinding);
+        nextMaterialCheckTick = 0;
+        failureReason = null;
     }
 
     public void tick(ServerLevel level) {
@@ -292,7 +304,10 @@ public final class BuilderController {
                         stateMachine.transition(BuilderStateMachine.State.SELECT_NEXT_TASK);
                     }
                 }
-                case SCAFFOLD_PLACE -> continueScaffoldPlacement(level);
+                case SCAFFOLD_PLACE -> {
+                    DebugMetrics.global().increment(Counter.SCAFFOLD_BLOCK);
+                    continueScaffoldPlacement(level);
+                }
                 case SCAFFOLD_REMOVE -> continueScaffoldCleanup(level);
                 case SCAFFOLD_PLAN -> stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
                 case STOP_CHECKPOINT -> {
@@ -441,6 +456,7 @@ public final class BuilderController {
         }
         transitionJobTo(BuildJobState.FETCHING_MATERIAL);
         stateMachine.transition(BuilderStateMachine.State.NAVIGATE_CHEST);
+        DebugMetrics.global().increment(Counter.MATERIAL_TRIP);
         navigation.begin(level, order.chestBinding().primaryPos());
     }
 
@@ -851,6 +867,7 @@ public final class BuilderController {
 
     private void block(String reason, Optional<GridPos> position) {
         failureReason = Objects.requireNonNull(reason, "reason");
+        DebugMetrics.global().increment(Counter.CONFLICT);
         if (order != null) {
             BuildJob current = job();
             if (current.state() != BuildJobState.PAUSED_BLOCKED

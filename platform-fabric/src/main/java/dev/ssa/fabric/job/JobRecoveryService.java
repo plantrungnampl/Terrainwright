@@ -7,6 +7,7 @@ import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.operation.OperationIntent;
 import dev.ssa.construction.operation.OperationStatus;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
+import dev.ssa.fabric.debug.DebugMetrics;
 import dev.ssa.fabric.persistence.OperationIntentStore;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
 import java.util.List;
@@ -180,6 +181,7 @@ public final class JobRecoveryService {
                 Outcome outcome,
                 Optional<UUID> hutId,
                 Optional<String> jobId) {
+            DebugMetrics.global().recordReconciliationOutcome(outcome.name());
             return new Reconciliation(outcome, hutId, jobId);
         }
     }

@@ -152,11 +152,12 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 **Interfaces:**
 - `DebugMetrics` records generation, path, scaffold, material-trip, conflict, and reconciliation counters without per-tick INFO logging.
 - Release scenarios cover all V1 locked-scope paths and assert the V1 exclusions remain absent.
+- The Architect Table and Builder Hut are craftable/placeable Survival blocks; placement records the owner and the Hut UI explicitly links or relinks one vanilla chest.
 
-- [ ] Add deterministic invariant/property tests and run them red before implementation.
-- [ ] Add the release GameTest matrix: three styles, missing material resume, chest topology change, chunk unload, tombstone, Hut loss, conflict, Stop, Safe Undo, and restart boundaries.
-- [ ] Implement metrics and documentation from actual command names and observed behavior.
-- [ ] Run the clean build, full GameTest matrix, S4/S5 harness, and exclusion scan; commit `release: verify smart survival architect v1`.
+- [x] Add deterministic invariant/property sweeps; they found no core production failure. Add DebugMetrics API tests and observe compile-red before implementation.
+- [x] Add the release GameTest matrix: three styles, Survival entry, missing material resume, chest topology change, chunk unload, tombstone, Hut loss, conflict, Stop, Safe Undo, and restart boundaries.
+- [x] Implement metrics and documentation from actual command names and observed behavior.
+- [x] Run the clean build, full GameTest matrix, S4/S5 harness, and exclusion scan; commit `release: verify smart survival architect v1`.
 
 ## Final verification gate
 
@@ -164,7 +165,7 @@ Run, in this order:
 
 ```powershell
 ./gradlew clean test build
-./gradlew runServerGameTest
+./gradlew :platform-fabric:runGameTest
 powershell -ExecutionPolicy Bypass -File tools/Invoke-S4PersistenceCheck.ps1
 powershell -ExecutionPolicy Bypass -File tools/Invoke-S5RestartCheck.ps1
 git diff --check

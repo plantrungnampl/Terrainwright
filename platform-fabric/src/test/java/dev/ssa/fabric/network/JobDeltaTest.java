@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
@@ -56,12 +57,34 @@ final class JobDeltaTest {
                 "job-1", 8, JobPayloads.JobCommand.Action.PAUSE);
         JobPayloads.JobCommandResult result = new JobPayloads.JobCommandResult(
                 "job-1", false, JobReplicationService.Rejection.STALE_REVISION, 9);
+        JobPayloads.HutSnapshot hut = new JobPayloads.HutSnapshot(HUT, 3, true, true);
+        JobPayloads.LinkBuilderChest link = new JobPayloads.LinkBuilderChest(
+                HUT, new BlockPos(1, 2, 3), new BlockPos(4, 2, 3));
+        JobPayloads.BuilderChestLinkResult linkResult = new JobPayloads.BuilderChestLinkResult(
+                HUT, false, JobPayloads.BuilderChestLinkResult.Failure.TOO_FAR);
 
         assertEquals(snapshot, roundTrip(snapshot, JobPayloads.JobSnapshot.CODEC));
         assertEquals(delta, roundTrip(delta, JobPayloads.JobDelta.CODEC));
         assertEquals(request, roundTrip(request, JobPayloads.RequestJobSnapshot.CODEC));
         assertEquals(command, roundTrip(command, JobPayloads.JobCommand.CODEC));
         assertEquals(result, roundTrip(result, JobPayloads.JobCommandResult.CODEC));
+        assertEquals(hut, roundTrip(hut, JobPayloads.HutSnapshot.CODEC));
+        assertEquals(link, roundTrip(link, JobPayloads.LinkBuilderChest.CODEC));
+        assertEquals(linkResult, roundTrip(linkResult, JobPayloads.BuilderChestLinkResult.CODEC));
+    }
+
+    @Test
+    void hutAndChestLinkStatusRemainVisibleWithoutAnActiveJob() {
+        JobClientState state = new JobClientState();
+        JobPayloads.HutSnapshot hut = new JobPayloads.HutSnapshot(HUT, 3, true, false);
+        JobPayloads.BuilderChestLinkResult linkResult = new JobPayloads.BuilderChestLinkResult(
+                HUT, true, JobPayloads.BuilderChestLinkResult.Failure.NONE);
+
+        assertTrue(state.accept(hut));
+        assertTrue(state.accept(linkResult));
+        assertEquals(hut, state.hutSnapshot().orElseThrow());
+        assertEquals(linkResult, state.lastChestLinkResult().orElseThrow());
+        assertTrue(state.snapshot().isEmpty());
     }
 
     @Test

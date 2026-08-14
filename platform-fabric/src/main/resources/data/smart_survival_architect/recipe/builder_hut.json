@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "minecraft:chest",
+    "L": "#minecraft:logs",
+    "P": "#minecraft:planks",
+    "T": "minecraft:crafting_table"
+  },
+  "pattern": [
+    "LCL",
+    "PTP",
+    "PPP"
+  ],
+  "result": {
+    "id": "smart_survival_architect:builder_hut"
+  }
+}

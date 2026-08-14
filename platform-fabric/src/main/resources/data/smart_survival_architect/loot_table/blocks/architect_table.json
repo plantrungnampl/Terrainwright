@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "smart_survival_architect:architect_table"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "smart_survival_architect:blocks/architect_table"
+}

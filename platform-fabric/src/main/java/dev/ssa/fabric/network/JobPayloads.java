@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -35,6 +36,106 @@ public final class JobPayloads {
         @Override
         public Type<RequestJobSnapshot> type() {
             return TYPE;
+        }
+    }
+
+    public record HutSnapshot(
+            UUID hutId,
+            long revision,
+            boolean chestLinked,
+            boolean activeJob) implements CustomPacketPayload {
+        public static final Type<HutSnapshot> TYPE = JobPayloads.type("hut_snapshot");
+        public static final StreamCodec<RegistryFriendlyByteBuf, HutSnapshot> CODEC = StreamCodec.of(
+                (buffer, payload) -> {
+                    buffer.writeUUID(payload.hutId());
+                    buffer.writeVarLong(payload.revision());
+                    buffer.writeBoolean(payload.chestLinked());
+                    buffer.writeBoolean(payload.activeJob());
+                },
+                buffer -> new HutSnapshot(
+                        buffer.readUUID(),
+                        buffer.readVarLong(),
+                        buffer.readBoolean(),
+                        buffer.readBoolean()));
+
+        public HutSnapshot {
+            Objects.requireNonNull(hutId, "hutId");
+            if (revision < 0) {
+                throw new IllegalArgumentException("Hut revision must not be negative");
+            }
+        }
+
+        @Override
+        public Type<HutSnapshot> type() {
+            return TYPE;
+        }
+    }
+
+    public record LinkBuilderChest(
+            UUID hutId,
+            BlockPos hutPos,
+            BlockPos chestPos) implements CustomPacketPayload {
+        public static final Type<LinkBuilderChest> TYPE = JobPayloads.type("link_builder_chest");
+        public static final StreamCodec<RegistryFriendlyByteBuf, LinkBuilderChest> CODEC = StreamCodec.of(
+                (buffer, payload) -> {
+                    buffer.writeUUID(payload.hutId());
+                    writeBlockPos(buffer, payload.hutPos());
+                    writeBlockPos(buffer, payload.chestPos());
+                },
+                buffer -> new LinkBuilderChest(
+                        buffer.readUUID(), readBlockPos(buffer), readBlockPos(buffer)));
+
+        public LinkBuilderChest {
+            Objects.requireNonNull(hutId, "hutId");
+            Objects.requireNonNull(hutPos, "hutPos");
+            Objects.requireNonNull(chestPos, "chestPos");
+        }
+
+        @Override
+        public Type<LinkBuilderChest> type() {
+            return TYPE;
+        }
+    }
+
+    public record BuilderChestLinkResult(
+            UUID hutId,
+            boolean accepted,
+            Failure failure) implements CustomPacketPayload {
+        public static final Type<BuilderChestLinkResult> TYPE = JobPayloads.type("builder_chest_link_result");
+        public static final StreamCodec<RegistryFriendlyByteBuf, BuilderChestLinkResult> CODEC = StreamCodec.of(
+                (buffer, payload) -> {
+                    buffer.writeUUID(payload.hutId());
+                    buffer.writeBoolean(payload.accepted());
+                    buffer.writeVarInt(payload.failure().ordinal());
+                },
+                buffer -> new BuilderChestLinkResult(
+                        buffer.readUUID(),
+                        buffer.readBoolean(),
+                        readEnum(buffer, Failure.values(), "Builder Chest link failure")));
+
+        public BuilderChestLinkResult {
+            Objects.requireNonNull(hutId, "hutId");
+            Objects.requireNonNull(failure, "failure");
+            if (accepted != (failure == Failure.NONE)) {
+                throw new IllegalArgumentException("Chest link acceptance and failure disagree");
+            }
+        }
+
+        @Override
+        public Type<BuilderChestLinkResult> type() {
+            return TYPE;
+        }
+
+        public enum Failure {
+            NONE,
+            HUT_UNAVAILABLE,
+            NOT_OWNER,
+            OUT_OF_REACH,
+            ACTIVE_JOB_RUNNING,
+            NOT_VANILLA_CHEST,
+            TOO_FAR,
+            PERMISSION_DENIED,
+            CHUNK_UNLOADED
         }
     }
 
@@ -387,6 +488,16 @@ public final class JobPayloads {
 
     private static GridPos readGridPos(RegistryFriendlyByteBuf buffer) {
         return new GridPos(buffer.readInt(), buffer.readInt(), buffer.readInt());
+    }
+
+    private static void writeBlockPos(RegistryFriendlyByteBuf buffer, BlockPos position) {
+        buffer.writeInt(position.getX());
+        buffer.writeInt(position.getY());
+        buffer.writeInt(position.getZ());
+    }
+
+    private static BlockPos readBlockPos(RegistryFriendlyByteBuf buffer) {
+        return new BlockPos(buffer.readInt(), buffer.readInt(), buffer.readInt());
     }
 
     private static <T> T readEnum(RegistryFriendlyByteBuf buffer, T[] values, String name) {

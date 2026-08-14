@@ -1,6 +1,9 @@
 package dev.ssa.fabric.builder;
 
 import dev.ssa.fabric.entity.BuilderEntity;
+import dev.ssa.fabric.debug.DebugMetrics;
+import dev.ssa.fabric.debug.DebugMetrics.Counter;
+import dev.ssa.fabric.debug.DebugMetrics.Timing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -117,9 +120,19 @@ public final class FabricNavigationAdapter {
                 standingPosition = candidate;
                 return true;
             }
-            Path path = builder.getNavigation().createPath(candidate, 0);
+            DebugMetrics.global().increment(Counter.PATH_ATTEMPT);
+            long startedNanos = System.nanoTime();
+            Path path;
+            try {
+                path = builder.getNavigation().createPath(candidate, 0);
+            } finally {
+                DebugMetrics.global().recordNanos(Timing.PATHFINDING, System.nanoTime() - startedNanos);
+            }
             boolean canReach = path != null && path.canReach();
             boolean moving = path != null && builder.getNavigation().moveTo(path, 1.0);
+            if (!moving) {
+                DebugMetrics.global().increment(Counter.PATH_FAILURE);
+            }
             pathTrace.add("candidate=" + candidate
                     + ", below=" + level.getBlockState(candidate.below()).getBlock()
                     + ", path=" + (path == null ? "null" : path.getNodeCount())

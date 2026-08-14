@@ -1,12 +1,18 @@
 package dev.ssa.fabric.network;
 
+import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.block.BuilderHutService;
 import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.entity.BuilderEntity;
+import dev.ssa.fabric.link.BuilderChestLinkService;
+import dev.ssa.fabric.network.JobPayloads.BuilderChestLinkResult;
+import dev.ssa.fabric.network.JobPayloads.HutSnapshot;
 import dev.ssa.fabric.network.JobPayloads.JobCommand;
 import dev.ssa.fabric.network.JobPayloads.JobCommandResult;
 import dev.ssa.fabric.network.JobPayloads.JobDelta;
 import dev.ssa.fabric.network.JobPayloads.JobSnapshot;
+import dev.ssa.fabric.network.JobPayloads.LinkBuilderChest;
 import dev.ssa.fabric.network.JobPayloads.RequestJobSnapshot;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
 import java.util.concurrent.CompletableFuture;
@@ -32,11 +38,15 @@ public final class JobNetworking {
         }
         initialized = true;
         PayloadTypeRegistry.serverboundPlay().register(RequestJobSnapshot.TYPE, RequestJobSnapshot.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(LinkBuilderChest.TYPE, LinkBuilderChest.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(JobCommand.TYPE, JobCommand.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(HutSnapshot.TYPE, HutSnapshot.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BuilderChestLinkResult.TYPE, BuilderChestLinkResult.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(JobSnapshot.TYPE, JobSnapshot.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(JobDelta.TYPE, JobDelta.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(JobCommandResult.TYPE, JobCommandResult.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(RequestJobSnapshot.TYPE, JobNetworking::requestSnapshot);
+        ServerPlayNetworking.registerGlobalReceiver(LinkBuilderChest.TYPE, JobNetworking::linkBuilderChest);
         ServerPlayNetworking.registerGlobalReceiver(JobCommand.TYPE, JobNetworking::command);
     }
 
@@ -45,8 +55,58 @@ public final class JobNetworking {
         ServerBuildJobRepository repository = ServerBuildJobRepository.get(player.level());
         repository.findHut(payload.hutId())
                 .filter(hut -> hut.ownerId().equals(player.getUUID()))
-                .flatMap(ServerBuildJobRepository.HutState::activeJobId)
-                .ifPresent(jobId -> sendSnapshot(player, repository, jobId));
+                .ifPresent(hut -> {
+                    sendHutSnapshot(player, hut);
+                    hut.activeJobId().ifPresent(jobId -> sendSnapshot(player, repository, jobId));
+                });
+    }
+
+    private static void linkBuilderChest(LinkBuilderChest payload, ServerPlayNetworking.Context context) {
+        ServerPlayer player = context.player();
+        ServerLevel level = player.level();
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        ServerBuildJobRepository.HutState hut = repository.findHut(payload.hutId()).orElse(null);
+        if (hut == null) {
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.HUT_UNAVAILABLE);
+            return;
+        }
+        if (!hut.ownerId().equals(player.getUUID())) {
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.NOT_OWNER);
+            return;
+        }
+        if (!player.isWithinBlockInteractionRange(payload.chestPos(), 0)) {
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.OUT_OF_REACH);
+            return;
+        }
+        if (hut.activeJobId()
+                .flatMap(repository::findJob)
+                .map(job -> job.state() != BuildJobState.PAUSED_NO_CHEST)
+                .orElse(false)) {
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.ACTIVE_JOB_RUNNING);
+            return;
+        }
+        try {
+            BuilderChestLinkService.LinkResult result = BuilderHutService.linkChest(
+                    level,
+                    payload.hutPos(),
+                    payload.hutId(),
+                    player.getUUID(),
+                    payload.chestPos());
+            if (!result.linked()) {
+                sendChestLinkResult(
+                        player,
+                        payload.hutId(),
+                        mapLinkFailure(result.failure().orElseThrow()));
+                return;
+            }
+            BuilderRuntimeService.relinkChest(
+                    level, payload.hutId(), result.binding().orElseThrow());
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.NONE);
+            sendHutSnapshot(player, repository.findHut(payload.hutId()).orElseThrow());
+        } catch (IllegalStateException failure) {
+            LOGGER.debug("Rejected Builder Chest link for {}: {}", payload.hutId(), failure.getMessage());
+            sendChestLinkResult(player, payload.hutId(), BuilderChestLinkResult.Failure.HUT_UNAVAILABLE);
+        }
     }
 
     private static void command(JobCommand payload, ServerPlayNetworking.Context context) {
@@ -96,6 +156,42 @@ public final class JobNetworking {
                         .map(plan -> JobReplicationService.snapshot(
                                 job, plan, missingMaterials(player.level(), repository, job.hutId()))))
                 .ifPresent(snapshot -> ServerPlayNetworking.send(player, snapshot));
+    }
+
+    private static void sendHutSnapshot(
+            ServerPlayer player,
+            ServerBuildJobRepository.HutState hut) {
+        if (ServerPlayNetworking.canSend(player, HutSnapshot.TYPE)) {
+            ServerPlayNetworking.send(player, new HutSnapshot(
+                    hut.hutId(),
+                    hut.revision(),
+                    hut.containerBinding().isPresent(),
+                    hut.activeJobId().isPresent()));
+        }
+    }
+
+    private static void sendChestLinkResult(
+            ServerPlayer player,
+            UUID hutId,
+            BuilderChestLinkResult.Failure failure) {
+        if (ServerPlayNetworking.canSend(player, BuilderChestLinkResult.TYPE)) {
+            ServerPlayNetworking.send(
+                    player,
+                    new BuilderChestLinkResult(
+                            hutId,
+                            failure == BuilderChestLinkResult.Failure.NONE,
+                            failure));
+        }
+    }
+
+    private static BuilderChestLinkResult.Failure mapLinkFailure(
+            BuilderChestLinkService.LinkFailure failure) {
+        return switch (failure) {
+            case NOT_VANILLA_CHEST -> BuilderChestLinkResult.Failure.NOT_VANILLA_CHEST;
+            case TOO_FAR -> BuilderChestLinkResult.Failure.TOO_FAR;
+            case PERMISSION_DENIED -> BuilderChestLinkResult.Failure.PERMISSION_DENIED;
+            case CHUNK_UNLOADED -> BuilderChestLinkResult.Failure.CHUNK_UNLOADED;
+        };
     }
 
     private static void sendDelta(

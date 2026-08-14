@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaRequired = @(
     'settings.gradle.kts',
     'build.gradle.kts',

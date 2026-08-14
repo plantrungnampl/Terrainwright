@@ -3,7 +3,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaEvidenceDirectory = Join-Path $ssaRoot 'docs\spikes\S3'
 $ssaScreenshotDirectory = Join-Path $ssaEvidenceDirectory 'screenshots'
 $ssaRunScreenshotDirectory = Join-Path $ssaRoot 'platform-fabric\build\run\clientGameTest\screenshots'

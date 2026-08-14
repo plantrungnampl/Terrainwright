@@ -3,7 +3,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaEvidenceDirectory = Join-Path $ssaRoot 'docs\spikes\S2'
 $ssaLogPath = Join-Path $ssaEvidenceDirectory 'gametest.log'
 $ssaGradle = Join-Path $ssaRoot 'gradlew.bat'

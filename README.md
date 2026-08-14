@@ -95,8 +95,8 @@ The runnable mod JAR is produced under `platform-fabric/build/libs/`. The comple
 Additional durability gates are available for contributors working on persistence or recovery:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools/Invoke-S4PersistenceCheck.ps1
-powershell -ExecutionPolicy Bypass -File tools/Invoke-S5RestartCheck.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verification/Invoke-S4PersistenceCheck.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verification/Invoke-S5RestartCheck.ps1
 ```
 
 ## Documentation

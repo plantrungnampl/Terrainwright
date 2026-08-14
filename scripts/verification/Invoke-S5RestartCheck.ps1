@@ -3,7 +3,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaGradle = Join-Path $ssaRoot 'gradlew.bat'
 $ssaEvidenceDirectory = Join-Path $ssaRoot 'docs\spikes\S5'
 $ssaFixturesDirectory = Join-Path $ssaEvidenceDirectory 'fixtures'
@@ -254,7 +254,7 @@ foreach ($ssaCase in $ssaCases) {
         -Lines ([string[]](Get-Content -LiteralPath $ssaResultPath | ForEach-Object { $_.TrimEnd() }))
 }
 
-$ssaLayoutOutput = & (Join-Path $ssaRoot 'tools\verify-s1-layout.ps1') 2>&1 | Out-String
+$ssaLayoutOutput = & (Join-Path $PSScriptRoot 'verify-s1-layout.ps1') 2>&1 | Out-String
 if ($ssaLayoutOutput -notmatch 'PASS S1 module layout') {
     throw 'S5 layout verification failed.'
 }

@@ -51,7 +51,7 @@ Run from the repository root with Java 25 available:
 ```powershell
 .\gradlew.bat clean test build --no-daemon
 .\gradlew.bat :platform-fabric:runGameTest --no-daemon
-powershell -ExecutionPolicy Bypass -File tools/Invoke-S4PersistenceCheck.ps1
-powershell -ExecutionPolicy Bypass -File tools/Invoke-S5RestartCheck.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verification/Invoke-S4PersistenceCheck.ps1
+powershell -ExecutionPolicy Bypass -File scripts/verification/Invoke-S5RestartCheck.ps1
 git diff --check
 ```

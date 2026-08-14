@@ -45,7 +45,7 @@ function Receive-SsaOutput {
     }
 }
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaEvidenceDirectory = Join-Path $ssaRoot 'docs\spikes\S1'
 $ssaLogPath = Join-Path $ssaEvidenceDirectory ($Mode.ToLowerInvariant() + '-launch.log')
 $ssaTask = if ($Mode -eq 'Server') { 'runServer' } else { 'runClient' }

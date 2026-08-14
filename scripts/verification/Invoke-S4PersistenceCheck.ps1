@@ -3,7 +3,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ssaEvidenceDirectory = Join-Path $ssaRoot 'docs\spikes\S4'
 $ssaGradle = Join-Path $ssaRoot 'gradlew.bat'
 $ssaJdkHome = $env:JAVA_HOME
@@ -145,7 +145,7 @@ $ssaVerificationLog = Join-Path $ssaEvidenceDirectory 'verification.log'
 $ssaVerification = New-Object System.Collections.Generic.List[string]
 $ssaVerification.Add("STARTED=$((Get-Date).ToString('o'))")
 
-$ssaLayoutOutput = & (Join-Path $ssaRoot 'tools\verify-s1-layout.ps1') 2>&1 | Out-String
+$ssaLayoutOutput = & (Join-Path $PSScriptRoot 'verify-s1-layout.ps1') 2>&1 | Out-String
 if ($ssaLayoutOutput -notmatch 'PASS S1 module layout') {
     throw 'S1 layout verification failed.'
 }

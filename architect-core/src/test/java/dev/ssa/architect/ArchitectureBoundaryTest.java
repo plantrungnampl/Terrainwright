@@ -38,7 +38,8 @@ class ArchitectureBoundaryTest {
                 AssertionError.class,
                 () -> SourceBoundary.assertNoPlatformImports(repository, List.of("architect-core")));
 
-        assertTrue(error.getMessage().contains("architect-core\\src\\main\\java\\example\\Leak.java:3"));
+        String sourceLocation = Path.of("architect-core", "src", "main", "java", "example", "Leak.java") + ":3";
+        assertTrue(error.getMessage().contains(sourceLocation));
         assertTrue(error.getMessage().contains("net.minecraft"));
     }
 

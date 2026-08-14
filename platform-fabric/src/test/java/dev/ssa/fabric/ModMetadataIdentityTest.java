@@ -25,6 +25,13 @@ final class ModMetadataIdentityTest {
         assertTrue(metadata.contains("dev.ssa.fabric.client.TerrainwrightClient"), metadata);
     }
 
+    @Test
+    void usesTheReleaseVersion() throws IOException {
+        String metadata = metadata();
+
+        assertTrue(metadata.contains("\"version\": \"1.0.1\""), metadata);
+    }
+
     private static String metadata() throws IOException {
         try (InputStream input = ModMetadataIdentityTest.class.getResourceAsStream("/fabric.mod.json")) {
             assertNotNull(input, "fabric.mod.json");

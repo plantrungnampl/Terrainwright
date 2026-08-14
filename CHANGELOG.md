@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2026-08-14
+
+- Fixed Creative tab/search behavior.
+- Redesigned the Architect screen.
+- Redesigned the Builder Hut screen.
+- Validated responsive layouts and accessibility behavior.
+
 ## 1.0.0 - 2026-08-14
 
 - Added deterministic Medieval, Japanese, and Modern house generation for the Small, Medium, and Large UI footprints.

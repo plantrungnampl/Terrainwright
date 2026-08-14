@@ -58,7 +58,7 @@ V1 does **not** include LLM generation, basements, arbitrary structure types, se
 
 ## Install
 
-1. Download `terrainwright-1.0.0.jar` from the [latest release](https://github.com/plantrungnampl/Terrainwright/releases/latest).
+1. Download `terrainwright-1.0.1.jar` from the [latest release](https://github.com/plantrungnampl/Terrainwright/releases/latest).
 2. Install the matching Fabric Loader and Fabric API.
 3. Put the Terrainwright and Fabric API JARs in the Minecraft `mods` directory on the server and clients.
 4. Start the game with Java 25.

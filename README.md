@@ -5,23 +5,48 @@
 [![License: MIT](https://img.shields.io/github/license/plantrungnampl/Terrainwright)](LICENSE)
 [![Minecraft 26.2](https://img.shields.io/badge/Minecraft-26.2-62b47a)](https://www.minecraft.net/)
 
-Terrainwright is a Minecraft Java Fabric mod for designing terrain-aware houses and having a server-owned Builder construct them from real survival materials in an explicitly linked vanilla chest.
+## Build smarter. Keep it Survival.
 
-If Terrainwright helps you create a world worth keeping, consider starring the repository and sharing a real build with the community.
+**Terrainwright** is a Minecraft Java Fabric mod for designing terrain-aware houses and having a server-owned Builder construct them **block by block from real survival materials** stored in a linked vanilla chest.
+
+No creative-mode structure paste. No silently spawned materials. You choose the site and design, approve the ghost preview, supply the resources, and the Builder does the construction.
+
+**[Download the latest release](https://github.com/plantrungnampl/Terrainwright/releases/latest)** · **[Getting Started](docs/player/getting-started.md)** · **[Discussions](https://github.com/plantrungnampl/Terrainwright/discussions)** · **[Report a bug](https://github.com/plantrungnampl/Terrainwright/issues)**
+
+> If Terrainwright helps you create a world worth keeping, consider starring the repository and sharing a real build with the community.
+
+## The survival building loop
+
+1. **Design** — choose Medieval, Japanese, or Modern, then configure the footprint, floors, rooms, and entrance preference.
+2. **Survey** — select a real site and let Terrainwright evaluate the local terrain.
+3. **Preview** — inspect a server-authoritative ghost build before committing any materials.
+4. **Supply** — link a vanilla chest and provide the actual blocks required by the plan.
+5. **Build** — a server-owned Builder carries bounded batches and constructs the house over time.
+6. **Control** — Pause, Resume, Stop, or use Safe Undo when needed.
 
 ## Why Terrainwright?
 
-- **Survival first:** the Builder transfers real materials, carries bounded batches, and never silently mines or crafts resources.
-- **Terrain aware:** deterministic generation adapts small and medium houses to flat ground and gentle slopes without modifying water or lava.
-- **Three distinct styles:** Medieval, Japanese, and Modern use different geometry and material identities.
-- **Server authoritative:** previews, permissions, material accounting, placement, Stop, and Safe Undo are validated by the server.
-- **Crash conscious:** durable operation intents, restart reconciliation, chunk suspension, Builder tombstones, and quarantine prevent unsafe automatic guesses.
+| | Terrainwright |
+|---|---|
+| **Survival materials** | Uses real blocks from your linked chest instead of silently spawning resources |
+| **Terrain awareness** | Adapts bounded house generation to flat ground and gentle slopes |
+| **Visible construction** | A Builder performs the build instead of instantly pasting a finished structure |
+| **Player approval** | The generated ghost preview must be confirmed before construction begins |
+| **Server authority** | Permissions, materials, previews, placement, Stop, and Safe Undo are validated by the server |
+| **Recovery safety** | Restart reconciliation, chunk suspension, Builder tombstones, and quarantine avoid unsafe automatic guesses |
 
-## V1 scope
+## V1.0 highlights
 
-V1.0 includes the locked house workflow: bounded light-terrain preparation, one Builder per Hut, linked vanilla single/double chests, progress and recovery guidance, Pause/Resume, Stop, and Safe Undo.
+- **Three architectural identities:** Medieval, Japanese, and Modern use different geometry and material palettes.
+- **Three bounded footprints:** 9x11, 15x19, and 21x25 with 1-3 floors and configurable house features.
+- **Terrain-aware generation:** deterministic layouts support flat ground and gentle slopes without modifying water or lava.
+- **Real logistics:** one Builder per Hut, linked vanilla single/double chests, bounded carrying capacity, and exact missing-material guidance.
+- **Safe controls:** Pause/Resume, Stop, Safe Undo, restart reconciliation, unloaded-chunk suspension, and lost-Builder recovery.
+- **Multiplayer-conscious architecture:** server-authoritative previews, permissions, material accounting, and world placement.
 
-It deliberately does **not** include LLM generation, basements, arbitrary structure types, self-mining/crafting, forced chunk loading, teleport fallback, or multi-Builder scheduling.
+### Deliberate V1 non-goals
+
+V1 does **not** include LLM generation, basements, arbitrary structure types, self-mining/crafting, forced chunk loading, teleport fallback, or multi-Builder scheduling. Terrainwright keeps the first release focused on a deterministic, inspectable survival workflow.
 
 ## Requirements
 
@@ -38,7 +63,7 @@ It deliberately does **not** include LLM generation, basements, arbitrary struct
 3. Put the Terrainwright and Fabric API JARs in the Minecraft `mods` directory on the server and clients.
 4. Start the game with Java 25.
 
-The public product name is Terrainwright. The technical Fabric mod ID remains `smart_survival_architect` to preserve registry and world-data compatibility.
+The public product name is **Terrainwright**. The technical Fabric mod ID remains `smart_survival_architect` to preserve registry and world-data compatibility.
 
 ## Play
 

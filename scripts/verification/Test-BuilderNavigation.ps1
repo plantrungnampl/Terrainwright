@@ -1,3 +1,4 @@
+# Verifies bounded Builder navigation and placement behavior.
 [CmdletBinding()]
 param()
 

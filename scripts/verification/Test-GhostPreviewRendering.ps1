@@ -1,3 +1,4 @@
+# Verifies ghost-preview rendering, lifecycle, and performance bounds.
 [CmdletBinding()]
 param()
 

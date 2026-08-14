@@ -1,3 +1,4 @@
+# Verifies the required Gradle module layout.
 $ErrorActionPreference = 'Stop'
 
 $ssaRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path

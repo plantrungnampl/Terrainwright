@@ -1,3 +1,4 @@
+# Verifies recovery across real dedicated-server process restarts.
 [CmdletBinding()]
 param()
 
@@ -254,7 +255,7 @@ foreach ($ssaCase in $ssaCases) {
         -Lines ([string[]](Get-Content -LiteralPath $ssaResultPath | ForEach-Object { $_.TrimEnd() }))
 }
 
-$ssaLayoutOutput = & (Join-Path $PSScriptRoot 'verify-s1-layout.ps1') 2>&1 | Out-String
+$ssaLayoutOutput = & (Join-Path $PSScriptRoot 'Test-ProjectLayout.ps1') 2>&1 | Out-String
 if ($ssaLayoutOutput -notmatch 'PASS S1 module layout') {
     throw 'S5 layout verification failed.'
 }

@@ -1,3 +1,4 @@
+# Verifies Fabric client and dedicated-server startup.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]

@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName = "smart-survival-architect"
+    archivesName = "terrainwright"
 }
 
 loom {

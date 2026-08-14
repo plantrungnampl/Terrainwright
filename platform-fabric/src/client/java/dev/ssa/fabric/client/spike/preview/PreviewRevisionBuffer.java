@@ -17,7 +17,7 @@ final class PreviewRevisionBuffer implements AutoCloseable {
                 * VERTICES_PER_BLOCK
                 * DefaultVertexFormat.POSITION_COLOR.getVertexSize();
         this.stagedBuffer = new StagedVertexBuffer(
-                () -> "Smart Survival Architect preview revision " + revision.revision(), bufferBytes);
+                () -> "Terrainwright preview revision " + revision.revision(), bufferBytes);
     }
 
     PreviewRevision revision() {

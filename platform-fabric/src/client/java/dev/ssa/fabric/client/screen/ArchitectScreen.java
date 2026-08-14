@@ -47,7 +47,7 @@ public final class ArchitectScreen extends Screen {
     }
 
     public ArchitectScreen(PreviewClientState previewState, Runnable selectSite, Runnable selectHut) {
-        super(Component.literal("Smart Survival Architect"));
+        super(Component.literal("Terrainwright"));
         this.previewState = java.util.Objects.requireNonNull(previewState, "previewState");
         this.selectSite = java.util.Objects.requireNonNull(selectSite, "selectSite");
         this.selectHut = java.util.Objects.requireNonNull(selectHut, "selectHut");

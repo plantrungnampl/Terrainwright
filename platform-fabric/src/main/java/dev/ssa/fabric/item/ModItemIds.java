@@ -1,6 +1,6 @@
 package dev.ssa.fabric.item;
 
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -15,6 +15,6 @@ public final class ModItemIds {
     private static ResourceKey<Item> key(String path) {
         return ResourceKey.create(
                 Registries.ITEM,
-                Identifier.fromNamespaceAndPath(SmartSurvivalArchitectMod.MOD_ID, path));
+                Identifier.fromNamespaceAndPath(TerrainwrightMod.MOD_ID, path));
     }
 }

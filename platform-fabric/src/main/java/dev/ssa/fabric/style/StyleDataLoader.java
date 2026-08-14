@@ -14,7 +14,7 @@ import dev.ssa.architect.style.JapaneseStyle;
 import dev.ssa.architect.style.MedievalStyle;
 import dev.ssa.architect.style.ModernStyle;
 import dev.ssa.architect.style.StylePack;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -50,9 +50,9 @@ import org.slf4j.LoggerFactory;
 
 /** Loads only data-driven palettes; geometry remains in the trusted built-in style implementations. */
 public final class StyleDataLoader implements ResourceManagerReloadListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID + "/styles");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TerrainwrightMod.MOD_ID + "/styles");
     private static final Identifier RELOAD_ID = Identifier.fromNamespaceAndPath(
-            SmartSurvivalArchitectMod.MOD_ID, "style_palettes");
+            TerrainwrightMod.MOD_ID, "style_palettes");
     private static final Set<String> TOP_LEVEL_FIELDS = Set.of(
             "formatVersion",
             "id",
@@ -100,12 +100,12 @@ public final class StyleDataLoader implements ResourceManagerReloadListener {
     public void onResourceManagerReload(ResourceManager manager) {
         Map<Identifier, Resource> resources = manager.listResources(
                 "styles",
-                id -> id.getNamespace().equals(SmartSurvivalArchitectMod.MOD_ID)
+                id -> id.getNamespace().equals(TerrainwrightMod.MOD_ID)
                         && id.getPath().endsWith(".json"));
         Map<StyleId, LoadedStyle> next = new HashMap<>();
         for (StylePack builtIn : BUILT_INS.values()) {
             Identifier resourceId = Identifier.fromNamespaceAndPath(
-                    SmartSurvivalArchitectMod.MOD_ID,
+                    TerrainwrightMod.MOD_ID,
                     "styles/" + builtIn.id().value().path() + ".json");
             Resource resource = resources.get(resourceId);
             if (resource == null) {

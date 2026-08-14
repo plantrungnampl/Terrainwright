@@ -14,7 +14,7 @@ import dev.ssa.architect.style.StylePack;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
 import dev.ssa.fabric.client.spike.preview.PreviewRenderMetrics;
-import dev.ssa.fabric.client.SmartSurvivalArchitectClient;
+import dev.ssa.fabric.client.TerrainwrightClient;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +40,7 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
         HouseRequirements requirements = requirements(style, 41);
         var blueprint = success(new ArchitectEngine().generate(
                 requirements, terrain(17, 21), style, registry(style)));
-        PreviewClientState state = SmartSurvivalArchitectClient.previewState();
+        PreviewClientState state = TerrainwrightClient.previewState();
         BlockPos origin = new BlockPos(0, 80, 0);
 
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "smart_survival_architect",
   "version": "${version}",
-  "name": "Smart Survival Architect",
+  "name": "Terrainwright",
   "description": "A survival-oriented architecture and construction system.",
   "authors": [
     "Terrainwright"
@@ -11,10 +11,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "dev.ssa.fabric.SmartSurvivalArchitectMod"
+      "dev.ssa.fabric.TerrainwrightMod"
     ],
     "client": [
-      "dev.ssa.fabric.client.SmartSurvivalArchitectClient"
+      "dev.ssa.fabric.client.TerrainwrightClient"
     ]
   },
   "depends": {

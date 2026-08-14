@@ -1,7 +1,7 @@
 package dev.ssa.fabric.network;
 
 import dev.ssa.construction.job.BuildJobState;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import dev.ssa.fabric.block.BuilderHutService;
 import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.entity.BuilderEntity;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /** Server-owned Builder Hut job replication and control transport. */
 public final class JobNetworking {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID + "/jobs");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TerrainwrightMod.MOD_ID + "/jobs");
     private static boolean initialized;
 
     private JobNetworking() {}

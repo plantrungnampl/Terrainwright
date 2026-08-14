@@ -2,7 +2,7 @@ package dev.ssa.fabric.client;
 
 import dev.ssa.architect.model.BlockStateSpec;
 import dev.ssa.architect.model.GridPos;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import dev.ssa.fabric.client.preview.GhostPreviewRenderer;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.preview.PreviewTransform;
@@ -48,8 +48,8 @@ import net.minecraft.world.level.block.state.properties.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class SmartSurvivalArchitectClient implements ClientModInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID);
+public final class TerrainwrightClient implements ClientModInitializer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TerrainwrightMod.MOD_ID);
     private static final PreviewClientState PREVIEW_STATE = PreviewClientState.production();
     private static final JobClientState JOB_STATE = new JobClientState();
     private static BlockPos activeArchitectTable;
@@ -62,18 +62,18 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
         LOGGER.info("SSA_S1_CLIENT_READY");
         EntityRendererRegistry.register(ModEntityTypes.BUILDER, BuilderRenderer::new);
         GhostPreviewRenderer.initialize();
-        ClientPlayNetworking.registerGlobalReceiver(SurveyTokenResult.TYPE, SmartSurvivalArchitectClient::receiveToken);
-        ClientPlayNetworking.registerGlobalReceiver(SurveyStatus.TYPE, SmartSurvivalArchitectClient::receiveSurveyStatus);
-        ClientPlayNetworking.registerGlobalReceiver(PreviewFailure.TYPE, SmartSurvivalArchitectClient::receiveFailure);
-        ClientPlayNetworking.registerGlobalReceiver(PreviewResult.TYPE, SmartSurvivalArchitectClient::receivePreview);
-        ClientPlayNetworking.registerGlobalReceiver(JobSnapshot.TYPE, SmartSurvivalArchitectClient::receiveJobSnapshot);
-        ClientPlayNetworking.registerGlobalReceiver(HutSnapshot.TYPE, SmartSurvivalArchitectClient::receiveHutSnapshot);
+        ClientPlayNetworking.registerGlobalReceiver(SurveyTokenResult.TYPE, TerrainwrightClient::receiveToken);
+        ClientPlayNetworking.registerGlobalReceiver(SurveyStatus.TYPE, TerrainwrightClient::receiveSurveyStatus);
+        ClientPlayNetworking.registerGlobalReceiver(PreviewFailure.TYPE, TerrainwrightClient::receiveFailure);
+        ClientPlayNetworking.registerGlobalReceiver(PreviewResult.TYPE, TerrainwrightClient::receivePreview);
+        ClientPlayNetworking.registerGlobalReceiver(JobSnapshot.TYPE, TerrainwrightClient::receiveJobSnapshot);
+        ClientPlayNetworking.registerGlobalReceiver(HutSnapshot.TYPE, TerrainwrightClient::receiveHutSnapshot);
         ClientPlayNetworking.registerGlobalReceiver(
-                BuilderChestLinkResult.TYPE, SmartSurvivalArchitectClient::receiveChestLinkResult);
-        ClientPlayNetworking.registerGlobalReceiver(JobDelta.TYPE, SmartSurvivalArchitectClient::receiveJobDelta);
+                BuilderChestLinkResult.TYPE, TerrainwrightClient::receiveChestLinkResult);
+        ClientPlayNetworking.registerGlobalReceiver(JobDelta.TYPE, TerrainwrightClient::receiveJobDelta);
         ClientPlayNetworking.registerGlobalReceiver(
-                JobCommandResult.TYPE, SmartSurvivalArchitectClient::receiveJobCommandResult);
-        UseBlockCallback.EVENT.register(SmartSurvivalArchitectClient::useBlock);
+                JobCommandResult.TYPE, TerrainwrightClient::receiveJobCommandResult);
+        UseBlockCallback.EVENT.register(TerrainwrightClient::useBlock);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (selectionMode != SelectionMode.NONE && client.gui.screen() instanceof PauseScreen) {
                 cancelSelection(false);
@@ -203,8 +203,8 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
     private static void openScreen(Minecraft client) {
         client.setScreenAndShow(new ArchitectScreen(
                 PREVIEW_STATE,
-                SmartSurvivalArchitectClient::beginSiteSelection,
-                SmartSurvivalArchitectClient::beginHutSelection));
+                TerrainwrightClient::beginSiteSelection,
+                TerrainwrightClient::beginHutSelection));
     }
 
     private static void openBuilderScreen(UUID hutId, BlockPos hutPos) {
@@ -223,7 +223,7 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
         Minecraft.getInstance().setScreenAndShow(new BuilderHutScreen(
                 JOB_STATE,
                 () -> requestBuilderJob(hutId),
-                SmartSurvivalArchitectClient::beginChestSelection));
+                TerrainwrightClient::beginChestSelection));
     }
 
     private static void requestBuilderJob(UUID hutId) {

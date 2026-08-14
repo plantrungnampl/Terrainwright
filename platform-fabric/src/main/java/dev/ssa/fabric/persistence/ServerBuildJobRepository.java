@@ -15,7 +15,7 @@ import dev.ssa.construction.journal.JournalEntry;
 import dev.ssa.construction.plan.TaskGraph;
 import dev.ssa.construction.scaffold.ScaffoldProvenance;
 import dev.ssa.construction.scaffold.ScaffoldProvenance.Cell;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Cause;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Observation;
@@ -183,7 +183,7 @@ public final class ServerBuildJobRepository extends SavedData {
             ServerBuildJobRepository::decode,
             ServerBuildJobRepository::payload);
     public static final SavedDataType<ServerBuildJobRepository> TYPE = new SavedDataType<>(
-            Identifier.fromNamespaceAndPath(SmartSurvivalArchitectMod.MOD_ID, "build_jobs"),
+            Identifier.fromNamespaceAndPath(TerrainwrightMod.MOD_ID, "build_jobs"),
             ServerBuildJobRepository::new,
             CODEC,
             DataFixTypes.SAVED_DATA_COMMAND_STORAGE);

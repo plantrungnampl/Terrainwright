@@ -16,7 +16,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class SmartSurvivalArchitectMod implements ModInitializer {
+public final class TerrainwrightMod implements ModInitializer {
     public static final String MOD_ID = "smart_survival_architect";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);

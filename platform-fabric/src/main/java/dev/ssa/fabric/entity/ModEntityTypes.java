@@ -1,6 +1,6 @@
 package dev.ssa.fabric.entity;
 
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,7 +13,7 @@ import net.minecraft.world.entity.MobCategory;
 public final class ModEntityTypes {
     private static final ResourceKey<EntityType<?>> BUILDER_KEY = ResourceKey.create(
             Registries.ENTITY_TYPE,
-            Identifier.fromNamespaceAndPath(SmartSurvivalArchitectMod.MOD_ID, "builder"));
+            Identifier.fromNamespaceAndPath(TerrainwrightMod.MOD_ID, "builder"));
 
     public static final EntityType<BuilderEntity> BUILDER = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,

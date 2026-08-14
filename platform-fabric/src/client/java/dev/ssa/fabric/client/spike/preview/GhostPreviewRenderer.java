@@ -229,7 +229,7 @@ public final class GhostPreviewRenderer {
         try (RenderPass renderPass = RenderSystem.getDevice()
                 .createCommandEncoder()
                 .createRenderPass(
-                        () -> "Smart Survival Architect ghost preview",
+                        () -> "Terrainwright ghost preview",
                         colorTexture,
                         Optional.empty(),
                         mainTarget.getDepthTextureView(),

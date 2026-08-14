@@ -1,6 +1,6 @@
-# Smart Survival Architect
+# Terrainwright
 
-Smart Survival Architect is a Minecraft Java 26.2 Fabric mod for designing a terrain-aware house, approving a client ghost preview, and having one server-owned Builder NPC construct it from materials in an explicitly linked vanilla chest.
+Terrainwright is a Minecraft Java 26.2 Fabric mod for designing a terrain-aware house, approving a client ghost preview, and having one server-owned Builder NPC construct it from materials in an explicitly linked vanilla chest.
 
 V1.0 contains the locked house workflow only: Medieval, Japanese, and Modern styles; bounded light-terrain adaptation; one Builder per Hut; real material transfer; restart reconciliation; Stop; and Safe Undo. It does not include LLM generation, basements, arbitrary structure types, self-mining/crafting, forced chunk loading, or multi-Builder scheduling.
 

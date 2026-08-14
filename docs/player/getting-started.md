@@ -2,7 +2,7 @@
 
 ## Install
 
-Install the Smart Survival Architect JAR, Fabric Loader, and Fabric API on the server and on every client. V1.0 targets Minecraft Java 26.2 and Java 25.
+Install the Terrainwright JAR, Fabric Loader, and Fabric API on the server and on every client. V1.0 targets Minecraft Java 26.2 and Java 25.
 
 ## Craft the two work blocks
 

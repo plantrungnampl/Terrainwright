@@ -1,1 +1,1 @@
-description = "Pure planning domain for Smart Survival Architect"
+description = "Pure planning domain for Terrainwright"

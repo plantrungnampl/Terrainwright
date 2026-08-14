@@ -7,7 +7,7 @@ import dev.ssa.architect.style.StylePack;
 import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
 import dev.ssa.construction.plan.ConstructionPlanner;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
 import dev.ssa.fabric.network.PreviewPayloads.CancelSurvey;
@@ -49,7 +49,7 @@ public final class PreviewNetworking {
     private static final int PREVIEW_WORKERS = 2;
     private static final int PREVIEW_QUEUE_CAPACITY = 16;
     private static final int PLAYER_REQUEST_COOLDOWN_TICKS = 5;
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID + "/preview");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TerrainwrightMod.MOD_ID + "/preview");
     private static final Map<MinecraftServer, Services> SERVICES = new WeakHashMap<>();
     private static boolean initialized;
 

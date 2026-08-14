@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "smart_survival_architect_gametest",
   "version": "1.0.0",
-  "name": "Smart Survival Architect GameTests",
+  "name": "Terrainwright GameTests",
   "environment": "*",
   "entrypoints": {
     "fabric-gametest": [

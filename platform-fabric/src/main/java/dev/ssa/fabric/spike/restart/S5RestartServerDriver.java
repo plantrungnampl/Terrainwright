@@ -239,7 +239,7 @@ public final class S5RestartServerDriver {
         result.setProperty("evidence_sha256_after", run.evidenceAfter);
         result.setProperty("metadata_verified", "true");
         result.setProperty("recovery_before_scheduling", "true");
-        writeForcedProperties(resultPath, result, "Smart Survival Architect S5 process result");
+        writeForcedProperties(resultPath, result, "Terrainwright S5 process result");
         System.out.printf(
                 "SSA_S5_RECOVERY fixture=%s boundary=%s first=%s second=%s scheduled=%s world=%s metadata=true exact=true%n",
                 fixtureId,

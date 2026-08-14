@@ -2,7 +2,7 @@ package dev.ssa.fabric.network;
 
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.construction.job.BuildJobState;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -521,7 +521,7 @@ public final class JobPayloads {
 
     private static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {
         return new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(
-                SmartSurvivalArchitectMod.MOD_ID, path));
+                TerrainwrightMod.MOD_ID, path));
     }
 
     private record ViewData(

@@ -264,7 +264,7 @@ public final class RestartFixtureRepository implements OperationEvidencePort {
                 Files.createDirectories(parent);
             }
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            properties.store(bytes, "Smart Survival Architect S5 restart fixture");
+            properties.store(bytes, "Terrainwright S5 restart fixture");
             Path temporary = path.resolveSibling(path.getFileName() + ".tmp");
             try (FileChannel channel = FileChannel.open(
                     temporary,

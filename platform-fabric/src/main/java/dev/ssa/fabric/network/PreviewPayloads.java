@@ -4,7 +4,7 @@ import dev.ssa.architect.blueprint.Blueprint;
 import dev.ssa.architect.model.EntrancePreference;
 import dev.ssa.architect.model.HouseRequirements;
 import dev.ssa.architect.model.StyleId;
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import java.util.Objects;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -349,7 +349,7 @@ public final class PreviewPayloads {
 
     private static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> type(String path) {
         return new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(
-                SmartSurvivalArchitectMod.MOD_ID, path));
+                TerrainwrightMod.MOD_ID, path));
     }
 
     private static void writeBlockPos(RegistryFriendlyByteBuf buffer, BlockPos position) {

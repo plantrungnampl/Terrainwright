@@ -1,6 +1,6 @@
 package dev.ssa.fabric.release;
 
-import dev.ssa.fabric.SmartSurvivalArchitectMod;
+import dev.ssa.fabric.TerrainwrightMod;
 import dev.ssa.fabric.block.BuilderHutBlockEntity;
 import dev.ssa.fabric.block.BuilderHutService;
 import dev.ssa.fabric.block.ModBlocks;
@@ -92,7 +92,7 @@ public final class SurvivalEntryGameTests {
     private static boolean hasRecipe(GameTestHelper context, String path) {
         ResourceKey<Recipe<?>> key = ResourceKey.create(
                 Registries.RECIPE,
-                Identifier.fromNamespaceAndPath(SmartSurvivalArchitectMod.MOD_ID, path));
+                Identifier.fromNamespaceAndPath(TerrainwrightMod.MOD_ID, path));
         return context.getLevel().getServer().getRecipeManager().byKey(key).isPresent();
     }
 }

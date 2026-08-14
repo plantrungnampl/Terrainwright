@@ -13,7 +13,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "smart-survival-architect"
+rootProject.name = "Terrainwright"
 
 include(
     ":architect-core",

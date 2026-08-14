@@ -5,11 +5,8 @@ build/
 run/
 logs/
 *.log
-!docs/spikes/S1/*.log
-!docs/spikes/S2/*.log
-!docs/spikes/S3/*.log
-!docs/spikes/S4/*.log
-!docs/spikes/S5/*.log
+docs/spikes/
+docs/evidence/
 Smart-Survival-Architect-Master-Architecture-R2/
 smart-survival-architect/
 docs/superpowers/

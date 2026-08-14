@@ -92,13 +92,6 @@ On Windows PowerShell:
 
 The runnable mod JAR is produced under `platform-fabric/build/libs/`. The complete build runs all module tests and the Fabric GameTest matrix.
 
-Additional durability gates are available for contributors working on persistence or recovery:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/verification/Test-PersistenceRecovery.ps1
-powershell -ExecutionPolicy Bypass -File scripts/verification/Test-RestartRecovery.ps1
-```
-
 ## Documentation
 
 - [Player guide](docs/player/getting-started.md)

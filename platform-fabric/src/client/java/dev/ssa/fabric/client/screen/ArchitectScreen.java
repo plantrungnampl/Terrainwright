@@ -7,15 +7,17 @@ import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
 import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public final class ArchitectScreen extends Screen {
+    private static final String KEY = "screen.smart_survival_architect.architect.";
     private static final List<StyleId> STYLES = List.of(
             StyleId.parse("smart_survival_architect:medieval"),
             StyleId.parse("smart_survival_architect:japanese"),
@@ -36,18 +38,22 @@ public final class ArchitectScreen extends Screen {
     private int entranceIndex;
     private long seed;
     private int requestedRotation;
-    private Button generateButton;
-    private Button selectHutButton;
-    private Button rotateButton;
-    private Button moveButton;
-    private Button confirmButton;
+    private TerrainwrightScreenLayout.ArchitectLayout layout;
+    private TerrainwrightButton generateButton;
+    private TerrainwrightButton selectHutButton;
+    private TerrainwrightButton rotateButton;
+    private TerrainwrightButton moveButton;
+    private TerrainwrightButton confirmButton;
+    private boolean renderedCanRequest;
+    private boolean renderedPreview;
+    private boolean renderedConfirmation;
 
     public ArchitectScreen(PreviewClientState previewState) {
         this(previewState, () -> {}, () -> {});
     }
 
     public ArchitectScreen(PreviewClientState previewState, Runnable selectSite, Runnable selectHut) {
-        super(Component.literal("Terrainwright"));
+        super(component("title"));
         this.previewState = java.util.Objects.requireNonNull(previewState, "previewState");
         this.selectSite = java.util.Objects.requireNonNull(selectSite, "selectSite");
         this.selectHut = java.util.Objects.requireNonNull(selectHut, "selectHut");
@@ -59,127 +65,419 @@ public final class ArchitectScreen extends Screen {
 
     @Override
     protected void init() {
-        int left = width / 2 - 155;
-        int top = Math.max(28, height / 2 - 105);
-        addRenderableWidget(button(left, top, 150, this::styleLabel, ignored -> {
-            styleIndex = (styleIndex + 1) % STYLES.size();
-            rebuildWidgets();
-        }));
-        addRenderableWidget(button(left + 160, top, 150, this::sizeLabel, ignored -> {
-            sizeIndex = (sizeIndex + 1) % SIZES.length;
-            rebuildWidgets();
-        }));
-        addRenderableWidget(button(left, top + 26, 72, this::floorsLabel, ignored -> {
-            floors = floors % HouseRequirements.MAX_FLOORS + 1;
-            rebuildWidgets();
-        }));
-        addRenderableWidget(button(left + 78, top + 26, 72, this::bedroomsLabel, ignored -> {
-            bedrooms = (bedrooms + 1) % (HouseRequirements.MAX_BEDROOMS + 1);
-            rebuildWidgets();
-        }));
-        addRenderableWidget(toggle(left + 160, top + 26, "Kitchen", () -> kitchen, value -> kitchen = value));
-        addRenderableWidget(toggle(left + 238, top + 26, "Storage", () -> storage, value -> storage = value));
-        addRenderableWidget(toggle(left, top + 52, "Balcony", () -> balcony, value -> balcony = value));
-        addRenderableWidget(toggle(left + 78, top + 52, "Chimney", () -> chimney, value -> chimney = value));
-        addRenderableWidget(button(left + 160, top + 52, 150, this::entranceLabel, ignored -> {
-            entranceIndex = (entranceIndex + 1) % EntrancePreference.values().length;
-            rebuildWidgets();
-        }));
-
-        addRenderableWidget(Button.builder(Component.literal("Select Site"), ignored -> selectSite.run())
-                .bounds(left, top + 82, 150, 20)
-                .build());
-        selectHutButton = addRenderableWidget(Button.builder(
-                        Component.literal("Select Builder Hut"), ignored -> selectHut.run())
-                .bounds(left + 160, top + 82, 150, 20)
-                .build());
-        selectHutButton.active = previewState.preview().isPresent();
-
-        generateButton = addRenderableWidget(Button.builder(
-                        Component.literal(previewState.preview().isPresent() ? "Regenerate" : "Generate Preview"),
-                        ignored -> requestPreview(false))
-                .bounds(left, top + 108, 150, 20)
-                .build());
-        rotateButton = addRenderableWidget(Button.builder(
-                        Component.literal("Rotate 90 degrees"),
-                        ignored -> requestPreview(true))
-                .bounds(left + 160, top + 108, 150, 20)
-                .build());
-        moveButton = addRenderableWidget(Button.builder(
-                        Component.literal("Move ghost +1 X"),
-                        ignored -> previewState.preview().ifPresent(result ->
-                                previewState.movePreview(result.origin().east())))
-                .bounds(left, top + 134, 150, 20)
-                .build());
-        confirmButton = addRenderableWidget(Button.builder(
-                        Component.literal("Confirm"),
-                        ignored -> previewState.confirmation().ifPresent(ClientPlayNetworking::send))
-                .bounds(left + 160, top + 134, 150, 20)
-                .build());
+        layout = TerrainwrightScreenLayout.architect(width, height);
+        addConfigurationControls();
+        addSecondaryActions();
+        addWorkflowActions();
+        rememberRenderedAuthority();
         updateActions();
     }
 
     @Override
     public void tick() {
+        if (authorityChanged()) {
+            rebuildWidgets();
+            return;
+        }
         updateActions();
     }
 
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.fill(0, 0, width, height, 0x88000000);
+        graphics.fill(0, 0, width, height, TerrainwrightUiTheme.WORLD_VEIL);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        drawWorkflowRail(graphics);
+        drawConfigurationRail(graphics);
+        drawWorldCanvas(graphics);
+        drawStatusRail(graphics);
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-        int left = width / 2 - 155;
-        int top = Math.max(28, height / 2 - 105);
-        graphics.centeredText(font, title, width / 2, top - 20, 0xffffff);
-        Optional<dev.ssa.fabric.network.PreviewPayloads.PreviewResult> preview = previewState.preview();
-        if (preview.isEmpty()) {
-            graphics.text(font, "Select a site, then generate a server preview.", left, top + 162, 0xb8d8ff);
-            previewState.lastFailure().ifPresent(reason -> graphics.text(
-                    font,
-                    "Preview failed: " + reason.name() + ". Select Site to retry.",
-                    left,
-                    top + 176,
-                    0xff7070));
-            if (!previewState.canRequestPreview()) {
-                graphics.text(font, "Waiting for a fresh Survey token.", left, top + 190, 0xffc66d);
-            }
-            return;
-        }
-
-        var result = preview.orElseThrow();
-        var blueprint = result.blueprint();
-        graphics.text(
-                font,
-                blueprint.styleId() + " - " + blueprint.floors() + " floor(s)",
-                left,
-                top + 162,
-                0xb8d8ff);
-        graphics.text(
-                font,
-                "Blocks " + blueprint.blocks().size()
-                        + " | Terrain " + blueprint.terrainPlan().removedCount()
-                        + " removed / " + blueprint.terrainPlan().filledCount() + " filled",
-                left,
-                top + 176,
-                0xd0d0d0);
-        graphics.text(
-                font,
-                "Origin " + result.origin().toShortString() + " | Rotation " + result.rotation(),
-                left,
-                top + 190,
-                0xd0d0d0);
-        if (previewState.confirmation().isEmpty()) {
-            graphics.text(font, "Confirm requires an unchanged server preview and selected Hut.", left, top + 204, 0xffc66d);
-        }
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private void addConfigurationControls() {
+        TerrainwrightScreenLayout.Bounds rail = layout.configurationRail();
+        int padding = 3;
+        int gap = layout.compact() ? 2 : 3;
+        int rowHeight = Math.max(9, Math.min(20, (rail.height() - padding * 2 - gap * 5) / 6));
+        int innerWidth = rail.width() - padding * 2;
+        int halfWidth = (innerWidth - gap) / 2;
+        boolean compactPairLabels = layout.compact() || halfWidth < 80;
+        int x = rail.x() + padding;
+        int y = rail.y() + padding;
+
+        addConfigButton(
+                new TerrainwrightScreenLayout.Bounds(x, y, innerWidth, rowHeight),
+                fieldLabel("style", styleOption(), layout.compact()),
+                component("tooltip.style", styleOption()),
+                () -> {
+                    styleIndex = (styleIndex + 1) % STYLES.size();
+                    rebuildWidgets();
+                });
+        y += rowHeight + gap;
+        addConfigButton(
+                new TerrainwrightScreenLayout.Bounds(x, y, innerWidth, rowHeight),
+                fieldLabel("size", sizeValue(), layout.compact()),
+                component("tooltip.size", sizeValue()),
+                () -> {
+                    sizeIndex = (sizeIndex + 1) % SIZES.length;
+                    rebuildWidgets();
+                });
+        y += rowHeight + gap;
+        addConfigPair(
+                x,
+                y,
+                halfWidth,
+                rowHeight,
+                gap,
+                fieldLabel("floors", floors, compactPairLabels),
+                component("tooltip.floors", floors),
+                () -> {
+                    floors = floors % HouseRequirements.MAX_FLOORS + 1;
+                    rebuildWidgets();
+                },
+                fieldLabel("bedrooms", bedrooms, compactPairLabels),
+                component("tooltip.bedrooms", bedrooms),
+                () -> {
+                    bedrooms = (bedrooms + 1) % (HouseRequirements.MAX_BEDROOMS + 1);
+                    rebuildWidgets();
+                });
+        y += rowHeight + gap;
+        addConfigPair(
+                x,
+                y,
+                halfWidth,
+                rowHeight,
+                gap,
+                toggleLabel("kitchen", kitchen, compactPairLabels),
+                component("tooltip.kitchen", toggleOption(kitchen)),
+                () -> {
+                    kitchen = !kitchen;
+                    rebuildWidgets();
+                },
+                toggleLabel("storage", storage, compactPairLabels),
+                component("tooltip.storage", toggleOption(storage)),
+                () -> {
+                    storage = !storage;
+                    rebuildWidgets();
+                });
+        y += rowHeight + gap;
+        addConfigPair(
+                x,
+                y,
+                halfWidth,
+                rowHeight,
+                gap,
+                toggleLabel("balcony", balcony, compactPairLabels),
+                component("tooltip.balcony", toggleOption(balcony)),
+                () -> {
+                    balcony = !balcony;
+                    rebuildWidgets();
+                },
+                toggleLabel("chimney", chimney, compactPairLabels),
+                component("tooltip.chimney", toggleOption(chimney)),
+                () -> {
+                    chimney = !chimney;
+                    rebuildWidgets();
+                });
+        y += rowHeight + gap;
+        addConfigButton(
+                new TerrainwrightScreenLayout.Bounds(x, y, innerWidth, rowHeight),
+                fieldLabel("entrance", entranceOption(), layout.compact()),
+                component("tooltip.entrance", entranceOption()),
+                () -> {
+                    entranceIndex = (entranceIndex + 1) % EntrancePreference.values().length;
+                    rebuildWidgets();
+                });
+    }
+
+    private void addConfigPair(
+            int x,
+            int y,
+            int width,
+            int height,
+            int gap,
+            Component leftLabel,
+            Component leftTooltip,
+            Runnable leftAction,
+            Component rightLabel,
+            Component rightTooltip,
+            Runnable rightAction) {
+        addConfigButton(
+                new TerrainwrightScreenLayout.Bounds(x, y, width, height),
+                leftLabel,
+                leftTooltip,
+                leftAction);
+        addConfigButton(
+                new TerrainwrightScreenLayout.Bounds(x + width + gap, y, width, height),
+                rightLabel,
+                rightTooltip,
+                rightAction);
+    }
+
+    private void addConfigButton(
+            TerrainwrightScreenLayout.Bounds bounds,
+            Component message,
+            Component tooltip,
+            Runnable action) {
+        TerrainwrightButton button =
+                addButton(bounds, message, TerrainwrightButton.Style.NORMAL, action, tooltip);
+        button.setTooltip(Tooltip.create(tooltip));
+    }
+
+    private void addSecondaryActions() {
+        TerrainwrightScreenLayout.Bounds rail = layout.secondaryActions();
+        TerrainwrightScreenLayout.Bounds canvas = layout.worldCanvas();
+        int gap = layout.compact() ? 4 : 8;
+        int actionWidth = (canvas.width() - gap) / 2;
+        TerrainwrightScreenLayout.Bounds rotateBounds = new TerrainwrightScreenLayout.Bounds(
+                canvas.x(), rail.y(), actionWidth, rail.height());
+        TerrainwrightScreenLayout.Bounds moveBounds = new TerrainwrightScreenLayout.Bounds(
+                canvas.x() + actionWidth + gap,
+                rail.y(),
+                canvas.width() - actionWidth - gap,
+                rail.height());
+
+        rotateButton = addButton(
+                rotateBounds,
+                actionLabel("rotate"),
+                TerrainwrightButton.Style.NORMAL,
+                () -> requestPreview(true),
+                component("tooltip.rotate"));
+        moveButton = addButton(
+                moveBounds,
+                actionLabel("move"),
+                TerrainwrightButton.Style.NORMAL,
+                () -> previewState.preview().ifPresent(result ->
+                        previewState.movePreview(result.origin().east())),
+                component("tooltip.move"));
+    }
+
+    private void addWorkflowActions() {
+        boolean previewAvailable = previewState.preview().isPresent();
+        boolean canRequest = previewState.canRequestPreview();
+        boolean canConfirm = previewState.confirmation().isPresent();
+        List<TerrainwrightScreenLayout.Bounds> slots = layout.actionSlots();
+
+        addButton(
+                slots.get(0),
+                actionLabel("select_site"),
+                primaryWhen(!previewAvailable && !canRequest),
+                selectSite,
+                component("tooltip.select_site"));
+        String generateAction = previewAvailable ? "regenerate" : "generate";
+        generateButton = addButton(
+                slots.get(1),
+                actionLabel(generateAction),
+                primaryWhen(!previewAvailable && canRequest),
+                () -> requestPreview(false),
+                component("tooltip." + generateAction));
+        selectHutButton = addButton(
+                slots.get(2),
+                actionLabel("select_hut"),
+                primaryWhen(previewAvailable && !canConfirm),
+                selectHut,
+                component("tooltip.select_hut"));
+        confirmButton = addButton(
+                slots.get(3),
+                actionLabel("confirm"),
+                primaryWhen(canConfirm),
+                () -> previewState.confirmation().ifPresent(ClientPlayNetworking::send),
+                component("tooltip.confirm"));
+    }
+
+    private TerrainwrightButton addButton(
+            TerrainwrightScreenLayout.Bounds bounds,
+            Component message,
+            TerrainwrightButton.Style style,
+            Runnable action,
+            Component compactTooltip) {
+        TerrainwrightButton button = addRenderableWidget(new TerrainwrightButton(
+                bounds.x(), bounds.y(), bounds.width(), bounds.height(), message, style, action));
+        if (layout.compact()) {
+            button.setTooltip(Tooltip.create(compactTooltip));
+        }
+        return button;
+    }
+
+    private TerrainwrightButton.Style primaryWhen(boolean condition) {
+        return condition ? TerrainwrightButton.Style.PRIMARY : TerrainwrightButton.Style.NORMAL;
+    }
+
+    private void drawWorkflowRail(GuiGraphicsExtractor graphics) {
+        TerrainwrightScreenLayout.Bounds rail = layout.stepRail();
+        TerrainwrightUiTheme.panel(graphics, rail);
+        boolean previewAvailable = previewState.preview().isPresent();
+        boolean canRequest = previewState.canRequestPreview();
+        boolean canConfirm = previewState.confirmation().isPresent();
+        WorkflowState[] states = {
+            canRequest || previewAvailable ? WorkflowState.READY : WorkflowState.WAITING,
+            WorkflowState.READY,
+            previewAvailable
+                    ? WorkflowState.READY
+                    : canRequest ? WorkflowState.WAITING : WorkflowState.LOCKED,
+            canConfirm
+                    ? WorkflowState.READY
+                    : previewAvailable ? WorkflowState.WAITING : WorkflowState.LOCKED,
+            canConfirm ? WorkflowState.READY : WorkflowState.LOCKED
+        };
+        String[] steps = {"site", "configure", "preview", "hut", "confirm"};
+        int gap = 2;
+        int slotWidth = (rail.width() - gap * (steps.length - 1)) / steps.length;
+        for (int index = 0; index < steps.length; index++) {
+            int x = rail.x() + index * (slotWidth + gap);
+            int width = index == steps.length - 1 ? rail.right() - x : slotWidth;
+            TerrainwrightUiTheme.statusBadge(
+                    graphics,
+                    font,
+                    new TerrainwrightScreenLayout.Bounds(x, rail.y(), width, rail.height()),
+                    component(
+                            "workflow." + steps[index] + (layout.compact() ? ".compact" : ""),
+                            states[index].label(layout.compact())),
+                    states[index].color);
+        }
+    }
+
+    private void drawConfigurationRail(GuiGraphicsExtractor graphics) {
+        TerrainwrightScreenLayout.Bounds rail = layout.configurationRail();
+        graphics.fill(rail.x(), rail.y(), rail.right(), rail.bottom(), TerrainwrightUiTheme.PARCHMENT_FILL);
+        graphics.outline(rail.x(), rail.y(), rail.width(), rail.height(), TerrainwrightUiTheme.AGED_COPPER);
+    }
+
+    private void drawWorldCanvas(GuiGraphicsExtractor graphics) {
+        TerrainwrightScreenLayout.Bounds canvas = layout.worldCanvas();
+        drawCopperCorners(graphics, canvas);
+        Optional<dev.ssa.fabric.network.PreviewPayloads.PreviewResult> preview = previewState.preview();
+        if (preview.isEmpty()) {
+            graphics.text(
+                    font,
+                    component("canvas.live" + (layout.compact() ? ".compact" : "")),
+                    canvas.x() + 4,
+                    canvas.y() + 4,
+                    TerrainwrightUiTheme.WARM_OFF_WHITE);
+            return;
+        }
+
+        var result = preview.orElseThrow();
+        var blueprint = result.blueprint();
+        int x = canvas.x() + 4;
+        int y = canvas.y() + 4;
+        int lineHeight = font.lineHeight + (layout.compact() ? 0 : 2);
+        Component[] lines = {
+            previewLabel("style", styleOption(blueprint.styleId())),
+            previewLabel("floors", blueprint.floors()),
+            previewLabel("blocks", blueprint.blocks().size()),
+            previewLabel(
+                    "terrain",
+                    blueprint.terrainPlan().removedCount(),
+                    blueprint.terrainPlan().filledCount()),
+            previewLabel("origin", result.origin().toShortString()),
+            previewLabel("rotation", result.rotation())
+        };
+        for (Component line : lines) {
+            graphics.text(font, line, x, y, TerrainwrightUiTheme.WARM_OFF_WHITE);
+            y += lineHeight;
+        }
+    }
+
+    private void drawCopperCorners(
+            GuiGraphicsExtractor graphics, TerrainwrightScreenLayout.Bounds bounds) {
+        int length = Math.max(4, Math.min(12, Math.min(bounds.width(), bounds.height()) / 4));
+        int color = TerrainwrightUiTheme.AGED_COPPER;
+        graphics.fill(bounds.x(), bounds.y(), bounds.x() + length, bounds.y() + 1, color);
+        graphics.fill(bounds.x(), bounds.y(), bounds.x() + 1, bounds.y() + length, color);
+        graphics.fill(bounds.right() - length, bounds.y(), bounds.right(), bounds.y() + 1, color);
+        graphics.fill(bounds.right() - 1, bounds.y(), bounds.right(), bounds.y() + length, color);
+        graphics.fill(bounds.x(), bounds.bottom() - 1, bounds.x() + length, bounds.bottom(), color);
+        graphics.fill(bounds.x(), bounds.bottom() - length, bounds.x() + 1, bounds.bottom(), color);
+        graphics.fill(bounds.right() - length, bounds.bottom() - 1, bounds.right(), bounds.bottom(), color);
+        graphics.fill(bounds.right() - 1, bounds.bottom() - length, bounds.right(), bounds.bottom(), color);
+    }
+
+    private void drawStatusRail(GuiGraphicsExtractor graphics) {
+        TerrainwrightScreenLayout.Bounds rail = layout.statusRail();
+        int gap = layout.compact() ? 2 : 4;
+        int cardHeight = (rail.height() - gap) / 2;
+        boolean previewAvailable = previewState.preview().isPresent();
+        boolean canRequest = previewState.canRequestPreview();
+        boolean canConfirm = previewState.confirmation().isPresent();
+        WorkflowState siteState = canRequest || previewAvailable
+                ? WorkflowState.READY
+                : WorkflowState.WAITING;
+        WorkflowState hutState = canConfirm
+                ? WorkflowState.READY
+                : previewAvailable ? WorkflowState.WAITING : WorkflowState.LOCKED;
+
+        drawStatusCard(
+                graphics,
+                new TerrainwrightScreenLayout.Bounds(rail.x(), rail.y(), rail.width(), cardHeight),
+                "site",
+                siteState,
+                siteRecovery(previewAvailable, canRequest));
+        drawStatusCard(
+                graphics,
+                new TerrainwrightScreenLayout.Bounds(
+                        rail.x(), rail.y() + cardHeight + gap, rail.width(), rail.height() - cardHeight - gap),
+                "hut",
+                hutState,
+                hutRecovery(previewAvailable, canConfirm));
+    }
+
+    private void drawStatusCard(
+            GuiGraphicsExtractor graphics,
+            TerrainwrightScreenLayout.Bounds bounds,
+            String name,
+            WorkflowState state,
+            Component recovery) {
+        graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), TerrainwrightUiTheme.DARK_OAK_PANEL);
+        graphics.fill(bounds.x(), bounds.y(), bounds.x() + 3, bounds.bottom(), state.color);
+        graphics.outline(bounds.x(), bounds.y(), bounds.width(), bounds.height(), TerrainwrightUiTheme.AGED_COPPER);
+        graphics.text(
+                font,
+                component(
+                        "status." + name + (layout.compact() ? ".compact" : ""),
+                        state.label(layout.compact())),
+                bounds.x() + 5,
+                bounds.y() + 4,
+                TerrainwrightUiTheme.WARM_OFF_WHITE);
+        int recoveryY = bounds.y() + font.lineHeight + 7;
+        int maxLines = Math.max(1, (bounds.bottom() - recoveryY - 2) / font.lineHeight);
+        var lines = font.split(recovery, bounds.width() - 9);
+        for (int index = 0; index < Math.min(maxLines, lines.size()); index++) {
+            graphics.text(
+                    font,
+                    lines.get(index),
+                    bounds.x() + 5,
+                    recoveryY + index * font.lineHeight,
+                    TerrainwrightUiTheme.WARM_OFF_WHITE);
+        }
+    }
+
+    private Component siteRecovery(boolean previewAvailable, boolean canRequest) {
+        Optional<dev.ssa.fabric.network.PreviewPayloads.PreviewFailure.Reason> failure =
+                previewState.lastFailure();
+        if (failure.isPresent()) {
+            return component(
+                    "failure." + failure.orElseThrow().name().toLowerCase(Locale.ROOT)
+                            + (layout.compact() ? ".compact" : ""));
+        }
+        String recovery = previewAvailable
+                ? "preview_ready"
+                : canRequest ? "generate" : "select_site";
+        return component("recovery." + recovery + (layout.compact() ? ".compact" : ""));
+    }
+
+    private Component hutRecovery(boolean previewAvailable, boolean canConfirm) {
+        String recovery = canConfirm
+                ? "confirm"
+                : previewAvailable ? "select_hut" : "hut_locked";
+        return component("recovery." + recovery + (layout.compact() ? ".compact" : ""));
     }
 
     private void requestPreview(boolean rotate) {
@@ -214,58 +512,83 @@ public final class ArchitectScreen extends Screen {
             return;
         }
         boolean canRequest = previewState.canRequestPreview();
-        selectHutButton.active = previewState.preview().isPresent();
+        boolean previewAvailable = previewState.preview().isPresent();
+        selectHutButton.active = previewAvailable;
         generateButton.active = canRequest;
-        rotateButton.active = canRequest && previewState.preview().isPresent();
-        moveButton.active = previewState.preview().isPresent();
+        rotateButton.active = canRequest && previewAvailable;
+        moveButton.active = previewAvailable;
         Optional<ConfirmPreview> confirmation = previewState.confirmation();
         confirmButton.active = confirmation.isPresent();
     }
 
-    private Button button(
-            int x,
-            int y,
-            int buttonWidth,
-            java.util.function.Supplier<String> label,
-            java.util.function.Consumer<Button> action) {
-        return Button.builder(Component.literal(label.get()), action::accept)
-                .bounds(x, y, buttonWidth, 20)
-                .build();
+    private boolean authorityChanged() {
+        return renderedCanRequest != previewState.canRequestPreview()
+                || renderedPreview != previewState.preview().isPresent()
+                || renderedConfirmation != previewState.confirmation().isPresent();
     }
 
-    private Button toggle(
-            int x,
-            int y,
-            String label,
-            java.util.function.BooleanSupplier value,
-            java.util.function.Consumer<Boolean> update) {
-        return Button.builder(
-                        Component.literal(label + ": " + (value.getAsBoolean() ? "On" : "Off")),
-                        ignored -> {
-                            update.accept(!value.getAsBoolean());
-                            rebuildWidgets();
-                        })
-                .bounds(x, y, 72, 20)
-                .build();
+    private void rememberRenderedAuthority() {
+        renderedCanRequest = previewState.canRequestPreview();
+        renderedPreview = previewState.preview().isPresent();
+        renderedConfirmation = previewState.confirmation().isPresent();
     }
 
-    private String styleLabel() {
-        return "Style: " + STYLES.get(styleIndex).value();
+    private Component actionLabel(String action) {
+        return component("action." + action + (layout.compact() ? ".compact" : ""));
     }
 
-    private String sizeLabel() {
-        return "Size: " + SIZES[sizeIndex][0] + " x " + SIZES[sizeIndex][1];
+    private Component fieldLabel(String field, Object value, boolean compact) {
+        return component("field." + field + (compact ? ".compact" : ""), value);
     }
 
-    private String floorsLabel() {
-        return "Floors: " + floors;
+    private Component toggleLabel(String field, boolean enabled, boolean compact) {
+        return fieldLabel(field, toggleOption(enabled), compact);
     }
 
-    private String bedroomsLabel() {
-        return "Beds: " + bedrooms;
+    private Component previewLabel(String field, Object... values) {
+        return component("preview." + field + (layout.compact() ? ".compact" : ""), values);
     }
 
-    private String entranceLabel() {
-        return "Entrance: " + EntrancePreference.values()[entranceIndex].name();
+    private Component styleOption() {
+        return styleOption(STYLES.get(styleIndex));
+    }
+
+    private Component styleOption(StyleId style) {
+        return component("option.style." + style.value().path());
+    }
+
+    private Component entranceOption() {
+        return component("option.entrance."
+                + EntrancePreference.values()[entranceIndex].name().toLowerCase(Locale.ROOT));
+    }
+
+    private Component toggleOption(boolean enabled) {
+        return component(enabled ? "option.on" : "option.off");
+    }
+
+    private Component sizeValue() {
+        return component("option.size", SIZES[sizeIndex][0], SIZES[sizeIndex][1]);
+    }
+
+    private static Component component(String suffix, Object... arguments) {
+        return Component.translatable(KEY + suffix, arguments);
+    }
+
+    private enum WorkflowState {
+        READY("ready", TerrainwrightUiTheme.STATE_GREEN),
+        WAITING("waiting", TerrainwrightUiTheme.STATE_AMBER),
+        LOCKED("locked", TerrainwrightUiTheme.STATE_GRAY);
+
+        private final String key;
+        private final int color;
+
+        WorkflowState(String key, int color) {
+            this.key = key;
+            this.color = color;
+        }
+
+        private Component label(boolean compact) {
+            return component("state." + key + (compact ? ".compact" : ""));
+        }
     }
 }

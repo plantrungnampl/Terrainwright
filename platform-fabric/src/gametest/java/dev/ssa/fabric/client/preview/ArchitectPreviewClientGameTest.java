@@ -26,7 +26,10 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +51,23 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
             singleplayer.getServer().runCommand("gamemode spectator @p");
             singleplayer.getServer().runCommand("tp @p 12 92 48 180 18");
             singleplayer.getClientLevel().waitForChunksRender();
+            state.clear();
             int startingFrames = dev.ssa.fabric.client.spike.preview.GhostPreviewRenderer.renderedFrameCount();
 
             try {
+                state.receiveSurveyToken("screen-ready-token");
+                ArchitectScreen emptyScreen = context.computeOnClient(client -> new ArchitectScreen(state));
+                context.runOnClient(client -> client.setScreenAndShow(emptyScreen));
+                context.waitTicks(2);
+                context.runOnClient(client -> {
+                    assertWidgetActive(emptyScreen, "action.generate", true);
+                    assertWidgetActive(emptyScreen, "action.select_hut", false);
+                    assertWidgetActive(emptyScreen, "action.rotate", false);
+                    assertWidgetActive(emptyScreen, "action.move", false);
+                    assertWidgetActive(emptyScreen, "action.confirm", false);
+                });
+                context.runOnClient(client -> client.setScreenAndShow(null));
+
                 long nonce = request(state, requirements, 0);
                 assertState(state.accept(result(blueprint, origin, 0, nonce)), "Medium preview was rejected");
                 state.selectHut(UUID.fromString("22222222-2222-2222-2222-222222222222"));
@@ -74,9 +91,22 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
                         state.accept(result(regenerated, origin, 0, nonce)),
                         "Regenerated Medium preview was rejected");
                 state.receiveSurveyToken("screen-successor-token");
-                context.runOnClient(client -> client.setScreenAndShow(new ArchitectScreen(state)));
+                int framesBeforeScreen = dev.ssa.fabric.client.spike.preview.GhostPreviewRenderer.renderedFrameCount();
+                ArchitectScreen previewScreen = context.computeOnClient(client -> new ArchitectScreen(state));
+                context.runOnClient(client -> client.setScreenAndShow(previewScreen));
                 context.waitTicks(2);
-                context.takeScreenshot("ssa-task13-architect-screen");
+                context.runOnClient(client -> {
+                    assertWidgetActive(previewScreen, "action.select_hut", true);
+                    assertWidgetActive(previewScreen, "action.rotate", true);
+                    assertWidgetActive(previewScreen, "action.move", true);
+                    assertWidgetActive(previewScreen, "action.confirm", true);
+                });
+                waitForFrames(context, framesBeforeScreen + 2);
+                int framesAfterScreen = dev.ssa.fabric.client.spike.preview.GhostPreviewRenderer.renderedFrameCount();
+                assertState(
+                        framesAfterScreen > framesBeforeScreen,
+                        "Architect screen suppressed live ghost rendering");
+                context.takeScreenshot("terrainwright-v101-architect-screen");
                 context.runOnClient(client -> client.setScreenAndShow(null));
 
                 context.runOnClient(client ->
@@ -189,6 +219,20 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
                 client -> dev.ssa.fabric.client.spike.preview.GhostPreviewRenderer.renderedFrameCount()
                         >= totalFrames,
                 10_000);
+    }
+
+    private static void assertWidgetActive(Screen screen, String keySuffix, boolean expected) {
+        Component message = Component.translatable(
+                "screen.smart_survival_architect.architect." + keySuffix);
+        AbstractWidget widget = screen.children().stream()
+                .filter(AbstractWidget.class::isInstance)
+                .map(AbstractWidget.class::cast)
+                .filter(candidate -> candidate.getMessage().equals(message))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing Architect widget: " + message));
+        assertState(
+                widget.active == expected,
+                "Unexpected active state for " + message + ": " + widget.active);
     }
 
     private static void assertState(boolean condition, String message) {

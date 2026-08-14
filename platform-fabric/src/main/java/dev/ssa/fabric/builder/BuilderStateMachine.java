@@ -42,9 +42,13 @@ public final class BuilderStateMachine {
         SELECT_NEXT_TASK,
         NO_CHEST,
         SUSPENDED_CHUNK_UNLOADED,
+        PAUSED,
         BLOCKED;
 
         private boolean canTransitionTo(State next) {
+            if (next == PAUSED && canPause()) {
+                return true;
+            }
             return switch (this) {
                 case IDLE -> next == RECOVERING;
                 case RECOVERING -> next == CHECK_MATERIALS
@@ -95,7 +99,17 @@ public final class BuilderStateMachine {
                         || next == BLOCKED;
                 case NO_CHEST -> next == RECOVERING || next == BLOCKED;
                 case SUSPENDED_CHUNK_UNLOADED -> next == RECOVERING || next == BLOCKED;
+                case PAUSED -> next == RECOVERING || next == BLOCKED;
                 case BLOCKED -> false;
+            };
+        }
+
+        private boolean canPause() {
+            return switch (this) {
+                case RECOVERING, CHECK_MATERIALS, WAIT_MATERIAL, NAVIGATE_CHEST,
+                        FETCH_MATERIAL, NAVIGATE_SITE, EXECUTE_TASK, NAVIGATE_SCAFFOLD,
+                        EXECUTE_SCAFFOLD, SELECT_NEXT_TASK -> true;
+                default -> false;
             };
         }
     }

@@ -153,6 +153,15 @@ public final class BuilderController {
             return;
         }
         BuildJobState durableState = job().state();
+        if (durableState == BuildJobState.PREPARING
+                && stateMachine.state() == BuilderStateMachine.State.PAUSED) {
+            stateMachine.transition(BuilderStateMachine.State.RECOVERING);
+        }
+        if (durableState == BuildJobState.PAUSED
+                && stateMachine.state() != BuilderStateMachine.State.RECOVERING) {
+            enterPaused();
+            return;
+        }
         if (durableState == BuildJobState.STOPPING
                 && stateMachine.state() != BuilderStateMachine.State.RECOVERING) {
             finishStopping(level);
@@ -185,7 +194,7 @@ public final class BuilderController {
             case EXECUTE_SCAFFOLD -> startScaffoldMutation(level);
             case SELECT_NEXT_TASK -> selectNextTask(level);
             case NO_CHEST, SUSPENDED_CHUNK_UNLOADED -> resumeIfAvailable(level);
-            case BLOCKED, IDLE -> {
+            case PAUSED, BLOCKED, IDLE -> {
             }
         }
     }
@@ -200,6 +209,32 @@ public final class BuilderController {
 
     public String failureReason() {
         return failureReason;
+    }
+
+    public Map<String, Integer> missingMaterials(ServerLevel level) {
+        Objects.requireNonNull(level, "level");
+        if (order == null || job().state() != BuildJobState.WAIT_MATERIAL) {
+            return Map.of();
+        }
+        Optional<Container> chest = linkedContainer(level);
+        if (chest.isEmpty()) {
+            return Map.of();
+        }
+        Container linkedChest = chest.orElseThrow();
+        Map<String, Integer> missing = new LinkedHashMap<>();
+        additionalMaterialCounts().forEach((item, required) -> {
+            int available = 0;
+            for (int slot = 0; slot < linkedChest.getContainerSize(); slot++) {
+                ItemStack stack = linkedChest.getItem(slot);
+                if (isCanonicalMaterial(stack, item)) {
+                    available += stack.getCount();
+                }
+            }
+            if (available < required) {
+                missing.put(BuiltInRegistries.ITEM.getKey(item).toString(), required - available);
+            }
+        });
+        return Map.copyOf(missing);
     }
 
     private boolean finishInFlight(ServerLevel level) {
@@ -232,6 +267,14 @@ public final class BuilderController {
                     beginRecoveryCheckpoint(level);
                 } else {
                     finishStopping(level);
+                }
+                return true;
+            }
+            if (job().state() == BuildJobState.PAUSED) {
+                if (completedAction == InFlightAction.RECOVERY) {
+                    beginRecoveryCheckpoint(level);
+                } else {
+                    enterPaused();
                 }
                 return true;
             }
@@ -302,6 +345,10 @@ public final class BuilderController {
 
     private void prepareJobAfterRecovery(ServerLevel level) {
         BuildJob current = job();
+        if (current.state() == BuildJobState.PAUSED) {
+            enterPaused();
+            return;
+        }
         if (current.state() == BuildJobState.STOPPING) {
             finishStopping(level);
             return;
@@ -841,6 +888,13 @@ public final class BuilderController {
         inFlight = level.getDataStorage().scheduleSave()
                 .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.NO_ACTIVE_INTENT, 0));
         inFlightAction = InFlightAction.STOP_CHECKPOINT;
+    }
+
+    private void enterPaused() {
+        builder.getNavigation().stop();
+        if (stateMachine.state() != BuilderStateMachine.State.PAUSED) {
+            stateMachine.transition(BuilderStateMachine.State.PAUSED);
+        }
     }
 
     private Optional<Container> linkedContainer(ServerLevel level) {
@@ -1383,6 +1437,10 @@ public final class BuilderController {
         }
 
         private BuildJob restoreBuildingState(BuildJob current, long expectedRevision) {
+            if (current.state() == BuildJobState.PAUSED
+                    && current.revision() == expectedRevision + 1) {
+                return current;
+            }
             if (current.state() == BuildJobState.STOPPING
                     && current.revision() == expectedRevision + 1) {
                 return current;

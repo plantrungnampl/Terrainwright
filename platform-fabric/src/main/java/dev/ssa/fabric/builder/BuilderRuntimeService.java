@@ -115,6 +115,26 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 .stop(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
     }
 
+    public static CompletableFuture<JobReplicationService.CommandResult> pauseJob(
+            ServerLevel level,
+            String jobId,
+            UUID ownerId,
+            long expectedRevision) {
+        Objects.requireNonNull(level, "level");
+        return service(level.getServer()).controls(level)
+                .pause(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
+    }
+
+    public static CompletableFuture<JobReplicationService.CommandResult> resumeJob(
+            ServerLevel level,
+            String jobId,
+            UUID ownerId,
+            long expectedRevision) {
+        Objects.requireNonNull(level, "level");
+        return service(level.getServer()).controls(level)
+                .resume(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
+    }
+
     public static CompletableFuture<JobReplicationService.CommandResult> undoJob(
             ServerLevel level,
             String jobId,
@@ -371,6 +391,16 @@ public final class BuilderRuntimeService implements AutoCloseable {
         requireServerThread();
         ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
         return new JobReplicationService(repository, permissions, new JobReplicationService.CommandExecutor() {
+            @Override
+            public CompletableFuture<Void> pause(BuildJob pausedJob) {
+                return level.getDataStorage().scheduleSave().thenApply(ignored -> (Void) null);
+            }
+
+            @Override
+            public CompletableFuture<Void> resume(BuildJob resumedJob) {
+                return level.getDataStorage().scheduleSave().thenApply(ignored -> (Void) null);
+            }
+
             @Override
             public CompletableFuture<Void> stop(BuildJob stoppingJob) {
                 return level.getDataStorage().scheduleSave().thenApply(ignored -> (Void) null);

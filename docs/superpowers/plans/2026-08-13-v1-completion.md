@@ -96,10 +96,10 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - Client state ignores deltas older than its current revision and never performs authoritative mutation.
 - Pause, Resume, Stop, and Undo are server-validated commands.
 
-- [ ] Write the stale-delta and unauthorized-command tests first and verify they fail.
-- [ ] Implement compact revisioned payloads and server-side command validation.
-- [ ] Render actionable missing-material/conflict/recovery status without adding client classes to server initialization.
-- [ ] Run unit tests and a two-player GameTest; commit `feat: expose builder progress and controls`.
+- [x] Write the stale-delta and unauthorized-command tests first and verify they fail.
+- [x] Implement compact revisioned payloads and server-side command validation.
+- [x] Render actionable missing-material/conflict/recovery status without adding client classes to server initialization.
+- [x] Run unit tests and a two-player GameTest; commit `feat: expose builder progress and controls`.
 
 ### Task 5: Close V1 procedural generation and style coverage
 

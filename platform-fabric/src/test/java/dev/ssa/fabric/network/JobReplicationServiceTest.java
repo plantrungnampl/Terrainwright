@@ -6,9 +6,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
+import dev.ssa.architect.blueprint.BuildPhase;
 import dev.ssa.construction.job.BuildJob;
+import dev.ssa.construction.job.BuildJob.Diagnostic;
+import dev.ssa.construction.job.BuildJob.Severity;
 import dev.ssa.construction.job.BuildJobState;
+import dev.ssa.construction.plan.TaskGraph;
+import dev.ssa.construction.schedule.WorkZone;
+import dev.ssa.construction.task.BuildTask;
+import dev.ssa.construction.task.TaskOperation;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -91,6 +102,95 @@ final class JobReplicationServiceTest {
         assertEquals(1, executor.undoCount.get());
     }
 
+    @Test
+    void pauseAndResumeUseTheSameRevisionedServerAuthority() {
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        BuildJob job = job("job-pause", OWNER);
+        repository.saveJob(job);
+        RecordingExecutor executor = new RecordingExecutor();
+        JobReplicationService service = new JobReplicationService(
+                repository,
+                (owner, position) -> true,
+                executor);
+
+        JobReplicationService.CommandResult paused = service
+                .pause(job.jobId(), OWNER, job.revision())
+                .join();
+        BuildJob durablePause = repository.findJob(job.jobId()).orElseThrow();
+        JobReplicationService.CommandResult resumed = service
+                .resume(job.jobId(), OWNER, durablePause.revision())
+                .join();
+
+        assertTrue(paused.accepted());
+        assertEquals(BuildJobState.PAUSED, durablePause.state());
+        assertTrue(resumed.accepted());
+        assertEquals(BuildJobState.PREPARING, repository.findJob(job.jobId()).orElseThrow().state());
+        assertEquals(1, executor.pauseCount.get());
+        assertEquals(1, executor.resumeCount.get());
+    }
+
+    @Test
+    void resumeCommandCannotBypassLostBuilderRecovery() {
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        BuildJob lostBuilder = job("job-lost-builder", OWNER)
+                .transitionTo(BuildJobState.PREPARING)
+                .transitionTo(BuildJobState.NO_BUILDER);
+        repository.saveJob(lostBuilder);
+        RecordingExecutor executor = new RecordingExecutor();
+        JobReplicationService service = new JobReplicationService(
+                repository,
+                (owner, position) -> true,
+                executor);
+
+        JobReplicationService.CommandResult result = service
+                .resume(lostBuilder.jobId(), OWNER, lostBuilder.revision())
+                .join();
+
+        assertFalse(result.accepted());
+        assertEquals(JobReplicationService.Rejection.INVALID_STATE, result.rejection());
+        assertEquals(lostBuilder, repository.findJob(lostBuilder.jobId()).orElseThrow());
+        assertEquals(0, executor.resumeCount.get());
+    }
+
+    @Test
+    void snapshotCarriesAuthoritativeProgressAndDiagnostics() {
+        GridPos conflict = new GridPos(2, 3, 4);
+        BuildJob job = job("job-view", OWNER).recordDiagnosticAndTransition(
+                new Diagnostic(
+                        "WORLD_CONFLICT",
+                        Severity.WARNING,
+                        "A player changed the target block",
+                        true,
+                        1,
+                        Optional.of(conflict)),
+                BuildJobState.PAUSED_CONFLICT);
+        BuildTask task = new BuildTask(
+                "task-1",
+                conflict,
+                TaskOperation.REMOVE,
+                Optional.empty(),
+                Set.of(),
+                BuildPhase.FOUNDATION,
+                WorkZone.containing(conflict),
+                false,
+                Optional.empty());
+
+        JobPayloads.JobSnapshot snapshot = JobReplicationService.snapshot(
+                job,
+                new TaskGraph(List.of(task)),
+                Map.of("minecraft:oak_planks", 3));
+
+        assertEquals(job.jobId(), snapshot.jobId());
+        assertEquals(OWNER, snapshot.ownerId());
+        assertEquals(job.revision(), snapshot.revision());
+        assertEquals(BuildJobState.PAUSED_CONFLICT, snapshot.state());
+        assertEquals(0, snapshot.completedTasks());
+        assertEquals(1, snapshot.totalTasks());
+        assertEquals(Map.of("minecraft:oak_planks", 3), snapshot.missingMaterials());
+        assertEquals(List.of(conflict), snapshot.conflicts());
+        assertEquals("WORLD_CONFLICT", snapshot.diagnostics().getFirst().code());
+    }
+
     private static BuildJob job(String jobId, UUID owner) {
         return BuildJob.create(
                 jobId,
@@ -106,6 +206,22 @@ final class JobReplicationServiceTest {
     private static final class RecordingExecutor implements JobReplicationService.CommandExecutor {
         private final AtomicInteger stopCount = new AtomicInteger();
         private final AtomicInteger undoCount = new AtomicInteger();
+        private final AtomicInteger pauseCount = new AtomicInteger();
+        private final AtomicInteger resumeCount = new AtomicInteger();
+
+        @Override
+        public CompletableFuture<Void> pause(BuildJob pausedJob) {
+            assertEquals(BuildJobState.PAUSED, pausedJob.state());
+            pauseCount.incrementAndGet();
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Void> resume(BuildJob resumedJob) {
+            assertEquals(BuildJobState.PREPARING, resumedJob.state());
+            resumeCount.incrementAndGet();
+            return CompletableFuture.completedFuture(null);
+        }
 
         @Override
         public CompletableFuture<Void> stop(BuildJob stoppingJob) {

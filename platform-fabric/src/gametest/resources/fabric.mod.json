@@ -13,7 +13,8 @@
       "dev.ssa.fabric.job.BuilderLossRecoveryGameTest",
       "dev.ssa.fabric.undo.SafeUndoGameTest",
       "dev.ssa.fabric.link.HutChestLinkGameTest",
-      "dev.ssa.fabric.preview.PreviewAuthorityGameTest"
+      "dev.ssa.fabric.preview.PreviewAuthorityGameTest",
+      "dev.ssa.fabric.network.JobControlAuthorityGameTest"
     ],
     "fabric-client-gametest": [
       "dev.ssa.fabric.client.spike.preview.GhostPreviewClientGameTest",

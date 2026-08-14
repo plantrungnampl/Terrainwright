@@ -3,7 +3,10 @@ package dev.ssa.fabric.network;
 import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
 import dev.ssa.construction.job.BuildJobState;
+import dev.ssa.construction.plan.TaskGraph;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,11 +26,63 @@ public final class JobReplicationService {
         this.executor = Objects.requireNonNull(executor, "executor");
     }
 
+    public static JobPayloads.JobSnapshot snapshot(BuildJob job, TaskGraph plan) {
+        return snapshot(job, plan, Map.of());
+    }
+
+    public static JobPayloads.JobSnapshot snapshot(
+            BuildJob job,
+            TaskGraph plan,
+            Map<String, Integer> missingMaterials) {
+        Objects.requireNonNull(job, "job");
+        Objects.requireNonNull(plan, "plan");
+        Objects.requireNonNull(missingMaterials, "missingMaterials");
+        List<JobPayloads.DiagnosticView> diagnostics = job.failedTaskDiagnostics().stream()
+                .limit(64)
+                .map(diagnostic -> new JobPayloads.DiagnosticView(
+                        diagnostic.code(),
+                        diagnostic.message(),
+                        diagnostic.recoverable(),
+                        diagnostic.position()))
+                .toList();
+        List<dev.ssa.architect.model.GridPos> conflicts = job.failedTaskDiagnostics().stream()
+                .filter(diagnostic -> diagnostic.code().contains("CONFLICT"))
+                .flatMap(diagnostic -> diagnostic.position().stream())
+                .distinct()
+                .limit(512)
+                .toList();
+        return new JobPayloads.JobSnapshot(
+                job.jobId(),
+                UUID.fromString(job.hutId()),
+                UUID.fromString(job.ownerId()),
+                job.revision(),
+                job.state(),
+                job.completedTaskIds().size(),
+                plan.tasks().size(),
+                missingMaterials,
+                conflicts,
+                diagnostics);
+    }
+
     public CompletableFuture<CommandResult> stop(
             String jobId,
             UUID requester,
             long expectedRevision) {
         return command(jobId, requester, expectedRevision, BuildJobState.STOPPING, executor::stop);
+    }
+
+    public CompletableFuture<CommandResult> pause(
+            String jobId,
+            UUID requester,
+            long expectedRevision) {
+        return command(jobId, requester, expectedRevision, BuildJobState.PAUSED, executor::pause);
+    }
+
+    public CompletableFuture<CommandResult> resume(
+            String jobId,
+            UUID requester,
+            long expectedRevision) {
+        return command(jobId, requester, expectedRevision, BuildJobState.PREPARING, executor::resume);
     }
 
     public CompletableFuture<CommandResult> undo(
@@ -58,6 +113,9 @@ public final class JobReplicationService {
         if (!permissions.canModify(requester, current.origin())) {
             return rejected(Rejection.PROTECTED, current.revision());
         }
+        if (targetState == BuildJobState.PREPARING && current.state() != BuildJobState.PAUSED) {
+            return rejected(Rejection.INVALID_STATE, current.revision());
+        }
         if (current.state() == targetState) {
             return CompletableFuture.completedFuture(CommandResult.accepted(current.revision()));
         }
@@ -81,6 +139,10 @@ public final class JobReplicationService {
     }
 
     public interface CommandExecutor {
+        CompletableFuture<Void> pause(BuildJob pausedJob);
+
+        CompletableFuture<Void> resume(BuildJob resumedJob);
+
         CompletableFuture<Void> stop(BuildJob stoppingJob);
 
         CompletableFuture<Void> undo(BuildJob undoingJob);
@@ -112,6 +174,7 @@ public final class JobReplicationService {
         NOT_OWNER,
         STALE_REVISION,
         PROTECTED,
-        INVALID_STATE
+        INVALID_STATE,
+        EXECUTION_FAILED
     }
 }

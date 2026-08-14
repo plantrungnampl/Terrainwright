@@ -43,6 +43,37 @@ final class BuildJobStopTest {
         assertEquals(1, committed.blockJournal().size());
     }
 
+    @Test
+    void manuallyPausedJobCanCommitTheWorldIntentThatWasAlreadyInFlight() {
+        BuildJob building = BuildJob.create(
+                        "job-pause-drain",
+                        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                        "ssa:blueprint",
+                        "0123456789abcdef",
+                        NamespacedId.parse("minecraft:overworld"),
+                        new GridPos(0, 64, 0),
+                        0)
+                .transitionTo(BuildJobState.PREPARING)
+                .transitionTo(BuildJobState.NAVIGATING)
+                .transitionTo(BuildJobState.BUILDING);
+        BuildJob paused = building.transitionTo(BuildJobState.PAUSED);
+        JournalEntry drained = new JournalEntry(
+                0,
+                "entry-pause",
+                "operation-pause",
+                "task-pause",
+                new GridPos(1, 0, 1),
+                state("minecraft:air"),
+                state("minecraft:stone"),
+                paused.revision() + 1);
+
+        BuildJob committed = paused.recordCompletion(drained.taskId(), drained);
+
+        assertEquals(BuildJobState.PAUSED, committed.state());
+        assertEquals(1, committed.blockJournal().size());
+    }
+
     private static BlockStateSpec state(String id) {
         return new BlockStateSpec(NamespacedId.parse(id), Map.of());
     }

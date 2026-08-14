@@ -3,6 +3,7 @@ package dev.ssa.fabric.entity;
 import dev.ssa.fabric.builder.BuilderController;
 import dev.ssa.fabric.builder.BuilderRuntimeService;
 import java.util.Objects;
+import java.util.Map;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -52,6 +53,10 @@ public final class BuilderEntity extends PathfinderMob {
 
     public boolean hasController() {
         return controller != null;
+    }
+
+    public Map<String, Integer> missingMaterials(ServerLevel level) {
+        return controller == null ? Map.of() : controller.missingMaterials(level);
     }
 
     public SimpleContainer carriedItems() {

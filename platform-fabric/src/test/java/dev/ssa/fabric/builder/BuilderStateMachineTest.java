@@ -79,4 +79,20 @@ final class BuilderStateMachineTest {
 
         assertEquals(BuilderStateMachine.State.SELECT_NEXT_TASK, machine.state());
     }
+
+    @Test
+    void manualPauseCanResumeOnlyThroughRecovery() {
+        BuilderStateMachine machine = new BuilderStateMachine();
+        machine.transition(BuilderStateMachine.State.RECOVERING);
+        machine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
+        machine.transition(BuilderStateMachine.State.NAVIGATE_SITE);
+        machine.transition(BuilderStateMachine.State.PAUSED);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> machine.transition(BuilderStateMachine.State.CHECK_MATERIALS));
+
+        machine.transition(BuilderStateMachine.State.RECOVERING);
+        assertEquals(BuilderStateMachine.State.RECOVERING, machine.state());
+    }
 }

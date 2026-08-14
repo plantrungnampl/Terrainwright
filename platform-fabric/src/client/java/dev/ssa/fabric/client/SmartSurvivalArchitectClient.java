@@ -8,6 +8,8 @@ import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.preview.PreviewTransform;
 import dev.ssa.fabric.client.entity.BuilderRenderer;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
+import dev.ssa.fabric.client.screen.BuilderHutScreen;
+import dev.ssa.fabric.client.job.JobClientState;
 import dev.ssa.fabric.block.BuilderHutBlockEntity;
 import dev.ssa.fabric.block.ModBlocks;
 import dev.ssa.fabric.entity.ModEntityTypes;
@@ -18,8 +20,13 @@ import dev.ssa.fabric.network.PreviewPayloads.SelectSurveySite;
 import dev.ssa.fabric.network.PreviewPayloads.StartSurvey;
 import dev.ssa.fabric.network.PreviewPayloads.SurveyTokenResult;
 import dev.ssa.fabric.network.PreviewPayloads.SurveyStatus;
+import dev.ssa.fabric.network.JobPayloads.JobCommandResult;
+import dev.ssa.fabric.network.JobPayloads.JobDelta;
+import dev.ssa.fabric.network.JobPayloads.JobSnapshot;
+import dev.ssa.fabric.network.JobPayloads.RequestJobSnapshot;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -41,7 +48,9 @@ import org.slf4j.LoggerFactory;
 public final class SmartSurvivalArchitectClient implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartSurvivalArchitectMod.MOD_ID);
     private static final PreviewClientState PREVIEW_STATE = PreviewClientState.production();
+    private static final JobClientState JOB_STATE = new JobClientState();
     private static BlockPos activeArchitectTable;
+    private static UUID activeBuilderHut;
     private static SelectionMode selectionMode = SelectionMode.NONE;
 
     @Override
@@ -53,6 +62,10 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
         ClientPlayNetworking.registerGlobalReceiver(SurveyStatus.TYPE, SmartSurvivalArchitectClient::receiveSurveyStatus);
         ClientPlayNetworking.registerGlobalReceiver(PreviewFailure.TYPE, SmartSurvivalArchitectClient::receiveFailure);
         ClientPlayNetworking.registerGlobalReceiver(PreviewResult.TYPE, SmartSurvivalArchitectClient::receivePreview);
+        ClientPlayNetworking.registerGlobalReceiver(JobSnapshot.TYPE, SmartSurvivalArchitectClient::receiveJobSnapshot);
+        ClientPlayNetworking.registerGlobalReceiver(JobDelta.TYPE, SmartSurvivalArchitectClient::receiveJobDelta);
+        ClientPlayNetworking.registerGlobalReceiver(
+                JobCommandResult.TYPE, SmartSurvivalArchitectClient::receiveJobCommandResult);
         UseBlockCallback.EVENT.register(SmartSurvivalArchitectClient::useBlock);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (selectionMode != SelectionMode.NONE && client.gui.screen() instanceof PauseScreen) {
@@ -112,6 +125,10 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
             cancelSelection(true);
             return InteractionResult.SUCCESS;
         }
+        if (level.getBlockEntity(position) instanceof BuilderHutBlockEntity hut) {
+            openBuilderScreen(hut.references().hutId());
+            return InteractionResult.SUCCESS;
+        }
         if (level.getBlockState(position).is(ModBlocks.ARCHITECT_TABLE)) {
             activeArchitectTable = position.immutable();
             PREVIEW_STATE.clear();
@@ -167,10 +184,27 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
                 SmartSurvivalArchitectClient::beginHutSelection));
     }
 
+    private static void openBuilderScreen(UUID hutId) {
+        activeBuilderHut = hutId;
+        JOB_STATE.clear();
+        requestBuilderJob(hutId);
+        Minecraft.getInstance().setScreenAndShow(new BuilderHutScreen(
+                JOB_STATE,
+                () -> requestBuilderJob(hutId)));
+    }
+
+    private static void requestBuilderJob(UUID hutId) {
+        if (hutId.equals(activeBuilderHut)) {
+            ClientPlayNetworking.send(new RequestJobSnapshot(hutId));
+        }
+    }
+
     private static void clearWorkflow() {
         activeArchitectTable = null;
+        activeBuilderHut = null;
         selectionMode = SelectionMode.NONE;
         PREVIEW_STATE.clear();
+        JOB_STATE.clear();
     }
 
     private static void receivePreview(PreviewResult payload, ClientPlayNetworking.Context context) {
@@ -183,6 +217,22 @@ public final class SmartSurvivalArchitectClient implements ClientModInitializer 
 
     private static void receiveFailure(PreviewFailure payload, ClientPlayNetworking.Context context) {
         context.client().execute(() -> PREVIEW_STATE.reject(payload));
+    }
+
+    private static void receiveJobSnapshot(JobSnapshot payload, ClientPlayNetworking.Context context) {
+        context.client().execute(() -> {
+            if (payload.hutId().equals(activeBuilderHut)) {
+                JOB_STATE.accept(payload);
+            }
+        });
+    }
+
+    private static void receiveJobDelta(JobDelta payload, ClientPlayNetworking.Context context) {
+        context.client().execute(() -> JOB_STATE.accept(payload));
+    }
+
+    private static void receiveJobCommandResult(JobCommandResult payload, ClientPlayNetworking.Context context) {
+        context.client().execute(() -> JOB_STATE.accept(payload));
     }
 
     private static Set<GridPos> conflicts(PreviewResult result, net.minecraft.client.multiplayer.ClientLevel level) {

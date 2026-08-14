@@ -15,6 +15,7 @@ import dev.ssa.architect.style.ModernStyle;
 import dev.ssa.architect.style.StylePack;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.client.screen.ArchitectScreen;
+import dev.ssa.fabric.client.screen.ArchitectScreenAssertions;
 import dev.ssa.fabric.client.screen.TerrainwrightButton;
 import dev.ssa.fabric.client.screen.TerrainwrightButtonAccessibilityAssertions;
 import dev.ssa.fabric.client.spike.preview.PreviewRenderMetrics;
@@ -69,12 +70,16 @@ public final class ArchitectPreviewClientGameTest implements FabricClientGameTes
                 context.waitTicks(2);
                 context.runOnClient(client -> {
                     assertCompactWidgetGeometry(compactScreen, 320, 180);
+                    ArchitectScreenAssertions.assertCompactWorkflowBadgesConveyStateAndFit(compactScreen);
                     assertRecoveryAdjacent(
                             compactScreen,
                             "recovery.generate.compact",
                             "action.generate.compact",
                             4);
                 });
+                context.getInput().setCursorPos(1000, 1000);
+                context.waitTick();
+                context.takeScreenshot("terrainwright-v101-architect-compact-screen");
                 context.runOnClient(client -> client.setScreenAndShow(null));
 
                 ArchitectScreen emptyScreen = context.computeOnClient(client -> new ArchitectScreen(state));

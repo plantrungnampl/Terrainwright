@@ -7,6 +7,7 @@ import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
 import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -335,6 +336,14 @@ public final class ArchitectScreen extends Screen {
     private void drawWorkflowRail(GuiGraphicsExtractor graphics) {
         TerrainwrightScreenLayout.Bounds rail = layout.stepRail();
         TerrainwrightUiTheme.panel(graphics, rail);
+        for (WorkflowBadge badge : workflowBadges()) {
+            TerrainwrightUiTheme.statusBadge(
+                    graphics, font, badge.bounds(), badge.text(), badge.stateColor());
+        }
+    }
+
+    List<WorkflowBadge> workflowBadges() {
+        TerrainwrightScreenLayout.Bounds rail = layout.stepRail();
         boolean previewAvailable = previewState.preview().isPresent();
         boolean canRequest = previewState.canRequestPreview();
         boolean canConfirm = previewState.confirmation().isPresent();
@@ -352,19 +361,21 @@ public final class ArchitectScreen extends Screen {
         String[] steps = {"design", "site", "preview", "hut", "confirm"};
         int gap = 2;
         int slotWidth = (rail.width() - gap * (steps.length - 1)) / steps.length;
+        List<WorkflowBadge> badges = new ArrayList<>(steps.length);
         for (int index = 0; index < steps.length; index++) {
             int x = rail.x() + index * (slotWidth + gap);
             int width = index == steps.length - 1 ? rail.right() - x : slotWidth;
-            TerrainwrightUiTheme.statusBadge(
-                    graphics,
-                    font,
-                    new TerrainwrightScreenLayout.Bounds(x, rail.y(), width, rail.height()),
+            badges.add(new WorkflowBadge(
                     layout.compact()
-                            ? component("workflow." + steps[index] + ".compact")
+                            ? component("workflow." + steps[index] + ".compact", states[index].label(true))
                             : component("workflow." + steps[index], states[index].label(false)),
-                    states[index].color);
+                    new TerrainwrightScreenLayout.Bounds(x, rail.y(), width, rail.height()),
+                    states[index].color));
         }
+        return List.copyOf(badges);
     }
+
+    record WorkflowBadge(Component text, TerrainwrightScreenLayout.Bounds bounds, int stateColor) {}
 
     private void drawConfigurationRail(GuiGraphicsExtractor graphics) {
         TerrainwrightScreenLayout.Bounds rail = layout.configurationRail();

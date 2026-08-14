@@ -5,6 +5,7 @@ import dev.ssa.fabric.block.ModBlockEntityTypes;
 import dev.ssa.fabric.block.ModBlocks;
 import dev.ssa.fabric.builder.BuilderRuntimeService;
 import dev.ssa.fabric.entity.ModEntityTypes;
+import dev.ssa.fabric.item.ModCreativeTabs;
 import dev.ssa.fabric.item.ModItems;
 import dev.ssa.fabric.network.JobNetworking;
 import dev.ssa.fabric.network.PreviewNetworking;
@@ -25,6 +26,7 @@ public final class TerrainwrightMod implements ModInitializer {
     public void onInitialize() {
         ModBlocks.initialize();
         ModItems.initialize();
+        ModCreativeTabs.initialize();
         ModBlockEntityTypes.initialize();
         ModEntityTypes.initialize();
         StyleDataLoader.initialize();

@@ -1,4 +1,5 @@
 {
   "block.smart_survival_architect.architect_table": "Architect Table",
-  "block.smart_survival_architect.builder_hut": "Builder Hut"
+  "block.smart_survival_architect.builder_hut": "Builder Hut",
+  "creativeTab.smart_survival_architect.terrainwright": "Terrainwright"
 }

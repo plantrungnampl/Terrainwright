@@ -168,22 +168,49 @@ public final class BuilderHutScreen extends Screen {
     private void drawHeader(GuiGraphicsExtractor graphics) {
         TerrainwrightScreenLayout.Bounds header = layout.header();
         TerrainwrightUiTheme.panel(graphics, header);
+        for (HeaderLabel label : headerLabels()) {
+            drawClippedLabel(
+                    graphics,
+                    label.text(),
+                    label.bounds().x(),
+                    label.bounds().y(),
+                    label.bounds().width());
+        }
+    }
+
+    List<HeaderLabel> headerLabels() {
+        TerrainwrightScreenLayout.Bounds header = layout.header();
         int padding = 4;
         int third = header.width() / 3;
         int textY = header.y() + Math.max(1, (header.height() - font.lineHeight) / 2);
-
-        drawClippedLabel(graphics, title, header.x() + padding, textY, third - padding * 2);
+        String compactSuffix = layout.compact() ? ".compact" : "";
         JobSnapshot snapshot = jobState.snapshot().orElse(null);
         Component state = snapshot == null
-                ? component("state.none")
-                : component("state.current", stateName(snapshot.state()));
-        drawClippedLabel(graphics, state, header.x() + third + padding, textY, third - padding * 2);
+                ? component("state.none" + compactSuffix)
+                : component("state.current" + compactSuffix, stateName(snapshot.state()));
 
         Component chest = jobState.hutSnapshot()
-                .map(hut -> component(hut.chestLinked() ? "chest.linked" : "chest.unlinked"))
-                .orElseGet(() -> component("chest.unavailable"));
-        drawClippedLabel(graphics, chest, header.x() + third * 2 + padding, textY, header.width() - third * 2 - padding * 2);
+                .map(hut -> component((hut.chestLinked() ? "chest.linked" : "chest.unlinked") + compactSuffix))
+                .orElseGet(() -> component("chest.unavailable" + compactSuffix));
+        return List.of(
+                new HeaderLabel(
+                        title,
+                        new TerrainwrightScreenLayout.Bounds(
+                                header.x() + padding, textY, third - padding * 2, font.lineHeight)),
+                new HeaderLabel(
+                        state,
+                        new TerrainwrightScreenLayout.Bounds(
+                                header.x() + third + padding, textY, third - padding * 2, font.lineHeight)),
+                new HeaderLabel(
+                        chest,
+                        new TerrainwrightScreenLayout.Bounds(
+                                header.x() + third * 2 + padding,
+                                textY,
+                                header.width() - third * 2 - padding * 2,
+                                font.lineHeight)));
     }
+
+    record HeaderLabel(Component text, TerrainwrightScreenLayout.Bounds bounds) {}
 
     private void drawClippedLabel(
             GuiGraphicsExtractor graphics, Component text, int x, int y, int availableWidth) {

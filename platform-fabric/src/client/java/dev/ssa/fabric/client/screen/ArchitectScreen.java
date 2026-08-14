@@ -5,6 +5,7 @@ import dev.ssa.architect.model.HouseRequirements;
 import dev.ssa.architect.model.StyleId;
 import dev.ssa.fabric.client.preview.PreviewClientState;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
+import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
 import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
 import java.util.List;
 import java.util.Locale;
@@ -47,8 +48,9 @@ public final class ArchitectScreen extends Screen {
     private TerrainwrightButton confirmButton;
     private StringWidget recoveryText;
     private boolean renderedCanRequest;
-    private boolean renderedPreview;
+    private PreviewResult renderedPreview;
     private boolean renderedConfirmation;
+    private PreviewResult synchronizedPreview;
 
     public ArchitectScreen(PreviewClientState previewState) {
         this(previewState, () -> {}, () -> {});
@@ -507,12 +509,18 @@ public final class ArchitectScreen extends Screen {
     }
 
     private void synchronizeStyleWithAuthoritativePreview() {
-        previewState.preview().ifPresent(result -> {
-            int authoritativeIndex = STYLES.indexOf(result.blueprint().styleId());
-            if (authoritativeIndex >= 0) {
-                styleIndex = authoritativeIndex;
-            }
-        });
+        PreviewResult authoritativePreview = previewState.preview().orElse(null);
+        if (java.util.Objects.equals(synchronizedPreview, authoritativePreview)) {
+            return;
+        }
+        synchronizedPreview = authoritativePreview;
+        if (authoritativePreview == null) {
+            return;
+        }
+        int authoritativeIndex = STYLES.indexOf(authoritativePreview.blueprint().styleId());
+        if (authoritativeIndex >= 0) {
+            styleIndex = authoritativeIndex;
+        }
     }
 
     private void updateActions() {
@@ -532,13 +540,13 @@ public final class ArchitectScreen extends Screen {
 
     private boolean authorityChanged() {
         return renderedCanRequest != previewState.canRequestPreview()
-                || renderedPreview != previewState.preview().isPresent()
+                || !java.util.Objects.equals(renderedPreview, previewState.preview().orElse(null))
                 || renderedConfirmation != previewState.confirmation().isPresent();
     }
 
     private void rememberRenderedAuthority() {
         renderedCanRequest = previewState.canRequestPreview();
-        renderedPreview = previewState.preview().isPresent();
+        renderedPreview = previewState.preview().orElse(null);
         renderedConfirmation = previewState.confirmation().isPresent();
     }
 

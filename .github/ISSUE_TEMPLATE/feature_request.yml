@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a focused Terrainwright improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the player or server problem first. Requests outside the documented V1 scope may be considered for a later version rather than added immediately.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What is difficult or impossible today, and who experiences it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest change that solves the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include existing mechanics, commands, or mod combinations you tried.
+  - type: textarea
+    id: safety
+    attributes:
+      label: Survival, server-authority, and compatibility impact
+      description: Note material cost, permissions, persistence, multiplayer, or save compatibility concerns.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and Discussions for this request.
+          required: true
+        - label: I described a concrete player or server problem, not only a preferred implementation.
+          required: true

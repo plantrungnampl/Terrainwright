@@ -14,6 +14,7 @@ final class ModMetadataIdentityTest {
         String metadata = metadata();
 
         assertTrue(metadata.contains("\"name\": \"Terrainwright\""), metadata);
+        assertTrue(metadata.contains("\"license\": \"MIT\""), metadata);
     }
 
     @Test

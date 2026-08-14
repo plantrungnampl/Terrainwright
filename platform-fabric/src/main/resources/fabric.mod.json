@@ -7,7 +7,7 @@
   "authors": [
     "Terrainwright"
   ],
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "environment": "*",
   "entrypoints": {
     "main": [

@@ -37,7 +37,7 @@
 - Consumes: verified Terrainwright V1 commands and documentation links already in `README.md`.
 - Produces: truthful public landing page, MIT metadata, contribution/security policy, and structured issue intake.
 
-- [ ] **Step 1: Add a failing metadata-license assertion**
+- [x] **Step 1: Add a failing metadata-license assertion**
 
 Add this assertion to `exposesTerrainwrightAsTheProductName()`:
 
@@ -45,7 +45,7 @@ Add this assertion to `exposesTerrainwrightAsTheProductName()`:
 assertTrue(metadata.contains("\"license\": \"MIT\""), metadata);
 ```
 
-- [ ] **Step 2: Run the focused test and observe RED**
+- [x] **Step 2: Run the focused test and observe RED**
 
 Run:
 
@@ -55,7 +55,7 @@ Run:
 
 Expected: `exposesTerrainwrightAsTheProductName()` fails because metadata still contains `All-Rights-Reserved`.
 
-- [ ] **Step 3: Add the MIT and community surface**
+- [x] **Step 3: Add the MIT and community surface**
 
 Use the canonical MIT license text with `Copyright (c) 2026 Terrainwright contributors`. Change Fabric metadata to `"license": "MIT"`.
 
@@ -75,7 +75,7 @@ Contributing, security, and star/share call-to-action
 
 `CONTRIBUTING.md` must require Java 25, the Gradle wrapper, focused tests during development, `clean test build` before submission, and tests for gameplay changes. `SECURITY.md` must direct vulnerabilities to GitHub private vulnerability reporting and forbid public exploit details before a fix. Issue forms must request Minecraft/Fabric/Terrainwright versions, reproduction steps, logs, and expected/actual behavior; their config must disable blank issues and link security reports to `/security/advisories/new`.
 
-- [ ] **Step 4: Run the focused test and validate repository text**
+- [x] **Step 4: Run the focused test and validate repository text**
 
 Run:
 
@@ -96,7 +96,7 @@ Expected: test passes; `rg` returns no matches; diff check exits zero.
 - Consumes: Gradle wrapper and Java 25 build contract.
 - Produces: `build` job and downloadable `terrainwright-fabric-jar` workflow artifact.
 
-- [ ] **Step 1: Create the CI workflow**
+- [x] **Step 1: Create the CI workflow**
 
 Use this job shape:
 
@@ -112,15 +112,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "25"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Build and test
         run: ./gradlew clean test build --no-daemon
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: terrainwright-fabric-jar
           path: |
@@ -129,7 +129,7 @@ jobs:
           if-no-files-found: error
 ```
 
-- [ ] **Step 2: Run the complete local verification gate**
+- [x] **Step 2: Run the complete local verification gate**
 
 Run:
 
@@ -149,7 +149,7 @@ Expected: build exits zero, all unit tests and 52 GameTests pass, and diff check
 - Consumes: locally verified launch files.
 - Produces: one clean launch commit suitable for public `main`.
 
-- [ ] **Step 1: Scan tracked content for obvious credentials**
+- [x] **Step 1: Scan tracked content for obvious credentials**
 
 Run:
 
@@ -159,7 +159,7 @@ git grep -n -I -E "(gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKI
 
 Expected: no credential match. Test fixtures with non-secret words must be inspected rather than blindly removed.
 
-- [ ] **Step 2: Review and commit**
+- [x] **Step 2: Review and commit**
 
 Run:
 

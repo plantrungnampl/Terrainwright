@@ -30,7 +30,7 @@ Community files will be deliberately small. `CONTRIBUTING.md` will document prer
 
 ## CI and Release Flow
 
-The CI workflow will run on pushes to `main` and pull requests. It will use `actions/checkout@v4`, `actions/setup-java@v4`, `gradle/actions/setup-gradle@v4`, and `actions/upload-artifact@v4`, install Temurin Java 25, run `./gradlew clean test build --no-daemon`, and upload `platform-fabric/build/libs/terrainwright-*.jar` while excluding source JARs from the player artifact.
+The CI workflow will run on pushes to `main` and pull requests. It will use `actions/checkout@v7`, `actions/setup-java@v5`, `gradle/actions/setup-gradle@v6`, and `actions/upload-artifact@v7`, install Temurin Java 25, run `./gradlew clean test build --no-daemon`, and upload `platform-fabric/build/libs/terrainwright-*.jar` while excluding source JARs from the player artifact.
 
 Before publishing, the local checkout must be clean, contain no obvious tracked credentials, and pass `git diff --check`. The repository will be created with `gh repo create Terrainwright --public --source=. --remote=origin --push`, then verified for `PUBLIC` visibility, default branch `main`, branch tracking, and exact remote SHA equality.
 

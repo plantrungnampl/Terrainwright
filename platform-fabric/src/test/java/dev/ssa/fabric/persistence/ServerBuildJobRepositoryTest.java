@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
@@ -82,17 +83,82 @@ final class ServerBuildJobRepositoryTest {
     }
 
     @Test
+    void codecMigratesLegacyLifecycleWithoutAnExplicitStatus() {
+        BuildJob job = job(1);
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        repository.saveJob(job);
+        repository.savePlan(job.jobId(), plan());
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                HUT_ID,
+                OWNER_ID,
+                Optional.of(job.jobId()),
+                Optional.empty(),
+                Optional.of(BuilderLifecycleTombstone.active(BUILDER_ID).observeDeath(1200)),
+                1));
+        CompoundTag encoded = (CompoundTag) ServerBuildJobRepository.CODEC
+                .encodeStart(NbtOps.INSTANCE, repository)
+                .getOrThrow();
+        CompoundTag lifecycle = encoded.getListOrEmpty("huts")
+                .getCompoundOrEmpty(0)
+                .getCompoundOrEmpty("builder_lifecycle");
+        lifecycle.remove("status");
+        lifecycle.putInt("format_version", 1);
+
+        ServerBuildJobRepository decoded = ServerBuildJobRepository.CODEC
+                .parse(NbtOps.INSTANCE, encoded)
+                .getOrThrow();
+
+        BuilderLifecycleTombstone migrated = decoded.findHut(HUT_ID)
+                .orElseThrow()
+                .builderLifecycle()
+                .orElseThrow();
+        assertEquals(BuilderLifecycleTombstone.Status.TOMBSTONED, migrated.status());
+        assertEquals(BuilderLifecycleTombstone.CURRENT_FORMAT_VERSION, migrated.formatVersion());
+    }
+
+    @Test
+    void codecRejectsUnknownLifecycleVersionsInsteadOfGuessingAMigration() {
+        BuildJob job = job(1);
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        repository.saveJob(job);
+        repository.savePlan(job.jobId(), plan());
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                HUT_ID,
+                OWNER_ID,
+                Optional.of(job.jobId()),
+                Optional.empty(),
+                Optional.of(BuilderLifecycleTombstone.active(BUILDER_ID)),
+                1));
+        CompoundTag encoded = (CompoundTag) ServerBuildJobRepository.CODEC
+                .encodeStart(NbtOps.INSTANCE, repository)
+                .getOrThrow();
+        encoded.getListOrEmpty("huts")
+                .getCompoundOrEmpty(0)
+                .getCompoundOrEmpty("builder_lifecycle")
+                .putInt("format_version", BuilderLifecycleTombstone.CURRENT_FORMAT_VERSION + 1);
+
+        assertTrue(ServerBuildJobRepository.CODEC.parse(NbtOps.INSTANCE, encoded).error().isPresent());
+    }
+
+    @Test
     void hutRemovalCannotEraseJobAndStaleJobWriteIsRejected() {
         ServerBuildJobRepository repository = new ServerBuildJobRepository();
         BuildJob current = job(1);
         repository.saveJob(current);
         repository.saveHutState(new ServerBuildJobRepository.HutState(
-                HUT_ID, OWNER_ID, Optional.of(current.jobId()), Optional.empty(), Optional.empty(), 0));
+                HUT_ID,
+                OWNER_ID,
+                Optional.of(current.jobId()),
+                Optional.empty(),
+                Optional.of(BuilderLifecycleTombstone.active(BUILDER_ID)),
+                0));
 
         repository.removeHut(HUT_ID);
 
-        assertEquals(Optional.of(current), repository.findJob(current.jobId()));
-        assertTrue(repository.findHut(HUT_ID).isEmpty());
+        assertEquals(BuildJobState.ORPHANED, repository.findJob(current.jobId()).orElseThrow().state());
+        assertEquals(
+                BUILDER_ID,
+                repository.findHut(HUT_ID).orElseThrow().builderLifecycle().orElseThrow().builderId());
         assertThrows(IllegalStateException.class, () -> repository.saveJob(job(0)));
     }
 

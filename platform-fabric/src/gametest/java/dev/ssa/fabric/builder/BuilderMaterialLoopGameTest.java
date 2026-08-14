@@ -423,22 +423,26 @@ public final class BuilderMaterialLoopGameTest {
                 new GridPos(origin.getX(), origin.getY(), origin.getZ()),
                 0);
         ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        BuilderEntity original = new BuilderEntity(ModEntityTypes.BUILDER, level);
+        BlockPos builderStart = context.absolutePos(layout.builderStart());
+        original.setPos(builderStart.getX() + 0.5, builderStart.getY(), builderStart.getZ() + 0.5);
+        context.assertTrue(level.addFreshEntity(original), "Production Builder was rejected");
         repository.saveJob(job);
         repository.saveHutState(new ServerBuildJobRepository.HutState(
                 hutId,
                 owner,
                 Optional.of(jobId),
                 Optional.of(binding),
-                Optional.empty(),
+                Optional.of(dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.active(original.getUUID())),
                 1));
-        BuilderEntity original = BuilderRuntimeService.start(
+        original = BuilderRuntimeService.start(
                 level,
                 job,
                 oneBlockGraph(),
                 binding,
-                context.absolutePos(layout.builderStart())).orElseThrow();
+                builderStart).join().orElseThrow();
         UUID builderId = original.getUUID();
-        original.discard();
+        original.remove(net.minecraft.world.entity.Entity.RemovalReason.UNLOADED_TO_CHUNK);
 
         BuilderEntity reloaded = new BuilderEntity(ModEntityTypes.BUILDER, level);
         reloaded.setUUID(builderId);
@@ -562,7 +566,7 @@ public final class BuilderMaterialLoopGameTest {
         for (int slot = 0; slot < previous.carriedItems().getContainerSize(); slot++) {
             carried.add(previous.carriedItems().getItem(slot).copy());
         }
-        previous.discard();
+        previous.remove(net.minecraft.world.entity.Entity.RemovalReason.UNLOADED_TO_CHUNK);
 
         ServerLevel level = context.getLevel();
         BuilderEntity reloaded = new BuilderEntity(ModEntityTypes.BUILDER, level);

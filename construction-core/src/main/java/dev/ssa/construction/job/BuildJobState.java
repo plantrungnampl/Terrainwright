@@ -33,20 +33,26 @@ public enum BuildJobState {
                     || next == FETCHING_MATERIAL
                     || next == NAVIGATING
                     || next == COMPLETED
-                    || isInterrupt(next);
-            case WAIT_MATERIAL -> next == FETCHING_MATERIAL || isInterrupt(next);
+                    || isInterrupt(next)
+                    || isBuilderLoss(next);
+            case WAIT_MATERIAL -> next == FETCHING_MATERIAL
+                    || isInterrupt(next)
+                    || isBuilderLoss(next);
             case FETCHING_MATERIAL -> next == WAIT_MATERIAL
                     || next == NAVIGATING
-                    || isInterrupt(next);
+                    || isInterrupt(next)
+                    || isBuilderLoss(next);
             case NAVIGATING -> next == WAIT_MATERIAL
                     || next == FETCHING_MATERIAL
                     || next == BUILDING
-                    || isInterrupt(next);
+                    || isInterrupt(next)
+                    || isBuilderLoss(next);
             case BUILDING -> next == WAIT_MATERIAL
                     || next == FETCHING_MATERIAL
                     || next == NAVIGATING
                     || next == COMPLETED
-                    || isInterrupt(next);
+                    || isInterrupt(next)
+                    || isBuilderLoss(next);
             case PAUSED,
                     PAUSED_MISSING_MATERIAL,
                     PAUSED_NO_CHEST,
@@ -54,9 +60,17 @@ public enum BuildJobState {
                     PAUSED_CONFLICT,
                     PAUSED_PROTECTED,
                     SUSPENDED_CHUNK_UNLOADED -> next == PREPARING
+                            || next == NO_BUILDER
+                            || next == ORPHANED
                             || next == STOPPING
                             || next == QUARANTINED_RECOVERY;
-            case NO_BUILDER, ORPHANED -> next == STOPPING;
+            case NO_BUILDER -> next == PREPARING
+                    || next == ORPHANED
+                    || next == STOPPING
+                    || next == QUARANTINED_RECOVERY;
+            case ORPHANED -> next == PREPARING
+                    || next == STOPPING
+                    || next == QUARANTINED_RECOVERY;
             case QUARANTINED_RECOVERY -> false;
             case UNDO_COMPLETED -> false;
             case COMPLETED, STOPPED -> next == UNDOING;
@@ -92,5 +106,9 @@ public enum BuildJobState {
                     QUARANTINED_RECOVERY -> true;
             default -> false;
         };
+    }
+
+    private static boolean isBuilderLoss(BuildJobState state) {
+        return state == NO_BUILDER || state == ORPHANED;
     }
 }

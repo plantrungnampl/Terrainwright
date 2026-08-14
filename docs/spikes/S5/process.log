@@ -1,6 +1,6 @@
 CASE=s5-before-prepared-append MODE=crash BOUNDARY=before_prepared_append
-STARTED=2026-08-13T22:31:27.0127021+07:00
-FINISHED=2026-08-13T22:31:43.7717701+07:00
+STARTED=2026-08-14T12:21:27.3284053+07:00
+FINISHED=2026-08-14T12:21:42.7560991+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -13,27 +13,27 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
+> Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:acceptGameTestEula
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :minecraft-common:compileJava UP-TO-DATE
-> Task :minecraft-common:classes UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :minecraft-common:compileJava UP-TO-DATE
+> Task :platform-fabric:configureLaunch
+> Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:31:33] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:31:33] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:31:33] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:21:33] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:21:33] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:21:33] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -84,33 +84,33 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:31:34] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:31:34] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:31:34] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:31:39] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:31:39] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:31:40] [Worker-Main-2/INFO] (Minecraft) No existing world data, creating new world
-[22:31:41] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:31:41] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:31:41] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.382 ms
-[22:31:41] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:31:41] [Server thread/INFO] (Minecraft) Loading properties
-[22:31:41] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:31:41] [Server thread/INFO] (Minecraft) Generating keypair
-[22:31:41] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:31:41] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:31:41] [Server thread/INFO] (Minecraft) Selecting global world spawn...
-[22:31:43] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:31:43] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:31:43] [Server thread/INFO] (Minecraft) Time elapsed: 1521 ms
-[22:31:43] [Server thread/INFO] (Minecraft) Done (1.806s)! For help, type "help"
-[22:31:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:31:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:31:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:31:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:31:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:31:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:31:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:21:33] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:21:34] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:21:34] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:21:39] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:21:39] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:21:39] [Worker-Main-16/INFO] (Minecraft) No existing world data, creating new world
+[12:21:40] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:21:40] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:21:40] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.131 ms
+[12:21:40] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:21:40] [Server thread/INFO] (Minecraft) Loading properties
+[12:21:40] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:21:40] [Server thread/INFO] (Minecraft) Generating keypair
+[12:21:40] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:21:40] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:21:40] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[12:21:42] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:21:42] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:21:42] [Server thread/INFO] (Minecraft) Time elapsed: 1462 ms
+[12:21:42] [Server thread/INFO] (Minecraft) Done (1.740s)! For help, type "help"
+[12:21:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:21:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:21:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:21:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:21:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:21:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:21:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-before-prepared-append boundary=before_prepared_append exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -129,11 +129,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 15s
 
 CASE=s5-before-prepared-append MODE=recover BOUNDARY=before_prepared_append
-STARTED=2026-08-13T22:31:43.7963689+07:00
-FINISHED=2026-08-13T22:32:01.5694191+07:00
+STARTED=2026-08-14T12:21:42.7690980+07:00
+FINISHED=2026-08-14T12:21:57.2920472+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -146,27 +146,27 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:compileJava UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :minecraft-common:compileJava UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :platform-fabric:configureLaunch
-> Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:31:50] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:31:50] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:31:50] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:21:49] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:21:49] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:21:49] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -217,48 +217,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:31:50] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:31:50] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:31:51] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:31:58] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:31:58] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:31:59] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:31:59] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:32:00] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.374 ms
-[22:32:00] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:32:00] [Server thread/INFO] (Minecraft) Loading properties
-[22:32:00] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:32:00] [Server thread/INFO] (Minecraft) Generating keypair
-[22:32:00] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:32:00] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:32:00] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:32:00] [Server thread/INFO] (Minecraft) Time elapsed: 12 ms
-[22:32:00] [Server thread/INFO] (Minecraft) Done (0.338s)! For help, type "help"
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-before-prepared-append boundary=before_prepared_append first=NO_ACTIVE_INTENT second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:32:00] [Server thread/INFO] (Minecraft) Stopping server
-[22:32:00] [Server thread/INFO] (Minecraft) Saving players
-[22:32:00] [Server thread/INFO] (Minecraft) Saving worlds
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:00] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:00] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:21:49] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:21:49] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:21:49] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:21:54] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:21:54] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:21:55] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:21:55] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:21:55] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.355 ms
+[12:21:55] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:21:55] [Server thread/INFO] (Minecraft) Loading properties
+[12:21:55] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:21:55] [Server thread/INFO] (Minecraft) Generating keypair
+[12:21:55] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:21:56] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:21:56] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:21:56] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:21:56] [Server thread/INFO] (Minecraft) Time elapsed: 50 ms
+[12:21:56] [Server thread/INFO] (Minecraft) Done (0.334s)! For help, type "help"
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-before-prepared-append boundary=before_prepared_append first=NO_ACTIVE_INTENT second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:21:56] [Server thread/INFO] (Minecraft) Stopping server
+[12:21:56] [Server thread/INFO] (Minecraft) Saving players
+[12:21:56] [Server thread/INFO] (Minecraft) Saving worlds
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:21:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:21:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 17s
+BUILD SUCCESSFUL in 14s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-append-before-fsync-ack MODE=crash BOUNDARY=after_append_before_fsync_ack
-STARTED=2026-08-13T22:32:01.6579884+07:00
-FINISHED=2026-08-13T22:32:18.7012439+07:00
+STARTED=2026-08-14T12:21:57.3360485+07:00
+FINISHED=2026-08-14T12:22:12.1087748+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -267,31 +268,31 @@ Daemon will be stopped at the end of the build
 > Configure project :platform-fabric
 Fabric Loom: 1.17.19
 
-> Task :minecraft-common:processResources NO-SOURCE
 > Task :construction-core:processResources NO-SOURCE
+> Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
+> Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:compileJava UP-TO-DATE
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :platform-fabric:acceptGameTestEula
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:32:08] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:32:08] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:32:09] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:22:03] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:22:03] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:22:03] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -342,31 +343,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:32:09] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:32:09] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:32:09] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:32:15] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:32:15] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:32:17] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:32:17] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:32:17] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.089 ms
-[22:32:17] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:32:17] [Server thread/INFO] (Minecraft) Loading properties
-[22:32:17] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:32:17] [Server thread/INFO] (Minecraft) Generating keypair
-[22:32:17] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:32:17] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:32:18] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:32:18] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:32:18] [Server thread/INFO] (Minecraft) Time elapsed: 54 ms
-[22:32:18] [Server thread/INFO] (Minecraft) Done (0.313s)! For help, type "help"
-[22:32:18] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:18] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:18] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:18] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:18] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:18] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:18] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:22:04] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:22:04] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:22:04] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:22:09] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:22:09] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:22:10] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:22:10] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:22:10] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.159 ms
+[12:22:10] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:22:10] [Server thread/INFO] (Minecraft) Loading properties
+[12:22:10] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:22:10] [Server thread/INFO] (Minecraft) Generating keypair
+[12:22:11] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:22:11] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:22:11] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:22:11] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:22:11] [Server thread/INFO] (Minecraft) Time elapsed: 56 ms
+[12:22:11] [Server thread/INFO] (Minecraft) Done (0.324s)! For help, type "help"
+[12:22:11] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:11] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:11] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:11] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:11] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:11] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:11] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-append-before-fsync-ack boundary=after_append_before_fsync_ack exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -385,11 +386,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 14s
 
 CASE=s5-after-append-before-fsync-ack MODE=recover BOUNDARY=after_append_before_fsync_ack
-STARTED=2026-08-13T22:32:18.7032453+07:00
-FINISHED=2026-08-13T22:32:34.3255520+07:00
+STARTED=2026-08-14T12:22:12.1097745+07:00
+FINISHED=2026-08-14T12:22:26.7761849+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -402,27 +403,27 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
-> Task :construction-core:compileJava UP-TO-DATE
-> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
+> Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:32:25] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:32:25] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:32:25] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:22:18] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:22:18] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:22:18] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -473,49 +474,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:32:25] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:32:25] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:32:25] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:32:30] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:32:31] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:32:32] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:32:32] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:32:32] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.639 ms
-[22:32:32] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:32:32] [Server thread/INFO] (Minecraft) Loading properties
-[22:32:32] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:32:32] [Server thread/INFO] (Minecraft) Generating keypair
-[22:32:32] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:32:33] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:32:33] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:32:33] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:32:33] [Server thread/INFO] (Minecraft) Time elapsed: 51 ms
-[22:32:33] [Server thread/INFO] (Minecraft) Done (0.352s)! For help, type "help"
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-append-before-fsync-ack boundary=after_append_before_fsync_ack first=ABORTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:32:33] [Server thread/INFO] (Minecraft) Stopping server
-[22:32:33] [Server thread/INFO] (Minecraft) Saving players
-[22:32:33] [Server thread/INFO] (Minecraft) Saving worlds
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:22:18] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:22:18] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:22:19] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:22:23] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:22:23] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:22:25] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:22:25] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:22:25] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.054 ms
+[12:22:25] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:22:25] [Server thread/INFO] (Minecraft) Loading properties
+[12:22:25] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:22:25] [Server thread/INFO] (Minecraft) Generating keypair
+[12:22:25] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:22:25] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:22:25] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:22:25] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:22:25] [Server thread/INFO] (Minecraft) Time elapsed: 59 ms
+[12:22:25] [Server thread/INFO] (Minecraft) Done (0.292s)! For help, type "help"
+[12:22:25] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:25] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:25] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:25] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:25] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:25] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:25] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-append-before-fsync-ack boundary=after_append_before_fsync_ack first=ABORTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:22:26] [Server thread/INFO] (Minecraft) Stopping server
+[12:22:26] [Server thread/INFO] (Minecraft) Saving players
+[12:22:26] [Server thread/INFO] (Minecraft) Saving worlds
+[12:22:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 15s
+BUILD SUCCESSFUL in 14s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-durable-prepared MODE=crash BOUNDARY=after_durable_prepared
-STARTED=2026-08-13T22:32:34.3432055+07:00
-FINISHED=2026-08-13T22:32:51.0099511+07:00
+STARTED=2026-08-14T12:22:26.7971909+07:00
+FINISHED=2026-08-14T12:22:41.3162215+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -529,26 +530,26 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
 > Task :architect-core:processResources UP-TO-DATE
-> Task :architect-core:classes UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:compileJava UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:32:41] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:32:41] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:32:41] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:22:33] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:22:33] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:22:33] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -599,31 +600,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:32:41] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:32:41] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:32:42] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:32:48] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:32:48] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:32:49] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:32:49] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:32:49] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.369 ms
-[22:32:49] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:32:49] [Server thread/INFO] (Minecraft) Loading properties
-[22:32:49] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:32:49] [Server thread/INFO] (Minecraft) Generating keypair
-[22:32:49] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:32:50] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:32:50] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:32:50] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:32:50] [Server thread/INFO] (Minecraft) Time elapsed: 44 ms
-[22:32:50] [Server thread/INFO] (Minecraft) Done (0.259s)! For help, type "help"
-[22:32:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:32:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:32:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:32:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:32:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:32:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:32:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:22:33] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:22:33] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:22:33] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:22:38] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:22:38] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:22:39] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:22:40] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:22:40] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.293 ms
+[12:22:40] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:22:40] [Server thread/INFO] (Minecraft) Loading properties
+[12:22:40] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:22:40] [Server thread/INFO] (Minecraft) Generating keypair
+[12:22:40] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:22:40] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:22:40] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:22:40] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:22:40] [Server thread/INFO] (Minecraft) Time elapsed: 57 ms
+[12:22:40] [Server thread/INFO] (Minecraft) Done (0.320s)! For help, type "help"
+[12:22:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-durable-prepared boundary=after_durable_prepared exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -642,11 +643,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 14s
 
 CASE=s5-after-durable-prepared MODE=recover BOUNDARY=after_durable_prepared
-STARTED=2026-08-13T22:32:51.0109543+07:00
-FINISHED=2026-08-13T22:33:09.1529535+07:00
+STARTED=2026-08-14T12:22:41.3172220+07:00
+FINISHED=2026-08-14T12:22:56.5424371+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -659,13 +660,13 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :architect-core:processResources UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
@@ -677,9 +678,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:32:58] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:32:58] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:32:58] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:22:48] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:22:48] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:22:48] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -730,49 +731,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:32:58] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:32:58] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:32:59] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:33:05] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:33:05] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:33:07] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:33:07] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:33:07] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.567 ms
-[22:33:07] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:33:07] [Server thread/INFO] (Minecraft) Loading properties
-[22:33:07] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:33:07] [Server thread/INFO] (Minecraft) Generating keypair
-[22:33:07] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:33:07] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:33:07] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:33:08] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:33:08] [Server thread/INFO] (Minecraft) Time elapsed: 50 ms
-[22:33:08] [Server thread/INFO] (Minecraft) Done (0.334s)! For help, type "help"
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-durable-prepared boundary=after_durable_prepared first=ABORTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:33:08] [Server thread/INFO] (Minecraft) Stopping server
-[22:33:08] [Server thread/INFO] (Minecraft) Saving players
-[22:33:08] [Server thread/INFO] (Minecraft) Saving worlds
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:08] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:22:48] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:22:48] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:22:48] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:22:53] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:22:53] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:22:54] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:22:54] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:22:55] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.385 ms
+[12:22:55] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:22:55] [Server thread/INFO] (Minecraft) Loading properties
+[12:22:55] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:22:55] [Server thread/INFO] (Minecraft) Generating keypair
+[12:22:55] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:22:55] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:22:55] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:22:55] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:22:55] [Server thread/INFO] (Minecraft) Time elapsed: 53 ms
+[12:22:55] [Server thread/INFO] (Minecraft) Done (0.331s)! For help, type "help"
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-durable-prepared boundary=after_durable_prepared first=ABORTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:22:55] [Server thread/INFO] (Minecraft) Stopping server
+[12:22:55] [Server thread/INFO] (Minecraft) Saving players
+[12:22:55] [Server thread/INFO] (Minecraft) Saving worlds
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:22:55] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:22:55] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 17s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-delta-1 MODE=crash BOUNDARY=after_delta_1
-STARTED=2026-08-13T22:33:09.1727372+07:00
-FINISHED=2026-08-13T22:33:24.5566543+07:00
+STARTED=2026-08-14T12:22:56.5584366+07:00
+FINISHED=2026-08-14T12:23:11.5392403+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -786,12 +787,12 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
 > Task :architect-core:processResources UP-TO-DATE
-> Task :architect-core:classes UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
-> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
+> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
 > Task :minecraft-common:compileJava UP-TO-DATE
@@ -803,9 +804,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:33:15] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:33:15] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:33:15] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:23:03] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:23:03] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:23:03] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -856,31 +857,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:33:15] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:33:15] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:33:16] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:33:21] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:33:21] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:33:23] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:33:23] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:33:23] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.394 ms
-[22:33:23] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:33:23] [Server thread/INFO] (Minecraft) Loading properties
-[22:33:23] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:33:23] [Server thread/INFO] (Minecraft) Generating keypair
-[22:33:23] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:33:23] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:33:23] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:33:23] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:33:23] [Server thread/INFO] (Minecraft) Time elapsed: 60 ms
-[22:33:23] [Server thread/INFO] (Minecraft) Done (0.361s)! For help, type "help"
-[22:33:23] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:23] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:23] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:23] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:23] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:23] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:23] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:23:03] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:23:03] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:23:03] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:23:08] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:23:09] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:23:10] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:23:10] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:23:10] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 983.2 μs
+[12:23:10] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:23:10] [Server thread/INFO] (Minecraft) Loading properties
+[12:23:10] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:23:10] [Server thread/INFO] (Minecraft) Generating keypair
+[12:23:10] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:23:10] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:23:10] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:23:10] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:23:10] [Server thread/INFO] (Minecraft) Time elapsed: 57 ms
+[12:23:10] [Server thread/INFO] (Minecraft) Done (0.330s)! For help, type "help"
+[12:23:10] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:10] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:10] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:10] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:10] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:10] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:10] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-delta-1 boundary=after_delta_1 exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -899,11 +900,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 15s
+BUILD FAILED in 14s
 
 CASE=s5-after-delta-1 MODE=recover BOUNDARY=after_delta_1
-STARTED=2026-08-13T22:33:24.5586542+07:00
-FINISHED=2026-08-13T22:33:41.7331607+07:00
+STARTED=2026-08-14T12:23:11.5402428+07:00
+FINISHED=2026-08-14T12:23:27.6066093+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -916,27 +917,27 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
-> Task :platform-fabric:acceptGameTestEula
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
+> Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :platform-fabric:configureLaunch
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:compileJava UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:33:31] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:33:31] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:33:31] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:23:18] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:23:18] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:23:18] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -987,49 +988,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:33:32] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:33:32] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:33:32] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:33:38] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:33:38] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:33:40] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:33:40] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:33:40] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.447 ms
-[22:33:40] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:33:40] [Server thread/INFO] (Minecraft) Loading properties
-[22:33:40] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:33:40] [Server thread/INFO] (Minecraft) Generating keypair
-[22:33:40] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:33:40] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:33:40] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:33:40] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:33:40] [Server thread/INFO] (Minecraft) Time elapsed: 51 ms
-[22:33:40] [Server thread/INFO] (Minecraft) Done (0.296s)! For help, type "help"
-[22:33:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:40] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-delta-1 boundary=after_delta_1 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:33:41] [Server thread/INFO] (Minecraft) Stopping server
-[22:33:41] [Server thread/INFO] (Minecraft) Saving players
-[22:33:41] [Server thread/INFO] (Minecraft) Saving worlds
-[22:33:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:23:18] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:23:18] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:23:19] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:23:24] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:23:24] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:23:25] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:23:25] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:23:26] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 2.048 ms
+[12:23:26] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:23:26] [Server thread/INFO] (Minecraft) Loading properties
+[12:23:26] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:23:26] [Server thread/INFO] (Minecraft) Generating keypair
+[12:23:26] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:23:26] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:23:26] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:23:26] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:23:26] [Server thread/INFO] (Minecraft) Time elapsed: 54 ms
+[12:23:26] [Server thread/INFO] (Minecraft) Done (0.318s)! For help, type "help"
+[12:23:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:26] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:26] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-delta-1 boundary=after_delta_1 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:23:27] [Server thread/INFO] (Minecraft) Stopping server
+[12:23:27] [Server thread/INFO] (Minecraft) Saving players
+[12:23:27] [Server thread/INFO] (Minecraft) Saving worlds
+[12:23:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 17s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-delta-2 MODE=crash BOUNDARY=after_delta_2
-STARTED=2026-08-13T22:33:41.7594293+07:00
-FINISHED=2026-08-13T22:33:58.1264496+07:00
+STARTED=2026-08-14T12:23:27.6306042+07:00
+FINISHED=2026-08-14T12:23:42.7486030+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1042,8 +1043,8 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
@@ -1060,9 +1061,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:33:48] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:33:48] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:33:48] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:23:34] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:23:34] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:23:34] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1113,31 +1114,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:33:48] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:33:48] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:33:49] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:33:55] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:33:55] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:33:56] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:33:56] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:33:56] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.021 ms
-[22:33:56] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:33:56] [Server thread/INFO] (Minecraft) Loading properties
-[22:33:56] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:33:56] [Server thread/INFO] (Minecraft) Generating keypair
-[22:33:57] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:33:57] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:33:57] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:33:57] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:33:57] [Server thread/INFO] (Minecraft) Time elapsed: 58 ms
-[22:33:57] [Server thread/INFO] (Minecraft) Done (0.318s)! For help, type "help"
-[22:33:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:33:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:33:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:33:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:33:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:33:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:33:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:23:34] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:23:34] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:23:35] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:23:40] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:23:40] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:23:41] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:23:41] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:23:41] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.491 ms
+[12:23:41] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:23:41] [Server thread/INFO] (Minecraft) Loading properties
+[12:23:41] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:23:41] [Server thread/INFO] (Minecraft) Generating keypair
+[12:23:41] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:23:41] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:23:41] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:23:42] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:23:42] [Server thread/INFO] (Minecraft) Time elapsed: 50 ms
+[12:23:42] [Server thread/INFO] (Minecraft) Done (0.299s)! For help, type "help"
+[12:23:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-delta-2 boundary=after_delta_2 exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -1156,11 +1157,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 14s
 
 CASE=s5-after-delta-2 MODE=recover BOUNDARY=after_delta_2
-STARTED=2026-08-13T22:33:58.1311153+07:00
-FINISHED=2026-08-13T22:34:14.2446875+07:00
+STARTED=2026-08-14T12:23:42.7506056+07:00
+FINISHED=2026-08-14T12:23:57.8052920+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1173,27 +1174,27 @@ Fabric Loom: 1.17.19
 > Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
-> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
+> Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:34:04] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:34:05] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:34:05] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:23:49] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:23:49] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:23:49] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1244,49 +1245,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:34:05] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:34:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:34:05] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:34:11] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:34:11] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:34:12] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:34:12] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:34:12] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.527 ms
-[22:34:12] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:34:12] [Server thread/INFO] (Minecraft) Loading properties
-[22:34:12] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:34:12] [Server thread/INFO] (Minecraft) Generating keypair
-[22:34:12] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:34:13] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:34:13] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:34:13] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:34:13] [Server thread/INFO] (Minecraft) Time elapsed: 62 ms
-[22:34:13] [Server thread/INFO] (Minecraft) Done (0.299s)! For help, type "help"
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-delta-2 boundary=after_delta_2 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:34:13] [Server thread/INFO] (Minecraft) Stopping server
-[22:34:13] [Server thread/INFO] (Minecraft) Saving players
-[22:34:13] [Server thread/INFO] (Minecraft) Saving worlds
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:34:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:34:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:23:49] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:23:49] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:23:49] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:23:54] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:23:55] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:23:56] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:23:56] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:23:56] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.753 ms
+[12:23:56] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:23:56] [Server thread/INFO] (Minecraft) Loading properties
+[12:23:56] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:23:56] [Server thread/INFO] (Minecraft) Generating keypair
+[12:23:56] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:23:56] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:23:56] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:23:56] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:23:56] [Server thread/INFO] (Minecraft) Time elapsed: 52 ms
+[12:23:56] [Server thread/INFO] (Minecraft) Done (0.306s)! For help, type "help"
+[12:23:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:56] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-delta-2 boundary=after_delta_2 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:23:57] [Server thread/INFO] (Minecraft) Stopping server
+[12:23:57] [Server thread/INFO] (Minecraft) Saving players
+[12:23:57] [Server thread/INFO] (Minecraft) Saving worlds
+[12:23:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:23:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:23:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:23:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:23:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:23:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:23:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 15s
+BUILD SUCCESSFUL in 14s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-delta-3 MODE=crash BOUNDARY=after_delta_3
-STARTED=2026-08-13T22:34:14.2647821+07:00
-FINISHED=2026-08-13T22:34:30.5558070+07:00
+STARTED=2026-08-14T12:23:57.8192902+07:00
+FINISHED=2026-08-14T12:24:12.8812902+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1295,8 +1296,8 @@ Daemon will be stopped at the end of the build
 > Configure project :platform-fabric
 Fabric Loom: 1.17.19
 
-> Task :construction-core:processResources NO-SOURCE
 > Task :minecraft-common:processResources NO-SOURCE
+> Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
@@ -1317,9 +1318,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:34:21] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:34:21] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:34:21] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:24:04] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:24:04] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:24:04] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1370,31 +1371,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:34:21] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:34:21] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:34:22] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:34:27] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:34:27] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:34:29] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:34:29] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:34:29] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.533 ms
-[22:34:29] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:34:29] [Server thread/INFO] (Minecraft) Loading properties
-[22:34:29] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:34:29] [Server thread/INFO] (Minecraft) Generating keypair
-[22:34:29] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:34:29] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:34:29] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:34:29] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:34:29] [Server thread/INFO] (Minecraft) Time elapsed: 60 ms
-[22:34:29] [Server thread/INFO] (Minecraft) Done (0.351s)! For help, type "help"
-[22:34:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:34:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:34:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:34:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:34:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:34:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:34:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:24:04] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:24:04] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:24:05] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:24:10] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:24:10] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:24:11] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:24:11] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:24:11] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.650 ms
+[12:24:11] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:24:11] [Server thread/INFO] (Minecraft) Loading properties
+[12:24:11] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:24:11] [Server thread/INFO] (Minecraft) Generating keypair
+[12:24:11] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:24:11] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:24:12] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:24:12] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:24:12] [Server thread/INFO] (Minecraft) Time elapsed: 62 ms
+[12:24:12] [Server thread/INFO] (Minecraft) Done (0.369s)! For help, type "help"
+[12:24:12] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:12] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:12] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:12] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:12] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:12] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:12] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-delta-3 boundary=after_delta_3 exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -1413,11 +1414,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 14s
 
 CASE=s5-after-delta-3 MODE=recover BOUNDARY=after_delta_3
-STARTED=2026-08-13T22:34:30.5568087+07:00
-FINISHED=2026-08-13T22:34:46.3169787+07:00
+STARTED=2026-08-14T12:24:12.8832902+07:00
+FINISHED=2026-08-14T12:24:28.4513605+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1430,27 +1431,27 @@ Fabric Loom: 1.17.19
 > Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :architect-core:processResources UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:34:37] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:34:37] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:34:37] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:24:19] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:24:19] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:24:19] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1501,49 +1502,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:34:37] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:34:37] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:34:38] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:34:43] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:34:43] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:34:44] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:34:44] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:34:44] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 966.3 μs
-[22:34:44] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:34:44] [Server thread/INFO] (Minecraft) Loading properties
-[22:34:44] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:34:44] [Server thread/INFO] (Minecraft) Generating keypair
-[22:34:45] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:34:45] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:34:45] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:34:45] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:34:45] [Server thread/INFO] (Minecraft) Time elapsed: 59 ms
-[22:34:45] [Server thread/INFO] (Minecraft) Done (0.313s)! For help, type "help"
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-delta-3 boundary=after_delta_3 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:34:45] [Server thread/INFO] (Minecraft) Stopping server
-[22:34:45] [Server thread/INFO] (Minecraft) Saving players
-[22:34:45] [Server thread/INFO] (Minecraft) Saving worlds
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:34:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:34:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:24:19] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:24:19] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:24:20] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:24:25] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:24:25] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:24:26] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:24:26] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:24:27] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.487 ms
+[12:24:27] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:24:27] [Server thread/INFO] (Minecraft) Loading properties
+[12:24:27] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:24:27] [Server thread/INFO] (Minecraft) Generating keypair
+[12:24:27] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:24:27] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:24:27] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:24:27] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:24:27] [Server thread/INFO] (Minecraft) Time elapsed: 54 ms
+[12:24:27] [Server thread/INFO] (Minecraft) Done (0.284s)! For help, type "help"
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-delta-3 boundary=after_delta_3 first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:24:27] [Server thread/INFO] (Minecraft) Stopping server
+[12:24:27] [Server thread/INFO] (Minecraft) Saving players
+[12:24:27] [Server thread/INFO] (Minecraft) Saving worlds
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
 BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-all-deltas-before-commit MODE=crash BOUNDARY=after_all_deltas_before_commit
-STARTED=2026-08-13T22:34:46.3349824+07:00
-FINISHED=2026-08-13T22:35:01.9769832+07:00
+STARTED=2026-08-14T12:24:28.4673605+07:00
+FINISHED=2026-08-14T12:24:43.3257936+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1574,9 +1575,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:34:53] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:34:53] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:34:53] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:24:34] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:24:34] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:24:35] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1627,31 +1628,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:34:53] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:34:53] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:34:54] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:34:59] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:34:59] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:35:00] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:35:00] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:35:00] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.519 ms
-[22:35:00] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:35:00] [Server thread/INFO] (Minecraft) Loading properties
-[22:35:00] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:35:00] [Server thread/INFO] (Minecraft) Generating keypair
-[22:35:00] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:35:01] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:35:01] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:35:01] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:35:01] [Server thread/INFO] (Minecraft) Time elapsed: 87 ms
-[22:35:01] [Server thread/INFO] (Minecraft) Done (0.315s)! For help, type "help"
-[22:35:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:24:35] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:24:35] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:24:35] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:24:40] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:24:40] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:24:42] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:24:42] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:24:42] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.084 ms
+[12:24:42] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:24:42] [Server thread/INFO] (Minecraft) Loading properties
+[12:24:42] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:24:42] [Server thread/INFO] (Minecraft) Generating keypair
+[12:24:42] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:24:42] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:24:42] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:24:42] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:24:42] [Server thread/INFO] (Minecraft) Time elapsed: 55 ms
+[12:24:42] [Server thread/INFO] (Minecraft) Done (0.313s)! For help, type "help"
+[12:24:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-all-deltas-before-commit boundary=after_all_deltas_before_commit exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -1670,11 +1671,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 15s
+BUILD FAILED in 14s
 
 CASE=s5-after-all-deltas-before-commit MODE=recover BOUNDARY=after_all_deltas_before_commit
-STARTED=2026-08-13T22:35:01.9779849+07:00
-FINISHED=2026-08-13T22:35:16.9999798+07:00
+STARTED=2026-08-14T12:24:43.3267934+07:00
+FINISHED=2026-08-14T12:24:58.5820787+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1688,26 +1689,26 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
 > Task :architect-core:processResources UP-TO-DATE
-> Task :architect-core:classes UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:35:08] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:35:08] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:35:08] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:24:49] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:24:49] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:24:49] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1758,49 +1759,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:35:08] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:35:08] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:35:08] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:35:13] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:35:14] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:35:15] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:35:15] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:35:15] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 2.390 ms
-[22:35:15] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:35:15] [Server thread/INFO] (Minecraft) Loading properties
-[22:35:15] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:35:15] [Server thread/INFO] (Minecraft) Generating keypair
-[22:35:15] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:35:15] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:35:15] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:35:16] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:35:16] [Server thread/INFO] (Minecraft) Time elapsed: 52 ms
-[22:35:16] [Server thread/INFO] (Minecraft) Done (0.293s)! For help, type "help"
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-all-deltas-before-commit boundary=after_all_deltas_before_commit first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:35:16] [Server thread/INFO] (Minecraft) Stopping server
-[22:35:16] [Server thread/INFO] (Minecraft) Saving players
-[22:35:16] [Server thread/INFO] (Minecraft) Saving worlds
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:16] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:24:49] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:24:49] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:24:50] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:24:55] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:24:55] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:24:56] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:24:56] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:24:57] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 998.9 μs
+[12:24:57] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:24:57] [Server thread/INFO] (Minecraft) Loading properties
+[12:24:57] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:24:57] [Server thread/INFO] (Minecraft) Generating keypair
+[12:24:57] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:24:57] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:24:57] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:24:57] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:24:57] [Server thread/INFO] (Minecraft) Time elapsed: 50 ms
+[12:24:57] [Server thread/INFO] (Minecraft) Done (0.316s)! For help, type "help"
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:57] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-all-deltas-before-commit boundary=after_all_deltas_before_commit first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:24:57] [Server thread/INFO] (Minecraft) Stopping server
+[12:24:57] [Server thread/INFO] (Minecraft) Saving players
+[12:24:57] [Server thread/INFO] (Minecraft) Saving worlds
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:24:57] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:24:58] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:24:58] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:24:58] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:24:58] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 14s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-journal-commit-before-wal-commit MODE=crash BOUNDARY=after_journal_commit_before_wal_commit
-STARTED=2026-08-13T22:35:17.0179819+07:00
-FINISHED=2026-08-13T22:35:33.8020024+07:00
+STARTED=2026-08-14T12:24:58.5990763+07:00
+FINISHED=2026-08-14T12:25:13.7157355+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1809,17 +1810,17 @@ Daemon will be stopped at the end of the build
 > Configure project :platform-fabric
 Fabric Loom: 1.17.19
 
-> Task :minecraft-common:processResources NO-SOURCE
 > Task :construction-core:processResources NO-SOURCE
+> Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :architect-core:processResources UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
@@ -1831,9 +1832,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:35:24] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:35:24] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:35:24] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:25:05] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:25:05] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:25:05] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -1884,31 +1885,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:35:25] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:35:25] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:35:26] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:35:30] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:35:31] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:35:32] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:35:32] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:35:32] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.712 ms
-[22:35:32] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:35:32] [Server thread/INFO] (Minecraft) Loading properties
-[22:35:32] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:35:32] [Server thread/INFO] (Minecraft) Generating keypair
-[22:35:32] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:35:32] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:35:33] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:35:33] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:35:33] [Server thread/INFO] (Minecraft) Time elapsed: 63 ms
-[22:35:33] [Server thread/INFO] (Minecraft) Done (0.400s)! For help, type "help"
-[22:35:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:25:05] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:25:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:25:05] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:25:10] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:25:11] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:25:12] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:25:12] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:25:12] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.249 ms
+[12:25:12] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:25:12] [Server thread/INFO] (Minecraft) Loading properties
+[12:25:12] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:25:12] [Server thread/INFO] (Minecraft) Generating keypair
+[12:25:12] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:25:12] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:25:12] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:25:13] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:25:13] [Server thread/INFO] (Minecraft) Time elapsed: 60 ms
+[12:25:13] [Server thread/INFO] (Minecraft) Done (0.390s)! For help, type "help"
+[12:25:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:13] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:13] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-journal-commit-before-wal-commit boundary=after_journal_commit_before_wal_commit exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -1927,11 +1928,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 16s
+BUILD FAILED in 14s
 
 CASE=s5-after-journal-commit-before-wal-commit MODE=recover BOUNDARY=after_journal_commit_before_wal_commit
-STARTED=2026-08-13T22:35:33.8040023+07:00
-FINISHED=2026-08-13T22:35:50.2370092+07:00
+STARTED=2026-08-14T12:25:13.7177345+07:00
+FINISHED=2026-08-14T12:25:29.0336412+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -1944,27 +1945,27 @@ Fabric Loom: 1.17.19
 > Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :architect-core:processResources UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
-> Task :platform-fabric:acceptGameTestEula
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
+> Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:35:41] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:35:41] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:35:41] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:25:20] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:25:20] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:25:20] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2015,49 +2016,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:35:41] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:35:41] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:35:42] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:35:47] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:35:47] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:35:48] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:35:48] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:35:48] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.343 ms
-[22:35:48] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:35:48] [Server thread/INFO] (Minecraft) Loading properties
-[22:35:48] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:35:48] [Server thread/INFO] (Minecraft) Generating keypair
-[22:35:48] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:35:48] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:35:49] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:35:49] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:35:49] [Server thread/INFO] (Minecraft) Time elapsed: 52 ms
-[22:35:49] [Server thread/INFO] (Minecraft) Done (0.319s)! For help, type "help"
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-journal-commit-before-wal-commit boundary=after_journal_commit_before_wal_commit first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:35:49] [Server thread/INFO] (Minecraft) Stopping server
-[22:35:49] [Server thread/INFO] (Minecraft) Saving players
-[22:35:49] [Server thread/INFO] (Minecraft) Saving worlds
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:35:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:35:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:25:20] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:25:20] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:25:20] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:25:26] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:25:26] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:25:27] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:25:27] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:25:27] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.225 ms
+[12:25:27] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:25:27] [Server thread/INFO] (Minecraft) Loading properties
+[12:25:27] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:25:27] [Server thread/INFO] (Minecraft) Generating keypair
+[12:25:27] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:25:27] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:25:28] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:25:28] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:25:28] [Server thread/INFO] (Minecraft) Time elapsed: 58 ms
+[12:25:28] [Server thread/INFO] (Minecraft) Done (0.318s)! For help, type "help"
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-journal-commit-before-wal-commit boundary=after_journal_commit_before_wal_commit first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:25:28] [Server thread/INFO] (Minecraft) Stopping server
+[12:25:28] [Server thread/INFO] (Minecraft) Saving players
+[12:25:28] [Server thread/INFO] (Minecraft) Saving worlds
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 16s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-wal-commit-before-clear MODE=crash BOUNDARY=after_wal_commit_before_clear
-STARTED=2026-08-13T22:35:50.2600000+07:00
-FINISHED=2026-08-13T22:36:05.5400645+07:00
+STARTED=2026-08-14T12:25:29.0496407+07:00
+FINISHED=2026-08-14T12:25:45.1056874+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2066,31 +2067,31 @@ Daemon will be stopped at the end of the build
 > Configure project :platform-fabric
 Fabric Loom: 1.17.19
 
-> Task :construction-core:processResources NO-SOURCE
 > Task :minecraft-common:processResources NO-SOURCE
+> Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :minecraft-common:compileJava UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
+> Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:35:56] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:35:56] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:35:57] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:25:35] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:25:35] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:25:35] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2141,31 +2142,30 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:35:57] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:35:57] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:35:57] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:36:02] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:36:02] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:36:04] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:36:04] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:36:04] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 2.054 ms
-[22:36:04] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:36:04] [Server thread/INFO] (Minecraft) Loading properties
-[22:36:04] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:36:04] [Server thread/INFO] (Minecraft) Generating keypair
-[22:36:04] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:36:04] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:36:04] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:36:04] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:36:04] [Server thread/INFO] (Minecraft) Time elapsed: 49 ms
-[22:36:04] [Server thread/INFO] (Minecraft) Done (0.305s)! For help, type "help"
-[22:36:04] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:04] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:04] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:04] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:04] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:04] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:04] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:25:35] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:25:35] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:25:36] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:25:42] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:25:42] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:25:43] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:25:43] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:25:43] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.478 ms
+[12:25:43] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:25:43] [Server thread/INFO] (Minecraft) Loading properties
+[12:25:43] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:25:43] [Server thread/INFO] (Minecraft) Generating keypair
+[12:25:43] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:25:44] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:25:44] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:25:44] [Server thread/INFO] (Minecraft) Time elapsed: 11 ms
+[12:25:44] [Server thread/INFO] (Minecraft) Done (0.254s)! For help, type "help"
+[12:25:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-wal-commit-before-clear boundary=after_wal_commit_before_clear exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -2187,8 +2187,8 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 BUILD FAILED in 15s
 
 CASE=s5-after-wal-commit-before-clear MODE=recover BOUNDARY=after_wal_commit_before_clear
-STARTED=2026-08-13T22:36:05.5420641+07:00
-FINISHED=2026-08-13T22:36:20.0301357+07:00
+STARTED=2026-08-14T12:25:45.1076875+07:00
+FINISHED=2026-08-14T12:26:00.2623335+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2197,18 +2197,18 @@ Daemon will be stopped at the end of the build
 > Configure project :platform-fabric
 Fabric Loom: 1.17.19
 
-> Task :minecraft-common:processResources NO-SOURCE
 > Task :construction-core:processResources NO-SOURCE
+> Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :platform-fabric:configureLaunch
@@ -2219,9 +2219,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:36:11] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:36:11] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:36:11] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:25:51] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:25:51] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:25:51] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2272,49 +2272,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:36:12] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:36:12] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:36:12] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:36:17] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:36:17] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:36:18] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:36:18] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:36:18] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.773 ms
-[22:36:18] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:36:18] [Server thread/INFO] (Minecraft) Loading properties
-[22:36:18] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:36:18] [Server thread/INFO] (Minecraft) Generating keypair
-[22:36:18] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:36:18] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:36:19] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:36:19] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:36:19] [Server thread/INFO] (Minecraft) Time elapsed: 54 ms
-[22:36:19] [Server thread/INFO] (Minecraft) Done (0.312s)! For help, type "help"
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-wal-commit-before-clear boundary=after_wal_commit_before_clear first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:36:19] [Server thread/INFO] (Minecraft) Stopping server
-[22:36:19] [Server thread/INFO] (Minecraft) Saving players
-[22:36:19] [Server thread/INFO] (Minecraft) Saving worlds
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:19] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:19] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:25:51] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:25:51] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:25:52] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:25:57] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:25:57] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:25:58] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:25:58] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:25:58] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 911.8 μs
+[12:25:58] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:25:58] [Server thread/INFO] (Minecraft) Loading properties
+[12:25:58] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:25:58] [Server thread/INFO] (Minecraft) Generating keypair
+[12:25:58] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:25:59] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:25:59] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:25:59] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:25:59] [Server thread/INFO] (Minecraft) Time elapsed: 77 ms
+[12:25:59] [Server thread/INFO] (Minecraft) Done (0.303s)! For help, type "help"
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-wal-commit-before-clear boundary=after_wal_commit_before_clear first=COMMITTED second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:25:59] [Server thread/INFO] (Minecraft) Stopping server
+[12:25:59] [Server thread/INFO] (Minecraft) Saving players
+[12:25:59] [Server thread/INFO] (Minecraft) Saving worlds
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:25:59] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:25:59] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 14s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-after-clear-checkpoint MODE=crash BOUNDARY=after_clear_checkpoint
-STARTED=2026-08-13T22:36:20.0431376+07:00
-FINISHED=2026-08-13T22:36:35.0522265+07:00
+STARTED=2026-08-14T12:26:00.2763371+07:00
+FINISHED=2026-08-14T12:26:14.8784482+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2327,27 +2327,27 @@ Fabric Loom: 1.17.19
 > Task :construction-core:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
-> Task :platform-fabric:acceptGameTestEula
 > Task :construction-core:compileJava UP-TO-DATE
-> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
+> Task :platform-fabric:acceptGameTestEula
+> Task :platform-fabric:generateLog4jConfig UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:36:26] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:36:26] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:36:27] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:26:06] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:26:06] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:26:06] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2398,31 +2398,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:36:27] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:36:27] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:36:27] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:36:32] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:36:32] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:36:33] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:36:33] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:36:33] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.222 ms
-[22:36:33] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:36:33] [Server thread/INFO] (Minecraft) Loading properties
-[22:36:33] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:36:33] [Server thread/INFO] (Minecraft) Generating keypair
-[22:36:33] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:36:34] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:36:34] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:36:34] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:36:34] [Server thread/INFO] (Minecraft) Time elapsed: 55 ms
-[22:36:34] [Server thread/INFO] (Minecraft) Done (0.302s)! For help, type "help"
-[22:36:34] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:34] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:34] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:34] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:34] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:34] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:34] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:26:06] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:26:06] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:26:07] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:26:12] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:26:12] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:26:13] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:26:13] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:26:13] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 930.0 μs
+[12:26:13] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:26:13] [Server thread/INFO] (Minecraft) Loading properties
+[12:26:13] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:26:13] [Server thread/INFO] (Minecraft) Generating keypair
+[12:26:13] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:26:13] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:26:14] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:26:14] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:26:14] [Server thread/INFO] (Minecraft) Time elapsed: 53 ms
+[12:26:14] [Server thread/INFO] (Minecraft) Done (0.295s)! For help, type "help"
+[12:26:14] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:26:14] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:26:14] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:26:14] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:26:14] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:26:14] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:26:14] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-after-clear-checkpoint boundary=after_clear_checkpoint exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -2444,8 +2444,8 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 BUILD FAILED in 14s
 
 CASE=s5-after-clear-checkpoint MODE=recover BOUNDARY=after_clear_checkpoint
-STARTED=2026-08-13T22:36:35.0612263+07:00
-FINISHED=2026-08-13T22:36:51.0322288+07:00
+STARTED=2026-08-14T12:26:14.8874515+07:00
+FINISHED=2026-08-14T12:26:30.3954490+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2458,13 +2458,13 @@ Fabric Loom: 1.17.19
 > Task :minecraft-common:processResources NO-SOURCE
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
-> Task :architect-core:processResources UP-TO-DATE
 > Task :platform-fabric:deleteGameTestRunDir
+> Task :architect-core:processResources UP-TO-DATE
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
 > Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
 > Task :platform-fabric:generateDLIConfig UP-TO-DATE
@@ -2476,9 +2476,9 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:classes UP-TO-DATE
 
 > Task :platform-fabric:runServer
-[22:36:42] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:36:42] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:36:42] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:26:21] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:26:21] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:26:21] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2529,49 +2529,49 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:36:42] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:36:42] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:36:42] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:36:47] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:36:48] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:36:49] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:36:49] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:36:49] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.371 ms
-[22:36:49] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:36:49] [Server thread/INFO] (Minecraft) Loading properties
-[22:36:49] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:36:49] [Server thread/INFO] (Minecraft) Generating keypair
-[22:36:49] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:36:49] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:36:49] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:36:50] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:36:50] [Server thread/INFO] (Minecraft) Time elapsed: 55 ms
-[22:36:50] [Server thread/INFO] (Minecraft) Done (0.338s)! For help, type "help"
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-after-clear-checkpoint boundary=after_clear_checkpoint first=NO_ACTIVE_INTENT second=NO_ACTIVE_INTENT scheduled=true world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:36:50] [Server thread/INFO] (Minecraft) Stopping server
-[22:36:50] [Server thread/INFO] (Minecraft) Saving players
-[22:36:50] [Server thread/INFO] (Minecraft) Saving worlds
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:36:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:36:50] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:26:21] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:26:21] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:26:22] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:26:27] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:26:27] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:26:28] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:26:28] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:26:28] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.262 ms
+[12:26:28] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:26:28] [Server thread/INFO] (Minecraft) Loading properties
+[12:26:28] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:26:28] [Server thread/INFO] (Minecraft) Generating keypair
+[12:26:29] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:26:29] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:26:29] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:26:29] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:26:29] [Server thread/INFO] (Minecraft) Time elapsed: 53 ms
+[12:26:29] [Server thread/INFO] (Minecraft) Done (0.297s)! For help, type "help"
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-after-clear-checkpoint boundary=after_clear_checkpoint first=NO_ACTIVE_INTENT second=NO_ACTIVE_INTENT scheduled=true world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:26:29] [Server thread/INFO] (Minecraft) Stopping server
+[12:26:29] [Server thread/INFO] (Minecraft) Saving players
+[12:26:29] [Server thread/INFO] (Minecraft) Saving worlds
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:26:29] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:26:29] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
 BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date
 
 CASE=s5-foreign-evidence MODE=crash BOUNDARY=foreign_evidence
-STARTED=2026-08-13T22:36:51.0522302+07:00
-FINISHED=2026-08-13T22:37:08.6002768+07:00
+STARTED=2026-08-14T12:26:30.4094487+07:00
+FINISHED=2026-08-14T12:26:46.2320422+07:00
 GRADLE_EXIT_CODE=1
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2585,26 +2585,26 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:processResources UP-TO-DATE
 > Task :architect-core:compileJava UP-TO-DATE
 > Task :architect-core:processResources UP-TO-DATE
-> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:classes UP-TO-DATE
+> Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:jar UP-TO-DATE
 > Task :construction-core:compileJava UP-TO-DATE
-> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:jar UP-TO-DATE
+> Task :construction-core:classes UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:compileJava UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:classes UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:36:59] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:36:59] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:36:59] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:26:36] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:26:36] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:26:37] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2655,31 +2655,31 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:36:59] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:36:59] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:37:00] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:37:05] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:37:06] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:37:07] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:37:07] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:37:07] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.188 ms
-[22:37:07] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:37:07] [Server thread/INFO] (Minecraft) Loading properties
-[22:37:07] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:37:07] [Server thread/INFO] (Minecraft) Generating keypair
-[22:37:07] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:37:07] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:37:07] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:37:07] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:37:07] [Server thread/INFO] (Minecraft) Time elapsed: 56 ms
-[22:37:07] [Server thread/INFO] (Minecraft) Done (0.354s)! For help, type "help"
-[22:37:07] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:37:07] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:37:07] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:37:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:37:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:37:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:37:08] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:26:37] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:26:37] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:26:37] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:26:43] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:26:43] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:26:44] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:26:44] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:26:44] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.839 ms
+[12:26:44] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:26:44] [Server thread/INFO] (Minecraft) Loading properties
+[12:26:44] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:26:44] [Server thread/INFO] (Minecraft) Generating keypair
+[12:26:45] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:26:45] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:26:45] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:26:45] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:26:45] [Server thread/INFO] (Minecraft) Time elapsed: 51 ms
+[12:26:45] [Server thread/INFO] (Minecraft) Done (0.345s)! For help, type "help"
+[12:26:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:26:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:26:45] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:26:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:26:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:26:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:26:45] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 SSA_S5_CRASH fixture=s5-foreign-evidence boundary=foreign_evidence exit=70
 
 > Task :platform-fabric:runServer FAILED
@@ -2698,11 +2698,11 @@ Execution failed for task ':platform-fabric:runServer' (registered by plugin 'fa
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 17s
+BUILD FAILED in 15s
 
 CASE=s5-foreign-evidence MODE=recover BOUNDARY=foreign_evidence
-STARTED=2026-08-13T22:37:08.6022783+07:00
-FINISHED=2026-08-13T22:37:23.4062750+07:00
+STARTED=2026-08-14T12:26:46.2340412+07:00
+FINISHED=2026-08-14T12:27:02.1920398+07:00
 GRADLE_EXIT_CODE=0
 TIMED_OUT=False
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
@@ -2719,23 +2719,23 @@ Fabric Loom: 1.17.19
 > Task :platform-fabric:deleteGameTestRunDir
 > Task :architect-core:classes UP-TO-DATE
 > Task :architect-core:jar UP-TO-DATE
-> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:acceptGameTestEula
-> Task :construction-core:classes UP-TO-DATE
+> Task :construction-core:compileJava UP-TO-DATE
 > Task :platform-fabric:generateLog4jConfig UP-TO-DATE
+> Task :construction-core:classes UP-TO-DATE
 > Task :construction-core:jar UP-TO-DATE
+> Task :platform-fabric:generateDLIConfig UP-TO-DATE
+> Task :platform-fabric:configureLaunch
 > Task :minecraft-common:compileJava UP-TO-DATE
 > Task :minecraft-common:classes UP-TO-DATE
-> Task :platform-fabric:generateDLIConfig UP-TO-DATE
 > Task :minecraft-common:jar UP-TO-DATE
 > Task :platform-fabric:compileJava UP-TO-DATE
 > Task :platform-fabric:classes UP-TO-DATE
-> Task :platform-fabric:configureLaunch
 
 > Task :platform-fabric:runServer
-[22:37:14] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
-[22:37:14] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[22:37:15] [main/INFO] (FabricLoader) Loading 43 mods:
+[12:26:53] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.2 with Fabric Loader 0.19.3
+[12:26:53] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[12:26:53] [main/INFO] (FabricLoader) Loading 43 mods:
 	- fabric-api 0.154.2+26.2
 	   |-- fabric-key-mapping-api-v1 2.0.5+e2bdee789e
 	   |-- fabric-model-loading-api-v1 8.0.15+c80601bb9e
@@ -2786,42 +2786,42 @@ Fabric Loom: 1.17.19
 	- minecraft 26.2
 	- mixinextras 0.5.4
 	- smart_survival_architect 0.1.0-SNAPSHOT
-[22:37:15] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[22:37:15] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[22:37:15] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[22:37:20] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
-[22:37:20] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[22:37:21] [main/INFO] (Minecraft) Loaded 1585 recipes
-[22:37:21] [main/INFO] (Minecraft) Loaded 1688 advancements
-[22:37:21] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.755 ms
-[22:37:21] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
-[22:37:21] [Server thread/INFO] (Minecraft) Loading properties
-[22:37:21] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[22:37:21] [Server thread/INFO] (Minecraft) Generating keypair
-[22:37:21] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
-[22:37:22] [Server thread/INFO] (Minecraft) Preparing level "world"
-[22:37:22] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[22:37:22] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[22:37:22] [Server thread/INFO] (Minecraft) Time elapsed: 51 ms
-[22:37:22] [Server thread/INFO] (Minecraft) Done (0.296s)! For help, type "help"
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-SSA_S5_RECOVERY fixture=s5-foreign-evidence boundary=foreign_evidence first=QUARANTINED second=QUARANTINED scheduled=false world=634c4276-4fa1-4caa-9c6c-1a9c9d051c0d metadata=true exact=true
-[22:37:22] [Server thread/INFO] (Minecraft) Stopping server
-[22:37:22] [Server thread/INFO] (Minecraft) Saving players
-[22:37:22] [Server thread/INFO] (Minecraft) Saving worlds
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[22:37:22] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[22:37:22] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[12:26:53] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/C:/Users/clone/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[12:26:53] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[12:26:53] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[12:26:58] [main/INFO] (smart_survival_architect) SSA_S1_COMMON_READY block=smart_survival_architect:spike_marker
+[12:26:59] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[12:27:00] [main/INFO] (Minecraft) Loaded 1585 recipes
+[12:27:00] [main/INFO] (Minecraft) Loaded 1688 advancements
+[12:27:00] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 66 new biomes in 1.047 ms
+[12:27:00] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.2
+[12:27:00] [Server thread/INFO] (Minecraft) Loading properties
+[12:27:00] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[12:27:00] [Server thread/INFO] (Minecraft) Generating keypair
+[12:27:00] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:0
+[12:27:00] [Server thread/INFO] (Minecraft) Preparing level "world"
+[12:27:01] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[12:27:01] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[12:27:01] [Server thread/INFO] (Minecraft) Time elapsed: 56 ms
+[12:27:01] [Server thread/INFO] (Minecraft) Done (0.359s)! For help, type "help"
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+SSA_S5_RECOVERY fixture=s5-foreign-evidence boundary=foreign_evidence first=QUARANTINED second=QUARANTINED scheduled=false world=18c8f337-a380-4a2a-bec1-cc2e327e80f2 metadata=true exact=true
+[12:27:01] [Server thread/INFO] (Minecraft) Stopping server
+[12:27:01] [Server thread/INFO] (Minecraft) Saving players
+[12:27:01] [Server thread/INFO] (Minecraft) Saving worlds
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[12:27:01] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[12:27:01] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
 
-BUILD SUCCESSFUL in 14s
+BUILD SUCCESSFUL in 15s
 14 actionable tasks: 3 executed, 11 up-to-date

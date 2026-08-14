@@ -19,6 +19,7 @@ import dev.ssa.fabric.SmartSurvivalArchitectMod;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Cause;
 import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Observation;
+import dev.ssa.fabric.lifecycle.BuilderLifecycleTombstone.Status;
 import dev.ssa.fabric.link.ContainerBinding;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -128,13 +129,24 @@ public final class ServerBuildJobRepository extends SavedData {
             CAUSE_CODEC.fieldOf("cause").forGetter(Observation::cause),
             Codec.LONG.fieldOf("observed_game_time").forGetter(Observation::observedGameTime))
             .apply(instance, Observation::new));
-    private static final Codec<BuilderLifecycleTombstone> LIFECYCLE_CODEC = RecordCodecBuilder.create(instance ->
+    private static final Codec<Status> LIFECYCLE_STATUS_CODEC = enumCodec(Status.class);
+    private static final Codec<LifecyclePayload> LIFECYCLE_PAYLOAD_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    UUID_CODEC.fieldOf("builder_id").forGetter(BuilderLifecycleTombstone::builderId),
-                    OBSERVATION_CODEC.optionalFieldOf("tombstone").forGetter(BuilderLifecycleTombstone::tombstone),
-                    Codec.LONG.fieldOf("revision").forGetter(BuilderLifecycleTombstone::revision),
-                    Codec.INT.fieldOf("format_version").forGetter(BuilderLifecycleTombstone::formatVersion))
-                    .apply(instance, BuilderLifecycleTombstone::new));
+                    UUID_CODEC.fieldOf("builder_id").forGetter(LifecyclePayload::builderId),
+                    LIFECYCLE_STATUS_CODEC.optionalFieldOf("status")
+                            .forGetter(LifecyclePayload::status),
+                    OBSERVATION_CODEC.optionalFieldOf("tombstone").forGetter(LifecyclePayload::tombstone),
+                    Codec.LONG.fieldOf("revision").forGetter(LifecyclePayload::revision),
+                    Codec.INT.fieldOf("format_version").forGetter(LifecyclePayload::formatVersion))
+                    .apply(instance, LifecyclePayload::new));
+    private static final Codec<BuilderLifecycleTombstone> LIFECYCLE_CODEC = LIFECYCLE_PAYLOAD_CODEC.comapFlatMap(
+            ServerBuildJobRepository::decodeLifecycle,
+            lifecycle -> new LifecyclePayload(
+                    lifecycle.builderId(),
+                    Optional.of(lifecycle.status()),
+                    lifecycle.tombstone(),
+                    lifecycle.revision(),
+                    lifecycle.formatVersion()));
     private static final Codec<HutState> HUT_STATE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             UUID_CODEC.fieldOf("hut_id").forGetter(HutState::hutId),
             UUID_CODEC.fieldOf("owner_id").forGetter(HutState::ownerId),
@@ -300,8 +312,49 @@ public final class ServerBuildJobRepository extends SavedData {
     }
 
     public void removeHut(UUID hutId) {
-        if (huts.remove(Objects.requireNonNull(hutId, "hutId")) != null) {
-            setDirty();
+        HutState hut = huts.get(Objects.requireNonNull(hutId, "hutId"));
+        if (hut == null) {
+            return;
+        }
+        hut.activeJobId().flatMap(this::findJob).ifPresent(job -> {
+            if (job.state() == BuildJobState.IDLE) {
+                job = job.transitionTo(BuildJobState.PREPARING);
+            }
+            if (job.state().canTransitionTo(BuildJobState.ORPHANED)) {
+                saveJob(job.transitionTo(BuildJobState.ORPHANED));
+            }
+        });
+        // Keep the last Hut association as durable recovery evidence. The ORPHANED
+        // job state makes the physical Hut loss authoritative while retaining the
+        // Builder identity, binding, and WAL lookup key needed after restart.
+        setDirty();
+    }
+
+    private static DataResult<BuilderLifecycleTombstone> decodeLifecycle(LifecyclePayload payload) {
+        Status status;
+        if (payload.formatVersion() == 1) {
+            if (payload.status().isPresent()) {
+                return DataResult.error(() -> "Legacy Builder lifecycle must not contain a status");
+            }
+            status = payload.tombstone().isPresent() ? Status.TOMBSTONED : Status.ACTIVE;
+        } else if (payload.formatVersion() == BuilderLifecycleTombstone.CURRENT_FORMAT_VERSION) {
+            if (payload.status().isEmpty()) {
+                return DataResult.error(() -> "Current Builder lifecycle is missing its status");
+            }
+            status = payload.status().orElseThrow();
+        } else {
+            return DataResult.error(() ->
+                    "Unsupported Builder lifecycle format version: " + payload.formatVersion());
+        }
+        try {
+            return DataResult.success(new BuilderLifecycleTombstone(
+                    payload.builderId(),
+                    status,
+                    payload.tombstone(),
+                    payload.revision(),
+                    BuilderLifecycleTombstone.CURRENT_FORMAT_VERSION));
+        } catch (IllegalArgumentException failure) {
+            return DataResult.error(failure::getMessage);
         }
     }
 
@@ -437,6 +490,14 @@ public final class ServerBuildJobRepository extends SavedData {
 
     private static <E extends Enum<E>> Codec<E> enumCodec(Class<E> type) {
         return stringCodec(type.getSimpleName(), value -> Enum.valueOf(type, value), Enum::name);
+    }
+
+    private record LifecyclePayload(
+            UUID builderId,
+            Optional<Status> status,
+            Optional<Observation> tombstone,
+            long revision,
+            int formatVersion) {
     }
 
     private record Payload(

@@ -1,6 +1,7 @@
 package dev.ssa.fabric.entity;
 
 import dev.ssa.fabric.builder.BuilderController;
+import dev.ssa.fabric.builder.BuilderRuntimeService;
 import java.util.Objects;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.SimpleContainer;
@@ -109,6 +110,26 @@ public final class BuilderEntity extends PathfinderMob {
                     slot,
                     input.read(CARRIED_SLOT_PREFIX + slot, ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY));
         }
+    }
+
+    @Override
+    public void die(DamageSource damageSource) {
+        if (level() instanceof ServerLevel serverLevel) {
+            BuilderRuntimeService.observeDeath(serverLevel, this);
+        }
+        super.die(damageSource);
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (level() instanceof ServerLevel serverLevel) {
+            if (reason == RemovalReason.DISCARDED) {
+                BuilderRuntimeService.observeRemoval(serverLevel, this);
+            } else if (reason == RemovalReason.KILLED) {
+                BuilderRuntimeService.observeDeath(serverLevel, this);
+            }
+        }
+        super.remove(reason);
     }
 
     @Override

@@ -44,6 +44,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -71,6 +72,7 @@ public final class BuilderController {
     private final ServerBuildJobRepository repository;
     private final BuilderChestLinkService links;
     private final PermissionPort permissions;
+    private final Function<ServerLevel, CompletableFuture<Void>> recoveryCheckpoint;
     private final BuilderStateMachine stateMachine = new BuilderStateMachine();
     private final WorkBatchPlanner batchPlanner = new WorkBatchPlanner();
     private final FabricNavigationAdapter navigation;
@@ -98,12 +100,31 @@ public final class BuilderController {
             ServerBuildJobRepository repository,
             BuilderChestLinkService links,
             PermissionPort permissions) {
+        this(
+                builder,
+                mutations,
+                transfers,
+                repository,
+                links,
+                permissions,
+                ignored -> CompletableFuture.completedFuture(null));
+    }
+
+    public BuilderController(
+            BuilderEntity builder,
+            FabricMutationExecutor mutations,
+            MaterialTransferService transfers,
+            ServerBuildJobRepository repository,
+            BuilderChestLinkService links,
+            PermissionPort permissions,
+            Function<ServerLevel, CompletableFuture<Void>> recoveryCheckpoint) {
         this.builder = Objects.requireNonNull(builder, "builder");
         this.mutations = Objects.requireNonNull(mutations, "mutations");
         this.transfers = Objects.requireNonNull(transfers, "transfers");
         this.repository = Objects.requireNonNull(repository, "repository");
         this.links = Objects.requireNonNull(links, "links");
         this.permissions = Objects.requireNonNull(permissions, "permissions");
+        this.recoveryCheckpoint = Objects.requireNonNull(recoveryCheckpoint, "recoveryCheckpoint");
         this.navigation = new FabricNavigationAdapter(builder, new InteractionPositionResolver());
     }
 
@@ -129,6 +150,13 @@ public final class BuilderController {
             return;
         }
         if (finishInFlight(level)) {
+            return;
+        }
+        BuildJobState durableState = job().state();
+        if ((durableState == BuildJobState.NO_BUILDER
+                        || durableState == BuildJobState.ORPHANED
+                        || durableState == BuildJobState.QUARANTINED_RECOVERY)
+                && stateMachine.state() != BuilderStateMachine.State.RECOVERING) {
             return;
         }
 
@@ -179,11 +207,24 @@ public final class BuilderController {
             inFlight = null;
             inFlightAction = null;
             if (result.outcome() == CoordinatorOutcome.QUARANTINED) {
+                BuildJob current = job();
+                if (current.state().canTransitionTo(BuildJobState.QUARANTINED_RECOVERY)) {
+                    saveJob(current.recordDiagnosticAndTransition(
+                            new Diagnostic(
+                                    "OPERATION_INTENT_RECOVERY_QUARANTINED",
+                                    Severity.ERROR,
+                                    "OperationIntent recovery found unknown evidence",
+                                    true,
+                                    current.revision() + 1,
+                                    currentTaskPosition()),
+                            BuildJobState.QUARANTINED_RECOVERY));
+                }
                 block("OperationIntent recovery quarantined unknown evidence", currentTaskPosition());
                 return true;
             }
             switch (completedAction) {
-                case RECOVERY -> prepareJobAfterRecovery(level);
+                case RECOVERY -> beginRecoveryCheckpoint(level);
+                case RECOVERY_CHECKPOINT -> prepareJobAfterRecovery(level);
                 case TRANSFER -> {
                     // Recompute the remaining exact material need on the next server tick.
                 }
@@ -199,7 +240,7 @@ public final class BuilderController {
                 case SCAFFOLD_REMOVE -> continueScaffoldCleanup(level);
                 case SCAFFOLD_PLAN -> stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
             }
-            return false;
+            return inFlight != null;
         } catch (RuntimeException failure) {
             inFlight = null;
             inFlightAction = null;
@@ -221,6 +262,26 @@ public final class BuilderController {
                 intent -> recoveryInventories(level, intent),
                 commitLog);
         inFlightAction = InFlightAction.RECOVERY;
+    }
+
+    private void beginRecoveryCheckpoint(ServerLevel level) {
+        BuildJob current = job();
+        if (current.state() == BuildJobState.NO_BUILDER
+                || current.state() == BuildJobState.ORPHANED
+                || current.state() == BuildJobState.QUARANTINED_RECOVERY) {
+            stateMachine.transition(BuilderStateMachine.State.BLOCKED);
+            return;
+        }
+        ContainerBinding binding = order.chestBinding();
+        boolean projectComplete = current.completedTaskIds().size() == order.taskGraph().tasks().size();
+        if (!projectComplete
+                && (!level.isLoaded(binding.primaryPos()) || !links.isTransferEligible(level, binding))) {
+            stateMachine.transition(BuilderStateMachine.State.SUSPENDED_CHUNK_UNLOADED);
+            return;
+        }
+        inFlight = recoveryCheckpoint.apply(level)
+                .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.NO_ACTIVE_INTENT, 0));
+        inFlightAction = InFlightAction.RECOVERY_CHECKPOINT;
     }
 
     private void prepareJobAfterRecovery(ServerLevel level) {
@@ -1315,6 +1376,7 @@ public final class BuilderController {
 
     private enum InFlightAction {
         RECOVERY,
+        RECOVERY_CHECKPOINT,
         TRANSFER,
         PLACEMENT,
         SCAFFOLD_PLACE,

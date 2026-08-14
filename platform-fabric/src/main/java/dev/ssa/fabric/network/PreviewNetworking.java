@@ -253,11 +253,16 @@ public final class PreviewNetworking {
                 hut.builderLifecycle(),
                 hut.revision() + 1));
         hut.containerBinding().ifPresent(binding -> BuilderRuntimeService.start(
-                player.level(),
-                job,
-                plan,
-                binding,
-                authority.anchor().above()));
+                        player.level(),
+                        job,
+                        plan,
+                        binding,
+                        authority.anchor().above())
+                .whenComplete((builder, failure) -> {
+                    if (failure != null) {
+                        LOGGER.error("Durable Builder spawn failed for job {}", job.jobId(), failure);
+                    }
+                }));
     }
 
     private static Services services(MinecraftServer server) {

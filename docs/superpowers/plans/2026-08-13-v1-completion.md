@@ -58,11 +58,11 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - `JobRecoveryService.reconcile(world)` resolves OperationIntent, binding topology, lifecycle, and task/journal state in that order before reopening scheduling.
 - `ChunkSuspensionService` transitions jobs to `SUSPENDED_CHUNK_UNLOADED` and resumes only after required chunks are loaded.
 
-- [ ] Write pure lifecycle transition tests for unload, authoritative death, Hut loss, explicit replacement, and illegal automatic replacement.
-- [ ] Run the tests and observe the expected failure before implementation.
-- [ ] Persist tombstones and orphaned jobs; wire startup and world-load reconciliation ahead of `BuilderRuntimeService` scheduling.
-- [ ] Add real-process restart cases for every OperationIntent boundary and GameTests for death/Hut loss/chunk unload.
-- [ ] Run the full S4/S5 harness plus focused tests; commit `feat: reconcile builder lifecycle and jobs safely`.
+- [x] Write pure lifecycle transition tests for unload, authoritative death, Hut loss, explicit replacement, and illegal automatic replacement.
+- [x] Run the tests and observe the expected failure before implementation.
+- [x] Persist tombstones and orphaned jobs; wire startup and world-load reconciliation ahead of `BuilderRuntimeService` scheduling.
+- [x] Add real-process restart cases for every OperationIntent boundary and GameTests for death/Hut loss/chunk unload.
+- [x] Run the full S4/S5 harness plus focused tests; commit `feat: reconcile builder lifecycle and jobs safely`.
 
 ### Task 3: Implement server Stop and Safe Undo
 

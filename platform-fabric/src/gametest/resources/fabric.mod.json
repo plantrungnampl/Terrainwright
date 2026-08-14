@@ -11,6 +11,7 @@
       "dev.ssa.fabric.construction.OperationIntentProductionGameTest",
       "dev.ssa.fabric.builder.BuilderMaterialLoopGameTest",
       "dev.ssa.fabric.job.BuilderLossRecoveryGameTest",
+      "dev.ssa.fabric.undo.SafeUndoGameTest",
       "dev.ssa.fabric.link.HutChestLinkGameTest",
       "dev.ssa.fabric.preview.PreviewAuthorityGameTest"
     ],

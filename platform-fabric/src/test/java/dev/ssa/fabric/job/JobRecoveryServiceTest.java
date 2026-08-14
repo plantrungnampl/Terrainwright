@@ -60,6 +60,17 @@ final class JobRecoveryServiceTest {
     }
 
     @Test
+    void durableStopRequestReopensOnlyToDrainAndFinishStopping() {
+        ServerBuildJobRepository repository = LifecycleTestFixtures.repository(
+                HUT_ID, OWNER_ID, BUILDER_ID, BuildJobState.STOPPING);
+
+        JobRecoveryService.Reconciliation reconciliation =
+                new JobRecoveryService(repository).reconcileLoadedBuilder(BUILDER_ID);
+
+        assertEquals(JobRecoveryService.Outcome.STOPPING, reconciliation.outcome());
+    }
+
+    @Test
     void unresolvedLostBuilderIntentQuarantinesTheWalAndRetainedJob(@TempDir Path temporaryDirectory) {
         ServerBuildJobRepository repository = LifecycleTestFixtures.repository(
                 HUT_ID, OWNER_ID, BUILDER_ID, BuildJobState.PREPARING);

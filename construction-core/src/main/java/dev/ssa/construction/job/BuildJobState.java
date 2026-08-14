@@ -90,7 +90,7 @@ public enum BuildJobState {
     }
 
     public boolean canRecordConstructionProgress() {
-        return this == BUILDING;
+        return this == BUILDING || this == STOPPING;
     }
 
     private static boolean isInterrupt(BuildJobState state) {

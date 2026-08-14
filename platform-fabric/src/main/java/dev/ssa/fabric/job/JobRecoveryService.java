@@ -91,6 +91,18 @@ public final class JobRecoveryService {
         if (job.state() == BuildJobState.QUARANTINED_RECOVERY) {
             return Reconciliation.of(Outcome.QUARANTINED, Optional.of(hut.hutId()), jobId);
         }
+        if (job.state() == BuildJobState.STOPPING) {
+            return Reconciliation.of(Outcome.STOPPING, Optional.of(hut.hutId()), jobId);
+        }
+        if (job.state() == BuildJobState.STOPPED) {
+            return Reconciliation.of(Outcome.STOPPED, Optional.of(hut.hutId()), jobId);
+        }
+        if (job.state() == BuildJobState.UNDOING) {
+            return Reconciliation.of(Outcome.UNDOING, Optional.of(hut.hutId()), jobId);
+        }
+        if (job.state() == BuildJobState.UNDO_COMPLETED) {
+            return Reconciliation.of(Outcome.UNDO_COMPLETED, Optional.of(hut.hutId()), jobId);
+        }
         if (lifecycle.isTombstoned()) {
             return Reconciliation.of(Outcome.NO_BUILDER, Optional.of(hut.hutId()), jobId);
         }
@@ -174,6 +186,10 @@ public final class JobRecoveryService {
 
     public enum Outcome {
         READY_FOR_OPERATION_RECOVERY,
+        STOPPING,
+        STOPPED,
+        UNDOING,
+        UNDO_COMPLETED,
         SUSPENDED,
         NO_BUILDER,
         ORPHANED,

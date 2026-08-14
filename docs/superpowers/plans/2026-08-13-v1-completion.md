@@ -78,10 +78,10 @@ Complete the R2 V1.0 release target in the existing four-module repository witho
 - A changed/protected cell produces `CONFLICT_PRESERVE_CURRENT` and leaves the current block untouched.
 - Stop prevents new scheduling, drains the active intent, and leaves a recoverable job record.
 
-- [ ] Add red tests for an external edit that must be preserved and for no material/XP refund on construction or terrain-preparation undo.
-- [ ] Implement reverse journal execution through the existing permission and OperationIntent services.
-- [ ] Add owner-permission and multiplayer command tests; verify stale client commands are rejected.
-- [ ] Run `./gradlew :construction-core:test :platform-fabric:test` and the GameTest suite; commit `feat: add stop and safe undo`.
+- [x] Add red tests for an external edit that must be preserved and for no material/XP refund on construction or terrain-preparation undo.
+- [x] Implement reverse journal execution through the existing permission and OperationIntent services.
+- [x] Add owner-permission and multiplayer command tests; verify stale client commands are rejected.
+- [x] Run `./gradlew :construction-core:test :platform-fabric:test` and the GameTest suite; commit `feat: add stop and safe undo`.
 
 ### Task 4: Finish Builder Hut progress and control replication
 

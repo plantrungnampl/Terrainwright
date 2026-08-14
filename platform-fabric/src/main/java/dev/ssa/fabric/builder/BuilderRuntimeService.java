@@ -1,6 +1,7 @@
 package dev.ssa.fabric.builder;
 
 import dev.ssa.construction.job.BuildJob;
+import dev.ssa.construction.job.BuildJobState;
 import dev.ssa.construction.plan.TaskGraph;
 import dev.ssa.fabric.construction.FabricMutationExecutor;
 import dev.ssa.fabric.construction.MaterialTransferService;
@@ -12,12 +13,16 @@ import dev.ssa.fabric.job.ChunkSuspensionService;
 import dev.ssa.fabric.job.JobRecoveryService;
 import dev.ssa.fabric.link.BuilderChestLinkService;
 import dev.ssa.fabric.link.ContainerBinding;
+import dev.ssa.fabric.network.JobReplicationService;
 import dev.ssa.fabric.permission.FabricPermissionAdapter;
 import dev.ssa.fabric.persistence.OperationIntentStore;
 import dev.ssa.fabric.persistence.PersistenceExecutor;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
+import dev.ssa.fabric.undo.FabricUndoExecutor;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +49,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
     private final FabricPermissionAdapter permissions;
     private final BuilderChestLinkService links;
     private final Path operationDirectory;
+    private final Map<String, CompletableFuture<FabricUndoExecutor.UndoResult>> activeUndos = new HashMap<>();
 
     private BuilderRuntimeService(MinecraftServer server) {
         this.server = Objects.requireNonNull(server, "server");
@@ -97,6 +103,26 @@ public final class BuilderRuntimeService implements AutoCloseable {
         Objects.requireNonNull(spawnPosition, "spawnPosition");
         return service(level.getServer()).replaceTombstoned(
                 level, hutId, ownerId, spawnPosition);
+    }
+
+    public static CompletableFuture<JobReplicationService.CommandResult> stopJob(
+            ServerLevel level,
+            String jobId,
+            UUID ownerId,
+            long expectedRevision) {
+        Objects.requireNonNull(level, "level");
+        return service(level.getServer()).controls(level)
+                .stop(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
+    }
+
+    public static CompletableFuture<JobReplicationService.CommandResult> undoJob(
+            ServerLevel level,
+            String jobId,
+            UUID ownerId,
+            long expectedRevision) {
+        Objects.requireNonNull(level, "level");
+        return service(level.getServer()).controls(level)
+                .undo(jobId, Objects.requireNonNull(ownerId, "ownerId"), expectedRevision);
     }
 
     public static void observeDeath(ServerLevel level, BuilderEntity builder) {
@@ -308,6 +334,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
 
     private void attachLoadedBuilders(ServerLevel level) {
         requireServerThread();
+        resumeDurableUndos(level);
         List<BuilderEntity> builders = new ArrayList<>();
         for (Entity entity : level.getAllEntities()) {
             if (entity instanceof BuilderEntity builder && !builder.hasController()) {
@@ -324,7 +351,8 @@ public final class BuilderRuntimeService implements AutoCloseable {
                     recovery.reconcileLoadedBuilder(builder.getUUID());
             if (reconciliation.outcome() != JobRecoveryService.Outcome.READY_FOR_OPERATION_RECOVERY
                     && reconciliation.outcome() != JobRecoveryService.Outcome.SUSPENDED
-                    && reconciliation.outcome() != JobRecoveryService.Outcome.ORPHANED) {
+                    && reconciliation.outcome() != JobRecoveryService.Outcome.ORPHANED
+                    && reconciliation.outcome() != JobRecoveryService.Outcome.STOPPING) {
                 continue;
             }
             ServerBuildJobRepository.HutState hut = repository
@@ -337,6 +365,76 @@ public final class BuilderRuntimeService implements AutoCloseable {
                     .orElseThrow(() -> new IllegalStateException("Builder job has no durable task graph"));
             attach(level, builder, job, plan, hut.containerBinding().orElseThrow());
         }
+    }
+
+    private JobReplicationService controls(ServerLevel level) {
+        requireServerThread();
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        return new JobReplicationService(repository, permissions, new JobReplicationService.CommandExecutor() {
+            @Override
+            public CompletableFuture<Void> stop(BuildJob stoppingJob) {
+                return level.getDataStorage().scheduleSave().thenApply(ignored -> (Void) null);
+            }
+
+            @Override
+            public CompletableFuture<Void> undo(BuildJob undoingJob) {
+                return level.getDataStorage().scheduleSave()
+                        .thenComposeAsync(
+                                ignored -> beginUndo(level, undoingJob).thenApply(result -> (Void) null),
+                                server::execute);
+            }
+        });
+    }
+
+    private void resumeDurableUndos(ServerLevel level) {
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        String levelId = level.dimension().identifier().toString();
+        for (BuildJob job : repository.jobs().values()) {
+            if (job.state() != BuildJobState.UNDOING
+                    || !job.worldId().toString().equals(levelId)
+                    || activeUndos.containsKey(job.jobId())) {
+                continue;
+            }
+            UUID ownerId;
+            try {
+                ownerId = UUID.fromString(job.ownerId());
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            if (server.getPlayerList().getPlayer(ownerId) == null) {
+                continue;
+            }
+            beginUndo(level, job);
+        }
+    }
+
+    private CompletableFuture<FabricUndoExecutor.UndoResult> beginUndo(
+            ServerLevel level,
+            BuildJob job) {
+        CompletableFuture<FabricUndoExecutor.UndoResult> existing = activeUndos.get(job.jobId());
+        if (existing != null) {
+            return existing;
+        }
+        UUID ownerId = UUID.fromString(job.ownerId());
+        String walName = "undo-" + UUID.nameUUIDFromBytes(
+                job.jobId().getBytes(StandardCharsets.UTF_8)) + ".wal";
+        OperationIntentStore store = new OperationIntentStore(
+                operationDirectory.resolve(walName),
+                persistence);
+        FabricMutationExecutor mutations = new FabricMutationExecutor(
+                store,
+                server::execute,
+                OperationBoundaryListener.NONE);
+        CompletableFuture<FabricUndoExecutor.UndoResult> future = new FabricUndoExecutor(
+                        level,
+                        ServerBuildJobRepository.get(level),
+                        permissions,
+                        mutations)
+                .undo(job.jobId(), ownerId);
+        activeUndos.put(job.jobId(), future);
+        future.whenComplete((ignored, failure) -> server.execute(() ->
+                activeUndos.remove(job.jobId(), future)));
+        return future;
     }
 
     private void onBuilderUnloaded(ServerLevel level, BuilderEntity builder) {

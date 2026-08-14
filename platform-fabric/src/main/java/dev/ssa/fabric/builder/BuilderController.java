@@ -153,6 +153,11 @@ public final class BuilderController {
             return;
         }
         BuildJobState durableState = job().state();
+        if (durableState == BuildJobState.STOPPING
+                && stateMachine.state() != BuilderStateMachine.State.RECOVERING) {
+            finishStopping(level);
+            return;
+        }
         if ((durableState == BuildJobState.NO_BUILDER
                         || durableState == BuildJobState.ORPHANED
                         || durableState == BuildJobState.QUARANTINED_RECOVERY)
@@ -222,6 +227,14 @@ public final class BuilderController {
                 block("OperationIntent recovery quarantined unknown evidence", currentTaskPosition());
                 return true;
             }
+            if (job().state() == BuildJobState.STOPPING) {
+                if (completedAction == InFlightAction.RECOVERY) {
+                    beginRecoveryCheckpoint(level);
+                } else {
+                    finishStopping(level);
+                }
+                return true;
+            }
             switch (completedAction) {
                 case RECOVERY -> beginRecoveryCheckpoint(level);
                 case RECOVERY_CHECKPOINT -> prepareJobAfterRecovery(level);
@@ -239,6 +252,9 @@ public final class BuilderController {
                 case SCAFFOLD_PLACE -> continueScaffoldPlacement(level);
                 case SCAFFOLD_REMOVE -> continueScaffoldCleanup(level);
                 case SCAFFOLD_PLAN -> stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
+                case STOP_CHECKPOINT -> {
+                    // STOPPED is already the durable terminal state for this controller.
+                }
             }
             return inFlight != null;
         } catch (RuntimeException failure) {
@@ -286,6 +302,10 @@ public final class BuilderController {
 
     private void prepareJobAfterRecovery(ServerLevel level) {
         BuildJob current = job();
+        if (current.state() == BuildJobState.STOPPING) {
+            finishStopping(level);
+            return;
+        }
         if (current.state() == BuildJobState.COMPLETED) {
             stateMachine.transition(BuilderStateMachine.State.CHECK_MATERIALS);
             finishCompletedJob();
@@ -806,6 +826,21 @@ public final class BuilderController {
             stateMachine.transition(BuilderStateMachine.State.BLOCKED);
         }
         builder.getNavigation().stop();
+    }
+
+    private void finishStopping(ServerLevel level) {
+        BuildJob current = job();
+        if (current.state() != BuildJobState.STOPPING) {
+            return;
+        }
+        builder.getNavigation().stop();
+        saveJob(current.transitionTo(BuildJobState.STOPPED));
+        if (stateMachine.state() != BuilderStateMachine.State.BLOCKED) {
+            stateMachine.transition(BuilderStateMachine.State.BLOCKED);
+        }
+        inFlight = level.getDataStorage().scheduleSave()
+                .thenApply(ignored -> new CoordinatorResult(CoordinatorOutcome.NO_ACTIVE_INTENT, 0));
+        inFlightAction = InFlightAction.STOP_CHECKPOINT;
     }
 
     private Optional<Container> linkedContainer(ServerLevel level) {
@@ -1348,6 +1383,10 @@ public final class BuilderController {
         }
 
         private BuildJob restoreBuildingState(BuildJob current, long expectedRevision) {
+            if (current.state() == BuildJobState.STOPPING
+                    && current.revision() == expectedRevision + 1) {
+                return current;
+            }
             if (current.state() == BuildJobState.BUILDING) {
                 if (current.revision() != expectedRevision) {
                     throw new IllegalStateException("BuildJob revision does not match its OperationIntent");
@@ -1381,7 +1420,8 @@ public final class BuilderController {
         PLACEMENT,
         SCAFFOLD_PLACE,
         SCAFFOLD_REMOVE,
-        SCAFFOLD_PLAN
+        SCAFFOLD_PLAN,
+        STOP_CHECKPOINT
     }
 
     private enum ScaffoldMode {

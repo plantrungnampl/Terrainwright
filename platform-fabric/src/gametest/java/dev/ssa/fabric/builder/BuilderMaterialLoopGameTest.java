@@ -467,6 +467,53 @@ public final class BuilderMaterialLoopGameTest {
         });
     }
 
+    @GameTest(maxTicks = 300, padding = 16)
+    public void stopDrainsThePreparedIntentAndSchedulesNoFurtherWorldMutation(GameTestHelper context) {
+        Fixture fixture = start(context, layout(context), 3, "stop-drain");
+        AtomicBoolean stopRequested = new AtomicBoolean();
+        AtomicBoolean checkingWal = new AtomicBoolean();
+        fixture.boundaries().onAfterPrepared(() -> {
+            if (fixture.boundaries().durablePrepareCount() != 2
+                    || !stopRequested.compareAndSet(false, true)) {
+                return;
+            }
+            BuildJob current = fixture.repository().findJob(fixture.jobId()).orElseThrow();
+            fixture.repository().saveJob(current.transitionTo(BuildJobState.STOPPING));
+        });
+
+        context.onEachTick(() -> {
+            BuildJob current = fixture.repository().findJob(fixture.jobId()).orElseThrow();
+            if (current.state() != BuildJobState.STOPPED || !checkingWal.compareAndSet(false, true)) {
+                return;
+            }
+            fixture.store().loadActive().whenComplete((active, failure) ->
+                    context.getLevel().getServer().execute(() -> {
+                        try {
+                            if (failure != null) {
+                                throw new AssertionError("Could not inspect the drained Stop WAL", failure);
+                            }
+                            context.assertTrue(active.isEmpty(), "Stop left its drained intent active");
+                            context.assertTrue(
+                                    fixture.controller().state() == BuilderStateMachine.State.BLOCKED,
+                                    "Stopped controller remained schedulable");
+                            context.assertBlockPresent(Blocks.OAK_PLANKS, fixture.layout().wallOrigin());
+                            context.assertBlockPresent(Blocks.AIR, fixture.layout().wallOrigin().east());
+                            context.assertBlockPresent(Blocks.AIR, fixture.layout().wallOrigin().east(2));
+                            context.assertValueEqual(
+                                    fixture.builder().carriedItemCount(Items.OAK_PLANKS),
+                                    2,
+                                    "material remaining after the drained placement");
+                            fixture.builder().discard();
+                            fixture.persistence().close();
+                            context.succeed();
+                        } catch (Throwable assertionFailure) {
+                            fixture.persistence().close();
+                            context.fail("Stop drain test failed: " + rootMessage(assertionFailure));
+                        }
+                    }));
+        });
+    }
+
     private static Fixture start(GameTestHelper context, Layout layout, int materialCount, String name) {
         return start(context, layout, materialCount, name, wallGraph(), true);
     }
@@ -797,11 +844,17 @@ public final class BuilderMaterialLoopGameTest {
     private static final class BoundaryRecorder implements OperationBoundaryListener {
         private int durablePrepareCount;
         private boolean allAcknowledgedOffServerThread = true;
+        private Runnable afterPrepared = () -> {};
 
         @Override
         public void afterPrepared(dev.ssa.fabric.persistence.DurableAcknowledgement acknowledgement) {
             durablePrepareCount++;
             allAcknowledgedOffServerThread &= acknowledgement.ioThread().startsWith("ssa-builder-gametest-");
+            afterPrepared.run();
+        }
+
+        void onAfterPrepared(Runnable callback) {
+            afterPrepared = java.util.Objects.requireNonNull(callback, "callback");
         }
 
         int durablePrepareCount() {

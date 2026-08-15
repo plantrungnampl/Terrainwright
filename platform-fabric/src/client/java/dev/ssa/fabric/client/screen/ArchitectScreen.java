@@ -261,8 +261,7 @@ public final class ArchitectScreen extends Screen {
                 moveBounds,
                 actionLabel("move"),
                 TerrainwrightButton.Style.NORMAL,
-                () -> previewState.preview().ifPresent(result ->
-                        previewState.movePreview(result.origin().east())),
+                selectSite,
                 component("tooltip.move"));
     }
 

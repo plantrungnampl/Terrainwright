@@ -295,7 +295,7 @@ public final class BuilderLossRecoveryGameTest {
             }
         }
         context.setBlock(new BlockPos(2, 1, 2), Blocks.CHEST);
-        UUID ownerId = UUID.randomUUID();
+        UUID ownerId = context.makeMockServerPlayerInLevel().getUUID();
         UUID hutId = UUID.randomUUID();
         String jobId = UUID.randomUUID().toString();
         BuildJob job = BuildJob.create(

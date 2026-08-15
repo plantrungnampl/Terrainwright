@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricPermissionAdapter implements PermissionPort {
@@ -36,8 +37,30 @@ public final class FabricPermissionAdapter implements PermissionPort {
         if (player == null) {
             return false;
         }
+        return canModify(owner, player.level().dimension().identifier().toString(), position);
+    }
+
+    @Override
+    public boolean canModify(UUID owner, String worldId, GridPos position) {
+        Objects.requireNonNull(owner, "owner");
+        Objects.requireNonNull(worldId, "worldId");
+        Objects.requireNonNull(position, "position");
+        ServerPlayer player = server.getPlayerList().getPlayer(owner);
+        if (player == null) {
+            return false;
+        }
+        ServerLevel targetLevel = null;
+        for (ServerLevel level : server.getAllLevels()) {
+            if (level.dimension().identifier().toString().equals(worldId)) {
+                targetLevel = level;
+                break;
+            }
+        }
+        if (targetLevel == null || player.level() != targetLevel) {
+            return false;
+        }
         BlockPos blockPosition = new BlockPos(position.x(), position.y(), position.z());
-        return player.level().isLoaded(blockPosition)
-                && player.level().mayInteract(player, blockPosition);
+        return targetLevel.isLoaded(blockPosition)
+                && targetLevel.mayInteract(player, blockPosition);
     }
 }

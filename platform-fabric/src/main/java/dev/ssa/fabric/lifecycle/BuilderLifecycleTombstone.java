@@ -59,6 +59,10 @@ public record BuilderLifecycleTombstone(
         return tombstone(Cause.REMOVAL, observedGameTime);
     }
 
+    public BuilderLifecycleTombstone observeSpawnFailure(long observedGameTime) {
+        return tombstone(Cause.SPAWN_FAILURE, observedGameTime);
+    }
+
     public boolean isTombstoned() {
         return status == Status.TOMBSTONED;
     }
@@ -102,7 +106,8 @@ public record BuilderLifecycleTombstone(
 
     public enum Cause {
         DEATH,
-        REMOVAL
+        REMOVAL,
+        SPAWN_FAILURE
     }
 
     public enum Status {

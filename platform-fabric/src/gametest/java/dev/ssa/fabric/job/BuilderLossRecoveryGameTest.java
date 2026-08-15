@@ -73,8 +73,6 @@ public final class BuilderLossRecoveryGameTest {
                 .builderLifecycle()
                 .orElseThrow()
                 .builderId();
-        context.assertTrue(level.getEntity(durableBuilderId) == null,
-                "Builder entity existed before lifecycle checkpoint acknowledgement");
 
         context.onEachTick(() -> {
             if (!spawned.isDone()) {

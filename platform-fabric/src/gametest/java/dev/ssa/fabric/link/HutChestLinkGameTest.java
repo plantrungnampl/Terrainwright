@@ -100,6 +100,37 @@ public final class HutChestLinkGameTest {
     }
 
     @GameTest(maxTicks = 20)
+    public void runtimeTransferEligibilityRechecksDoubleChestPartnerPermission(GameTestHelper context) {
+        ServerLevel level = context.getLevel();
+        BlockPos hut = context.absolutePos(new BlockPos(0, 1, 0));
+        BlockPos left = context.absolutePos(new BlockPos(3, 1, 2));
+        BlockPos right = left.east();
+        setDoubleChest(level, left, right);
+        BuilderChestLinkService initial = new BuilderChestLinkService((owner, position) -> true);
+        ContainerBinding binding = initial.link(level, hut, OWNER, left, Optional.empty())
+                .binding().orElseThrow();
+        BlockPos deniedPartner = binding.partnerPos().orElseThrow();
+        PermissionPort changedPermissions = new PermissionPort() {
+            @Override
+            public boolean canModify(UUID owner, GridPos position) {
+                return true;
+            }
+
+            @Override
+            public boolean canModify(UUID owner, String worldId, GridPos position) {
+                return !(position.x() == deniedPartner.getX()
+                        && position.y() == deniedPartner.getY()
+                        && position.z() == deniedPartner.getZ());
+            }
+        };
+        BuilderChestLinkService runtime = new BuilderChestLinkService(changedPermissions, OWNER);
+
+        context.assertTrue(!runtime.isTransferEligible(level, binding),
+                "runtime transfer remained eligible after partner chest permission was revoked");
+        context.succeed();
+    }
+
+    @GameTest(maxTicks = 20)
     public void splitPausesTransferUntilExplicitRelink(GameTestHelper context) {
         ServerLevel level = context.getLevel();
         BlockPos hut = context.absolutePos(new BlockPos(0, 1, 0));

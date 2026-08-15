@@ -14,6 +14,7 @@ import dev.ssa.architect.scoring.ScoreBreakdown;
 import dev.ssa.architect.terrain.TerrainPlan;
 import dev.ssa.architect.validation.BlueprintValidation;
 import dev.ssa.fabric.block.ModBlocks;
+import dev.ssa.fabric.link.ContainerBinding;
 import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
 import dev.ssa.fabric.persistence.ServerBuildJobRepository;
 import dev.ssa.fabric.survey.SurveyModeService;
@@ -225,6 +226,31 @@ public final class PreviewAuthorityGameTest {
         repository.saveHutState(new ServerBuildJobRepository.HutState(
                 hutId, OWNER, Optional.empty(), Optional.empty(), Optional.empty(), 0));
         int jobsBefore = repository.jobs().size();
+
+        PreviewSessionService.ConfirmationResult noChest = sessions.confirmDetailed(
+                level,
+                scanner,
+                (owner, position) -> true,
+                repository,
+                OWNER,
+                new ConfirmPreview(session.id(), blueprint.hash(), hutId),
+                99);
+        context.assertValueEqual(
+                noChest.failure(),
+                Optional.of(PreviewSessionService.ConfirmationFailure.HUT_CHEST_NOT_LINKED),
+                "unlinked Hut confirmation failure");
+        context.assertTrue(
+                sessions.activeSession(OWNER).isPresent(),
+                "unlinked Hut confirmation consumed the server preview session");
+        context.assertValueEqual(repository.jobs().size(), jobsBefore, "jobs after unlinked Hut confirmation");
+
+        ContainerBinding binding = ContainerBinding.resolve(
+                level.dimension().identifier(),
+                anchor.offset(12, 0, 0),
+                Optional.empty(),
+                Optional.empty());
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                hutId, OWNER, Optional.empty(), Optional.of(binding), Optional.empty(), 1));
 
         Optional<PreviewSessionService.ConfirmationAuthority> forged = sessions.confirm(
                 level,

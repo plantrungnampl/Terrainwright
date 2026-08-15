@@ -18,9 +18,19 @@ public final class BuilderChestLinkService {
     public static final long MAX_DISTANCE_SQUARED = 256;
 
     private final PermissionPort permissions;
+    private final Optional<UUID> transferOwner;
 
     public BuilderChestLinkService(PermissionPort permissions) {
+        this(permissions, Optional.empty());
+    }
+
+    public BuilderChestLinkService(PermissionPort permissions, UUID transferOwner) {
+        this(permissions, Optional.of(Objects.requireNonNull(transferOwner, "transferOwner")));
+    }
+
+    private BuilderChestLinkService(PermissionPort permissions, Optional<UUID> transferOwner) {
         this.permissions = Objects.requireNonNull(permissions, "permissions");
+        this.transferOwner = Objects.requireNonNull(transferOwner, "transferOwner");
     }
 
     public LinkResult link(
@@ -46,9 +56,9 @@ public final class BuilderChestLinkService {
         if (distanceSquared(hutPos, resolved.primary()) > MAX_DISTANCE_SQUARED) {
             return LinkResult.rejected(LinkFailure.TOO_FAR, current);
         }
-        if (!permissions.canModify(ownerId, gridPos(resolved.primary()))
+        if (!canModify(level, ownerId, resolved.primary())
                 || resolved.partner().stream()
-                        .anyMatch(partner -> !permissions.canModify(ownerId, gridPos(partner)))) {
+                        .anyMatch(partner -> !canModify(level, ownerId, partner))) {
             return LinkResult.rejected(LinkFailure.PERMISSION_DENIED, current);
         }
 
@@ -62,11 +72,27 @@ public final class BuilderChestLinkService {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(binding, "binding");
         Optional<Topology> observed = topologyAt(level, binding.primaryPos());
-        return observed.isPresent()
-                && binding.matchesTopology(
+        if (observed.isEmpty()
+                || !binding.matchesTopology(
                         level.dimension().identifier(),
                         observed.orElseThrow().primary(),
-                        observed.orElseThrow().partner());
+                        observed.orElseThrow().partner())) {
+            return false;
+        }
+        if (transferOwner.isEmpty()) {
+            return true;
+        }
+        UUID owner = transferOwner.orElseThrow();
+        Topology resolved = observed.orElseThrow();
+        return canModify(level, owner, resolved.primary())
+                && resolved.partner().stream().allMatch(partner -> canModify(level, owner, partner));
+    }
+
+    private boolean canModify(ServerLevel level, UUID ownerId, BlockPos position) {
+        return permissions.canModify(
+                ownerId,
+                level.dimension().identifier().toString(),
+                gridPos(position));
     }
 
     private static Optional<Topology> topologyAt(ServerLevel level, BlockPos proposedPos) {

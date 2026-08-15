@@ -81,6 +81,47 @@ final class JobReplicationServiceTest {
     }
 
     @Test
+    void failedPauseCheckpointReturnsExecutionFailureAtAuthoritativeRevision() {
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        BuildJob job = job("job-pause-failure", OWNER);
+        repository.saveJob(job);
+        JobReplicationService service = new JobReplicationService(
+                repository,
+                (owner, position) -> true,
+                new JobReplicationService.CommandExecutor() {
+                    @Override
+                    public CompletableFuture<Void> pause(BuildJob pausedJob) {
+                        return CompletableFuture.failedFuture(new IllegalStateException("checkpoint failed"));
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> resume(BuildJob resumedJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> stop(BuildJob stoppingJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> undo(BuildJob undoingJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                });
+
+        JobReplicationService.CommandResult result = service
+                .pause(job.jobId(), OWNER, job.revision())
+                .join();
+        BuildJob authoritative = repository.findJob(job.jobId()).orElseThrow();
+
+        assertFalse(result.accepted());
+        assertEquals(JobReplicationService.Rejection.EXECUTION_FAILED, result.rejection());
+        assertEquals(authoritative.revision(), result.revision());
+        assertEquals(BuildJobState.PAUSED, authoritative.state());
+    }
+
+    @Test
     void undoRequiresAStoppedOrCompletedJobAndPersistsUndoingFirst() {
         ServerBuildJobRepository repository = new ServerBuildJobRepository();
         BuildJob stopped = job("job-undo", OWNER)

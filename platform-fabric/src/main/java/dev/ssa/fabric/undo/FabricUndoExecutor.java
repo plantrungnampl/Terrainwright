@@ -113,7 +113,10 @@ public final class FabricUndoExecutor {
             UndoPlanner.UndoDecision decision = planner.decide(
                     entry,
                     specification(currentState),
-                    permissions.canModify(owner, gridPos(position)),
+                    permissions.canModify(
+                            owner,
+                            level.dimension().identifier().toString(),
+                            gridPos(position)),
                     level.getBlockEntity(position) != null,
                     restore(entry.previousState()).getBlock() instanceof EntityBlock);
             if (decision.type() == UndoPlanner.UndoDecision.Type.CONFLICT_PRESERVE_CURRENT) {

@@ -39,6 +39,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -215,7 +216,7 @@ public final class PreviewNetworking {
         Services services = services(context.server());
         ServerPlayer player = context.player();
         ServerBuildJobRepository repository = ServerBuildJobRepository.get(player.level());
-        Optional<PreviewSessionService.ConfirmationAuthority> confirmed = services.sessions().confirm(
+        PreviewSessionService.ConfirmationResult confirmation = services.sessions().confirmDetailed(
                 player.level(),
                 services.scanner(),
                 services.permissions(),
@@ -223,10 +224,13 @@ public final class PreviewNetworking {
                 player.getUUID(),
                 payload,
                 context.server().getTickCount());
-        if (confirmed.isEmpty()) {
+        if (!confirmation.confirmed()) {
+            PreviewSessionService.ConfirmationFailure failure = confirmation.failure().orElseThrow();
+            LOGGER.debug("Rejected preview confirmation for {}: {}", player.getUUID(), failure);
+            player.sendSystemMessage(Component.literal("Terrainwright: " + failure.message()));
             return;
         }
-        PreviewSessionService.ConfirmationAuthority authority = confirmed.orElseThrow();
+        PreviewSessionService.ConfirmationAuthority authority = confirmation.authority().orElseThrow();
         BuildJob job = BuildJob.create(
                 UUID.randomUUID().toString(),
                 authority.owner().toString(),
@@ -247,17 +251,38 @@ public final class PreviewNetworking {
                 hut.containerBinding(),
                 hut.builderLifecycle(),
                 hut.revision() + 1));
-        hut.containerBinding().ifPresent(binding -> BuilderRuntimeService.start(
-                        player.level(),
-                        job,
-                        plan,
-                        binding,
-                        authority.anchor().above())
-                .whenComplete((builder, failure) -> {
-                    if (failure != null) {
-                        LOGGER.error("Durable Builder spawn failed for job {}", job.jobId(), failure);
-                    }
-                }));
+
+        sendSurveyStatus(player, SurveyStatus.Action.CONFIRM, true);
+        try {
+            BuilderRuntimeService.start(
+                            player.level(),
+                            job,
+                            plan,
+                            hut.containerBinding().orElseThrow(),
+                            authority.anchor().above())
+                    .whenComplete((builder, failure) -> {
+                        if (failure == null && builder.isPresent()) {
+                            return;
+                        }
+                        context.server().execute(() -> {
+                            if (failure != null) {
+                                LOGGER.error("Durable Builder spawn failed for job {}", job.jobId(), failure);
+                            } else {
+                                LOGGER.error("Durable Builder spawn returned no entity for job {}", job.jobId());
+                            }
+                            if (player.connection != null) {
+                                player.sendSystemMessage(Component.literal(
+                                        "Terrainwright: The build was confirmed, but the Builder could not start. "
+                                                + "Open the Builder Hut to replace it."));
+                            }
+                        });
+                    });
+        } catch (RuntimeException failure) {
+            LOGGER.error("Durable Builder start failed synchronously for job {}", job.jobId(), failure);
+            player.sendSystemMessage(Component.literal(
+                    "Terrainwright: The build was confirmed, but the Builder could not start. "
+                            + "Open the Builder Hut to recover it."));
+        }
     }
 
     private static Services services(MinecraftServer server) {

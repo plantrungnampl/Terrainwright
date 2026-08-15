@@ -40,10 +40,8 @@ public final class MaterialTransferService {
         if (count < 1) {
             throw new IllegalArgumentException("transfer count must be positive");
         }
-        if (source.inventoryId().equals(destination.inventoryId())
-                && source.bindingRevision() == destination.bindingRevision()
-                && sourceSlot == destinationSlot) {
-            throw new IllegalArgumentException("source and destination evidence must be distinct");
+        if (source.inventoryId().equals(destination.inventoryId())) {
+            throw new IllegalArgumentException("source and destination inventories must be distinct");
         }
 
         ItemStack sourceBefore = source.container().getItem(sourceSlot).copy();

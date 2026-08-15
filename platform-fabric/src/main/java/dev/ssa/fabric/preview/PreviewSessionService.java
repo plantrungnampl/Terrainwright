@@ -68,6 +68,25 @@ public final class PreviewSessionService {
             UUID owner,
             ConfirmPreview request,
             long currentRevision) {
+        return confirmDetailed(
+                        level,
+                        scanner,
+                        permissions,
+                        repository,
+                        owner,
+                        request,
+                        currentRevision)
+                .authority();
+    }
+
+    public ConfirmationResult confirmDetailed(
+            ServerLevel level,
+            FabricTerrainScanner scanner,
+            PermissionPort permissions,
+            ServerBuildJobRepository repository,
+            UUID owner,
+            ConfirmPreview request,
+            long currentRevision) {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(scanner, "scanner");
         Objects.requireNonNull(permissions, "permissions");
@@ -77,17 +96,34 @@ public final class PreviewSessionService {
         PreviewSession session = sessions.get(owner);
         if (session == null
                 || !session.id().equals(request.previewSessionId())
-                || currentRevision > session.expiryRevision()
-                || !session.blueprintHash().equals(request.expectedBlueprintHash())
-                || !session.dimensionId().equals(level.dimension().identifier())) {
-            return Optional.empty();
+                || !session.blueprintHash().equals(request.expectedBlueprintHash())) {
+            return ConfirmationResult.rejected(ConfirmationFailure.SESSION_MISMATCH);
+        }
+        if (currentRevision > session.expiryRevision()) {
+            return ConfirmationResult.rejected(ConfirmationFailure.PREVIEW_EXPIRED);
+        }
+        if (!session.dimensionId().equals(level.dimension().identifier())) {
+            return ConfirmationResult.rejected(ConfirmationFailure.WRONG_DIMENSION);
         }
         Optional<ServerBuildJobRepository.HutState> hut = repository.findHut(request.chosenHutId());
-        if (hut.isEmpty()
-                || !hut.orElseThrow().ownerId().equals(owner)
-                || hut.orElseThrow().activeJobId().isPresent()
-                || !permissions.canModify(owner, gridPos(session.anchor()))) {
-            return Optional.empty();
+        if (hut.isEmpty()) {
+            return ConfirmationResult.rejected(ConfirmationFailure.HUT_NOT_FOUND);
+        }
+        ServerBuildJobRepository.HutState selectedHut = hut.orElseThrow();
+        if (!selectedHut.ownerId().equals(owner)) {
+            return ConfirmationResult.rejected(ConfirmationFailure.HUT_NOT_OWNED);
+        }
+        if (selectedHut.activeJobId().isPresent()) {
+            return ConfirmationResult.rejected(ConfirmationFailure.HUT_ALREADY_BUSY);
+        }
+        if (selectedHut.containerBinding().isEmpty()) {
+            return ConfirmationResult.rejected(ConfirmationFailure.HUT_CHEST_NOT_LINKED);
+        }
+        if (!permissions.canModify(
+                owner,
+                session.dimensionId().toString(),
+                gridPos(session.anchor()))) {
+            return ConfirmationResult.rejected(ConfirmationFailure.PERMISSION_DENIED);
         }
         Optional<dev.ssa.architect.model.TerrainSnapshot> observed = scanner.scan(
                 level,
@@ -96,10 +132,10 @@ public final class PreviewSessionService {
                 session.snapshotDepth());
         if (observed.isEmpty()
                 || !session.worldRevision().equals(observed.orElseThrow().revisionFingerprint())) {
-            return Optional.empty();
+            return ConfirmationResult.rejected(ConfirmationFailure.STALE_TERRAIN);
         }
         sessions.remove(owner);
-        return Optional.of(new ConfirmationAuthority(
+        return ConfirmationResult.confirmed(new ConfirmationAuthority(
                 owner,
                 request.chosenHutId(),
                 session.blueprintHash(),
@@ -208,6 +244,52 @@ public final class PreviewSessionService {
             }
             requireSnapshotDimensions(snapshotWidth, snapshotDepth);
             requireRotation(rotation);
+        }
+    }
+
+    public record ConfirmationResult(
+            Optional<ConfirmationAuthority> authority,
+            Optional<ConfirmationFailure> failure) {
+        public ConfirmationResult {
+            authority = Objects.requireNonNull(authority, "authority");
+            failure = Objects.requireNonNull(failure, "failure");
+            if (authority.isPresent() == failure.isPresent()) {
+                throw new IllegalArgumentException("Confirmation result must contain exactly one outcome");
+            }
+        }
+
+        public boolean confirmed() {
+            return authority.isPresent();
+        }
+
+        private static ConfirmationResult confirmed(ConfirmationAuthority authority) {
+            return new ConfirmationResult(Optional.of(authority), Optional.empty());
+        }
+
+        private static ConfirmationResult rejected(ConfirmationFailure failure) {
+            return new ConfirmationResult(Optional.empty(), Optional.of(failure));
+        }
+    }
+
+    public enum ConfirmationFailure {
+        SESSION_MISMATCH("The preview is no longer authoritative. Generate a fresh preview."),
+        PREVIEW_EXPIRED("The preview expired. Generate a fresh preview."),
+        WRONG_DIMENSION("Return to the preview dimension before confirming."),
+        HUT_NOT_FOUND("The selected Builder Hut is unavailable."),
+        HUT_NOT_OWNED("Select a Builder Hut that you own."),
+        HUT_ALREADY_BUSY("The selected Builder Hut already has an active job."),
+        HUT_CHEST_NOT_LINKED("Link a Builder Chest before confirming the build."),
+        PERMISSION_DENIED("Build permission is no longer available at the selected site."),
+        STALE_TERRAIN("The terrain changed after preview generation. Generate a fresh preview.");
+
+        private final String message;
+
+        ConfirmationFailure(String message) {
+            this.message = message;
+        }
+
+        public String message() {
+            return message;
         }
     }
 

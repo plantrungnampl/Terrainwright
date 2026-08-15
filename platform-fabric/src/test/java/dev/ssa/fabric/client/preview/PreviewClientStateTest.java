@@ -62,6 +62,46 @@ final class PreviewClientStateTest {
     }
 
     @Test
+    void reselectingSiteRequiresANewAuthoritativePreviewBeforeConfirmation() {
+        PreviewClientState state = new PreviewClientState(new RecordingSink());
+        var blueprint = PreviewTestFixtures.blueprint(47);
+        UUID firstSessionId = UUID.randomUUID();
+        UUID replacementSessionId = UUID.randomUUID();
+        UUID hutId = UUID.randomUUID();
+
+        state.receiveSurveyToken("first-site");
+        RequestPreview firstRequest = state.requestPreview(requirements(47), 0);
+        assertTrue(state.accept(new PreviewResult(
+                firstSessionId,
+                blueprint.hash(),
+                blueprint,
+                new BlockPos(10, 64, 20),
+                0,
+                500,
+                firstRequest.requestNonce())));
+        state.selectHut(hutId);
+        assertEquals(firstSessionId, state.confirmation().orElseThrow().previewSessionId());
+
+        state.clear();
+
+        assertTrue(state.confirmation().isEmpty());
+        state.receiveSurveyToken("replacement-site");
+        RequestPreview replacementRequest = state.requestPreview(requirements(48), 90);
+        assertTrue(state.accept(new PreviewResult(
+                replacementSessionId,
+                blueprint.hash(),
+                blueprint,
+                new BlockPos(30, 70, 40),
+                90,
+                500,
+                replacementRequest.requestNonce())));
+        state.selectHut(hutId);
+
+        assertEquals(replacementSessionId, state.confirmation().orElseThrow().previewSessionId());
+        assertEquals(new BlockPos(30, 70, 40), state.preview().orElseThrow().origin());
+    }
+
+    @Test
     void localMoveAndConflictOverlayRebuildTheGhostButInvalidateAuthority() {
         RecordingSink sink = new RecordingSink();
         PreviewClientState state = new PreviewClientState(sink);

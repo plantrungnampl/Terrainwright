@@ -41,6 +41,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,7 +53,7 @@ public final class TerrainwrightClient implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(TerrainwrightMod.MOD_ID);
     private static final PreviewClientState PREVIEW_STATE = PreviewClientState.production();
     private static final JobClientState JOB_STATE = new JobClientState();
-    private static BlockPos activeArchitectTable;
+    private static GlobalPos activeArchitectTable;
     private static UUID activeBuilderHut;
     private static BlockPos activeBuilderHutPos;
     private static SelectionMode selectionMode = SelectionMode.NONE;
@@ -145,8 +146,11 @@ public final class TerrainwrightClient implements ClientModInitializer {
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockState(position).is(ModBlocks.ARCHITECT_TABLE)) {
-            activeArchitectTable = position.immutable();
-            PREVIEW_STATE.clear();
+            GlobalPos selectedTable = GlobalPos.of(level.dimension(), position);
+            if (!isSameArchitectTable(activeArchitectTable, selectedTable)) {
+                PREVIEW_STATE.clear();
+            }
+            activeArchitectTable = selectedTable;
             openScreen(Minecraft.getInstance());
             return InteractionResult.SUCCESS;
         }
@@ -158,7 +162,7 @@ public final class TerrainwrightClient implements ClientModInitializer {
             return;
         }
         PREVIEW_STATE.clear();
-        ClientPlayNetworking.send(new StartSurvey(activeArchitectTable));
+        ClientPlayNetworking.send(new StartSurvey(activeArchitectTable.pos()));
         selectionMode = SelectionMode.SITE_PENDING;
         Minecraft.getInstance().setScreenAndShow(null);
     }
@@ -177,7 +181,9 @@ public final class TerrainwrightClient implements ClientModInitializer {
     }
 
     private static void cancelSelection(boolean reopenScreen) {
-        ClientPlayNetworking.send(new CancelSurvey());
+        if (selectionMode.cancelsServerSurvey()) {
+            ClientPlayNetworking.send(new CancelSurvey());
+        }
         selectionMode = SelectionMode.NONE;
         if (reopenScreen) {
             openScreen(Minecraft.getInstance());
@@ -186,6 +192,14 @@ public final class TerrainwrightClient implements ClientModInitializer {
 
     private static void receiveSurveyStatus(SurveyStatus payload, ClientPlayNetworking.Context context) {
         context.client().execute(() -> {
+            if (payload.action() == SurveyStatus.Action.CONFIRM && payload.accepted()) {
+                selectionMode = SelectionMode.NONE;
+                PREVIEW_STATE.clear();
+                if (context.client().gui.screen() instanceof ArchitectScreen) {
+                    context.client().setScreenAndShow(null);
+                }
+                return;
+            }
             if (payload.action() == SurveyStatus.Action.START
                     && selectionMode == SelectionMode.SITE_PENDING
                     && payload.accepted()) {
@@ -329,11 +343,19 @@ public final class TerrainwrightClient implements ClientModInitializer {
         return property.getName(state.getValue(property));
     }
 
-    private enum SelectionMode {
+    static boolean isSameArchitectTable(GlobalPos activeTable, GlobalPos selectedTable) {
+        return selectedTable.equals(activeTable);
+    }
+
+    enum SelectionMode {
         NONE,
         SITE_PENDING,
         SITE,
         HUT,
-        CHEST
+        CHEST;
+
+        boolean cancelsServerSurvey() {
+            return this == SITE_PENDING || this == SITE;
+        }
     }
 }

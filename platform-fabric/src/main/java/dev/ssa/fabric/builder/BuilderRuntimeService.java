@@ -23,10 +23,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +52,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
     private final BuilderChestLinkService links;
     private final Path operationDirectory;
     private final Map<String, CompletableFuture<FabricUndoExecutor.UndoResult>> activeUndos = new HashMap<>();
+    private final Set<UUID> pendingSpawns = new HashSet<>();
 
     private BuilderRuntimeService(MinecraftServer server) {
         this.server = Objects.requireNonNull(server, "server");
@@ -215,6 +218,9 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 attach(level, builder, job, plan, chestBinding);
                 return CompletableFuture.completedFuture(Optional.of(builder));
             }
+            if (lifecycle.status() == BuilderLifecycleTombstone.Status.SPAWN_PENDING) {
+                markSpawnFailure(level, repository, lifecycle.builderId());
+            }
             return CompletableFuture.completedFuture(Optional.empty());
         }
 
@@ -225,40 +231,142 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 hut.ownerId(),
                 hut.activeJobId(),
                 hut.containerBinding(),
-                java.util.Optional.of(BuilderLifecycleTombstone.active(builderId)),
+                java.util.Optional.of(BuilderLifecycleTombstone.spawning(builderId)),
                 hut.revision() + 1));
+        pendingSpawns.add(builderId);
         CompletableFuture<Optional<BuilderEntity>> result = new CompletableFuture<>();
         level.getDataStorage().scheduleSave().whenComplete((ignored, saveFailure) -> server.execute(() -> {
             if (saveFailure != null) {
-                result.completeExceptionally(saveFailure);
+                failSpawn(level, repository, builderId, null, saveFailure, result);
                 return;
             }
-            try {
-                ServerBuildJobRepository.HutState durableHut = repository
-                        .findHut(UUID.fromString(job.hutId()))
-                        .orElseThrow();
-                BuilderLifecycleTombstone durableLifecycle = durableHut.builderLifecycle().orElseThrow();
-                if (!durableLifecycle.builderId().equals(builderId)
-                        || durableLifecycle.status() != BuilderLifecycleTombstone.Status.ACTIVE) {
-                    throw new IllegalStateException("Builder lifecycle changed before durable spawn");
-                }
-                BuilderEntity builder = new BuilderEntity(ModEntityTypes.BUILDER, level);
-                builder.setUUID(builderId);
-                builder.setPos(
-                        spawnPosition.getX() + 0.5,
-                        spawnPosition.getY(),
-                        spawnPosition.getZ() + 0.5);
-                if (!level.addFreshEntity(builder)) {
-                    builder.discard();
-                    throw new IllegalStateException("Minecraft rejected the production Builder spawn");
-                }
-                attach(level, builder, repository.findJob(job.jobId()).orElseThrow(), plan, chestBinding);
-                result.complete(Optional.of(builder));
-            } catch (Throwable failure) {
-                result.completeExceptionally(failure);
-            }
+            spawnPendingEntity(
+                    level,
+                    repository,
+                    hut.hutId(),
+                    job.jobId(),
+                    plan,
+                    chestBinding,
+                    spawnPosition,
+                    builderId,
+                    "Minecraft rejected the production Builder spawn",
+                    result);
         }));
         return result;
+    }
+
+    private void markSpawnFailure(
+            ServerLevel level,
+            ServerBuildJobRepository repository,
+            UUID builderId) {
+        new JobRecoveryService(repository).observeSpawnFailure(builderId, level.getGameTime());
+        level.getDataStorage().scheduleSave();
+    }
+
+    private void recoverInterruptedSpawns(ServerLevel level) {
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        List<UUID> interrupted = repository.huts().values().stream()
+                .flatMap(hut -> hut.builderLifecycle().stream())
+                .filter(lifecycle -> lifecycle.status() == BuilderLifecycleTombstone.Status.SPAWN_PENDING)
+                .map(BuilderLifecycleTombstone::builderId)
+                .filter(builderId -> !pendingSpawns.contains(builderId))
+                .toList();
+        interrupted.forEach(builderId -> {
+            markSpawnFailure(level, repository, builderId);
+            Entity interruptedEntity = level.getEntity(builderId);
+            if (interruptedEntity instanceof BuilderEntity builder && !builder.isRemoved()) {
+                builder.discard();
+            }
+        });
+    }
+
+    private void spawnPendingEntity(
+            ServerLevel level,
+            ServerBuildJobRepository repository,
+            UUID hutId,
+            String jobId,
+            TaskGraph plan,
+            ContainerBinding binding,
+            BlockPos spawnPosition,
+            UUID builderId,
+            String rejectionMessage,
+            CompletableFuture<Optional<BuilderEntity>> result) {
+        BuilderEntity builder = null;
+        try {
+            ServerBuildJobRepository.HutState durableHut = repository.findHut(hutId).orElseThrow();
+            BuilderLifecycleTombstone durableLifecycle = durableHut.builderLifecycle().orElseThrow();
+            if (!durableLifecycle.builderId().equals(builderId)
+                    || durableLifecycle.status() != BuilderLifecycleTombstone.Status.SPAWN_PENDING) {
+                throw new IllegalStateException("Builder lifecycle changed before durable spawn");
+            }
+            builder = new BuilderEntity(ModEntityTypes.BUILDER, level);
+            builder.setUUID(builderId);
+            builder.setPos(
+                    spawnPosition.getX() + 0.5,
+                    spawnPosition.getY(),
+                    spawnPosition.getZ() + 0.5);
+            if (!level.addFreshEntity(builder)) {
+                throw new IllegalStateException(rejectionMessage);
+            }
+            attach(level, builder, repository.findJob(jobId).orElseThrow(), plan, binding);
+        } catch (Throwable failure) {
+            failSpawn(level, repository, builderId, builder, failure, result);
+            return;
+        }
+
+        BuilderEntity spawned = builder;
+        try {
+            activateSpawn(level, repository, hutId, builderId)
+                    .whenComplete((ignored, activationFailure) -> server.execute(() -> {
+                        if (activationFailure != null) {
+                            failSpawn(level, repository, builderId, spawned, activationFailure, result);
+                            return;
+                        }
+                        pendingSpawns.remove(builderId);
+                        result.complete(Optional.of(spawned));
+                    }));
+        } catch (Throwable failure) {
+            failSpawn(level, repository, builderId, spawned, failure, result);
+        }
+    }
+
+    private CompletableFuture<Void> activateSpawn(
+            ServerLevel level,
+            ServerBuildJobRepository repository,
+            UUID hutId,
+            UUID builderId) {
+        ServerBuildJobRepository.HutState hut = repository.findHut(hutId).orElseThrow();
+        BuilderLifecycleTombstone lifecycle = hut.builderLifecycle().orElseThrow();
+        if (!lifecycle.builderId().equals(builderId)) {
+            throw new IllegalStateException("Builder identity changed before spawn activation");
+        }
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                hut.hutId(),
+                hut.ownerId(),
+                hut.activeJobId(),
+                hut.containerBinding(),
+                Optional.of(lifecycle.activate()),
+                hut.revision() + 1));
+        return level.getDataStorage().scheduleSave().thenApply(ignored -> (Void) null);
+    }
+
+    private void failSpawn(
+            ServerLevel level,
+            ServerBuildJobRepository repository,
+            UUID builderId,
+            BuilderEntity builder,
+            Throwable failure,
+            CompletableFuture<Optional<BuilderEntity>> result) {
+        pendingSpawns.remove(builderId);
+        try {
+            markSpawnFailure(level, repository, builderId);
+        } catch (RuntimeException recoveryFailure) {
+            failure.addSuppressed(recoveryFailure);
+        }
+        if (builder != null && !builder.isRemoved()) {
+            builder.discard();
+        }
+        result.completeExceptionally(failure);
     }
 
     private CompletableFuture<Optional<BuilderEntity>> replaceTombstoned(
@@ -313,27 +421,23 @@ public final class BuilderRuntimeService implements AutoCloseable {
                         currentHut.containerBinding(),
                         Optional.of(currentLifecycle.replaceWith(replacementId)),
                         currentHut.revision() + 1));
+                pendingSpawns.add(replacementId);
                 level.getDataStorage().scheduleSave().whenComplete((ignored, saveFailure) -> server.execute(() -> {
                     if (saveFailure != null) {
-                        result.completeExceptionally(saveFailure);
+                        failSpawn(level, repository, replacementId, null, saveFailure, result);
                         return;
                     }
-                    try {
-                        BuilderEntity replacement = new BuilderEntity(ModEntityTypes.BUILDER, level);
-                        replacement.setUUID(replacementId);
-                        replacement.setPos(
-                                spawnPosition.getX() + 0.5,
-                                spawnPosition.getY(),
-                                spawnPosition.getZ() + 0.5);
-                        if (!level.addFreshEntity(replacement)) {
-                            replacement.discard();
-                            throw new IllegalStateException("Minecraft rejected the replacement Builder spawn");
-                        }
-                        attach(level, replacement, repository.findJob(jobId).orElseThrow(), plan, binding);
-                        result.complete(Optional.of(replacement));
-                    } catch (Throwable failure) {
-                        result.completeExceptionally(failure);
-                    }
+                    spawnPendingEntity(
+                            level,
+                            repository,
+                            currentHut.hutId(),
+                            jobId,
+                            plan,
+                            binding,
+                            spawnPosition,
+                            replacementId,
+                            "Minecraft rejected the replacement Builder spawn",
+                            result);
                 }));
             } catch (Throwable failure) {
                 result.completeExceptionally(failure);
@@ -370,6 +474,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
 
     private void attachLoadedBuilders(ServerLevel level) {
         requireServerThread();
+        recoverInterruptedSpawns(level);
         resumeDurableUndos(level);
         List<BuilderEntity> builders = new ArrayList<>();
         for (Entity entity : level.getAllEntities()) {
@@ -524,7 +629,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 mutations,
                 new MaterialTransferService(mutations),
                 ServerBuildJobRepository.get(level),
-                links,
+                new BuilderChestLinkService(permissions, UUID.fromString(job.ownerId())),
                 permissions,
                 recoveredLevel -> {
                     new ChunkSuspensionService(ServerBuildJobRepository.get(recoveredLevel))

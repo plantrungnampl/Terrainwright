@@ -48,6 +48,28 @@ final class JobRecoveryServiceTest {
     }
 
     @Test
+    void spawnFailureMakesAPendingIdentityReplaceable() {
+        ServerBuildJobRepository repository = LifecycleTestFixtures.repository(
+                HUT_ID,
+                OWNER_ID,
+                BuilderLifecycleTombstone.spawning(BUILDER_ID),
+                BuildJobState.PREPARING);
+        JobRecoveryService service = new JobRecoveryService(repository);
+
+        service.observeSpawnFailure(BUILDER_ID, 1400);
+
+        assertEquals(BuildJobState.NO_BUILDER,
+                repository.findJob(LifecycleTestFixtures.JOB_ID).orElseThrow().state());
+        BuilderLifecycleTombstone lifecycle = repository.findHut(HUT_ID)
+                .orElseThrow()
+                .builderLifecycle()
+                .orElseThrow();
+        assertTrue(lifecycle.canReplace());
+        assertEquals(BuilderLifecycleTombstone.Cause.SPAWN_FAILURE,
+                lifecycle.tombstone().orElseThrow().cause());
+    }
+
+    @Test
     void activeIdentityReopensOnlyThroughOperationRecovery() {
         ServerBuildJobRepository repository = LifecycleTestFixtures.repository(
                 HUT_ID, OWNER_ID, BUILDER_ID, BuildJobState.PREPARING);

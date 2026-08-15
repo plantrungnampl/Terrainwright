@@ -1,12 +1,14 @@
 package dev.ssa.fabric.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.ssa.architect.model.EntrancePreference;
 import dev.ssa.architect.model.HouseRequirements;
 import dev.ssa.architect.model.StyleId;
 import dev.ssa.fabric.preview.PreviewTestFixtures;
 import io.netty.buffer.Unpooled;
+import java.util.Arrays;
 import java.util.UUID;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.BlockPos;
@@ -53,6 +55,12 @@ final class PreviewPayloadCodecTest {
         assertEquals(failure, roundTrip(failure, PreviewPayloads.PreviewFailure.CODEC));
         assertEquals(request, roundTrip(request, PreviewPayloads.RequestPreview.CODEC));
         assertEquals(confirm, roundTrip(confirm, PreviewPayloads.ConfirmPreview.CODEC));
+    }
+
+    @Test
+    void surveyStatusProtocolIncludesExplicitConfirmAcknowledgement() {
+        assertTrue(Arrays.stream(PreviewPayloads.SurveyStatus.Action.values())
+                .anyMatch(action -> action.name().equals("CONFIRM")));
     }
 
     @Test

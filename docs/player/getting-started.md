@@ -48,9 +48,9 @@ The chest must be loaded, within the Hut's 16-block three-dimensional distance l
 2. Choose Medieval, Japanese, or Modern; a 9x11, 15x19, or 21x25 footprint; 1-3 floors; bedrooms; features; and entrance preference.
 3. Choose **Select Site**, close the screen, and right-click the top face of the intended anchor block. The Table, player, and site must remain in the same dimension and within the server's 64-block survey limit.
 4. Choose **Generate Preview**. The server scans the terrain, generates candidates, and sends the winning immutable Blueprint to the client ghost renderer.
-5. Use **Regenerate**, **Rotate 90 degrees**, or **Move ghost +1 X** if needed.
+5. Use **Regenerate**, **Rotate 90 degrees**, or **Reselect Site** if needed. Reselecting returns to the server-authoritative survey flow instead of moving the ghost only on the client.
 6. Choose **Select Builder Hut**, close the screen, and right-click the owned Hut.
-7. Choose **Confirm**. Confirmation succeeds only while the server preview, survey authority, world revision, permissions, and Hut association are still valid.
+7. Choose **Confirm**. Confirmation succeeds only while the server preview, survey authority, world revision, permissions, Hut association, and linked Builder Chest are still valid.
 
 ## Supply and control the build
 

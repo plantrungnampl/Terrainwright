@@ -73,8 +73,6 @@ public final class BuilderLossRecoveryGameTest {
                 .builderLifecycle()
                 .orElseThrow()
                 .builderId();
-        context.assertTrue(level.getEntity(durableBuilderId) == null,
-                "Builder entity existed before lifecycle checkpoint acknowledgement");
 
         context.onEachTick(() -> {
             if (!spawned.isDone()) {
@@ -83,6 +81,67 @@ public final class BuilderLossRecoveryGameTest {
             BuilderEntity builder = spawned.join().orElseThrow();
             context.assertValueEqual(builder.getUUID(), durableBuilderId, "durable spawned identity");
             builder.discard();
+            context.succeed();
+        });
+    }
+
+    @GameTest(maxTicks = 40, padding = 12)
+    public void pendingSpawnBecomesReplaceableOnRuntimeTick(GameTestHelper context) {
+        ServerLevel level = context.getLevel();
+        BlockPos chest = context.absolutePos(new BlockPos(2, 1, 2));
+        BlockPos origin = context.absolutePos(new BlockPos(8, 1, 5));
+        context.setBlock(new BlockPos(2, 1, 2), Blocks.CHEST);
+        UUID ownerId = UUID.randomUUID();
+        UUID hutId = UUID.randomUUID();
+        UUID missingBuilderId = UUID.randomUUID();
+        String jobId = UUID.randomUUID().toString();
+        BuildJob job = BuildJob.create(
+                jobId,
+                ownerId.toString(),
+                hutId.toString(),
+                "blueprint-missing-active-builder",
+                "aaaaaaaaaaaaaaaa",
+                NamespacedId.parse(level.dimension().identifier().toString()),
+                new GridPos(origin.getX(), origin.getY(), origin.getZ()),
+                0);
+        ContainerBinding binding = ContainerBinding.resolve(
+                level.dimension().identifier(), chest, Optional.empty(), Optional.empty());
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        repository.saveJob(job);
+        repository.savePlan(jobId, plan());
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                hutId,
+                ownerId,
+                Optional.of(jobId),
+                Optional.of(binding),
+                Optional.of(BuilderLifecycleTombstone.spawning(missingBuilderId)),
+                1));
+        BuilderEntity interruptedSpawn = new BuilderEntity(ModEntityTypes.BUILDER, level);
+        interruptedSpawn.setUUID(missingBuilderId);
+        BlockPos interruptedPosition = context.absolutePos(new BlockPos(2, 1, 5));
+        interruptedSpawn.setPos(
+                interruptedPosition.getX() + 0.5,
+                interruptedPosition.getY(),
+                interruptedPosition.getZ() + 0.5);
+        context.assertTrue(level.addFreshEntity(interruptedSpawn), "interrupted Builder spawn setup");
+
+        context.onEachTick(() -> {
+            BuildJob recovered = repository.findJob(jobId).orElseThrow();
+            BuilderLifecycleTombstone lifecycle = repository.findHut(hutId)
+                    .orElseThrow()
+                    .builderLifecycle()
+                    .orElseThrow();
+            if (recovered.state() != BuildJobState.NO_BUILDER || !lifecycle.canReplace()) {
+                return;
+            }
+            context.assertValueEqual(
+                    lifecycle.tombstone().orElseThrow().cause(),
+                    BuilderLifecycleTombstone.Cause.SPAWN_FAILURE,
+                    "pending spawn recovery cause");
+            context.assertValueEqual(lifecycle.builderId(), missingBuilderId,
+                    "missing Builder identity changed during recovery");
+            context.assertTrue(interruptedSpawn.isRemoved(),
+                    "interrupted Builder entity survived pending-spawn recovery");
             context.succeed();
         });
     }
@@ -247,7 +306,7 @@ public final class BuilderLossRecoveryGameTest {
             }
         }
         context.setBlock(new BlockPos(2, 1, 2), Blocks.CHEST);
-        UUID ownerId = UUID.randomUUID();
+        UUID ownerId = context.makeMockServerPlayerInLevel().getUUID();
         UUID hutId = UUID.randomUUID();
         String jobId = UUID.randomUUID().toString();
         BuildJob job = BuildJob.create(

@@ -10,6 +10,20 @@ import org.junit.jupiter.api.Test;
 
 final class BuilderLifecycleTombstoneTest {
     @Test
+    void spawnIdentityRemainsPendingUntilTheEntityIsActivated() {
+        UUID builderId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        BuilderLifecycleTombstone pending = BuilderLifecycleTombstone.spawning(builderId);
+        BuilderLifecycleTombstone active = pending.activate();
+
+        assertEquals(BuilderLifecycleTombstone.Status.SPAWN_PENDING, pending.status());
+        assertFalse(pending.canReplace());
+        assertEquals(BuilderLifecycleTombstone.Status.ACTIVE, active.status());
+        assertEquals(builderId, active.builderId());
+        assertEquals(pending.revision() + 1, active.revision());
+    }
+
+    @Test
     void unloadPreservesIdentityAndDoesNotPermitReplacement() {
         BuilderLifecycleTombstone lifecycle = BuilderLifecycleTombstone.active(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"));
@@ -50,7 +64,7 @@ final class BuilderLifecycleTombstoneTest {
 
         BuilderLifecycleTombstone replacement = active.observeDeath(1200).replaceWith(replacementId);
         assertEquals(replacementId, replacement.builderId());
-        assertEquals(BuilderLifecycleTombstone.Status.ACTIVE, replacement.status());
+        assertEquals(BuilderLifecycleTombstone.Status.SPAWN_PENDING, replacement.status());
         assertFalse(replacement.canReplace());
         assertTrue(replacement.tombstone().isEmpty());
     }

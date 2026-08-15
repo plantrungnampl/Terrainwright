@@ -30,6 +30,18 @@ final class LifecycleTestFixtures {
             UUID ownerId,
             UUID builderId,
             BuildJobState state) {
+        return repository(
+                hutId,
+                ownerId,
+                BuilderLifecycleTombstone.active(builderId),
+                state);
+    }
+
+    static ServerBuildJobRepository repository(
+            UUID hutId,
+            UUID ownerId,
+            BuilderLifecycleTombstone lifecycle,
+            BuildJobState state) {
         ServerBuildJobRepository repository = new ServerBuildJobRepository();
         BuildJob job = BuildJob.create(
                 JOB_ID,
@@ -50,7 +62,7 @@ final class LifecycleTestFixtures {
                 ownerId,
                 Optional.of(JOB_ID),
                 Optional.empty(),
-                Optional.of(BuilderLifecycleTombstone.active(builderId)),
+                Optional.of(lifecycle),
                 1));
         return repository;
     }

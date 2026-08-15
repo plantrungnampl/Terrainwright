@@ -33,6 +33,10 @@ public final class JobRecoveryService {
         observeLoss(builderId, observedGameTime, BuilderLifecycleTombstone.Cause.REMOVAL);
     }
 
+    public void observeSpawnFailure(UUID builderId, long observedGameTime) {
+        observeLoss(builderId, observedGameTime, BuilderLifecycleTombstone.Cause.SPAWN_FAILURE);
+    }
+
     public void quarantineUnresolvedIntent(UUID builderId) {
         List<ServerBuildJobRepository.HutState> owners = owners(builderId);
         if (owners.isEmpty()) {
@@ -132,9 +136,11 @@ public final class JobRecoveryService {
         }
         ServerBuildJobRepository.HutState hut = owners.getFirst();
         BuilderLifecycleTombstone current = hut.builderLifecycle().orElseThrow();
-        BuilderLifecycleTombstone tombstoned = cause == BuilderLifecycleTombstone.Cause.DEATH
-                ? current.observeDeath(observedGameTime)
-                : current.observeRemoval(observedGameTime);
+        BuilderLifecycleTombstone tombstoned = switch (cause) {
+            case DEATH -> current.observeDeath(observedGameTime);
+            case REMOVAL -> current.observeRemoval(observedGameTime);
+            case SPAWN_FAILURE -> current.observeSpawnFailure(observedGameTime);
+        };
         if (tombstoned == current) {
             return;
         }

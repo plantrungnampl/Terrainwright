@@ -35,6 +35,19 @@ public record BuilderLifecycleTombstone(
                 builderId, Status.ACTIVE, Optional.empty(), 0, CURRENT_FORMAT_VERSION);
     }
 
+    public static BuilderLifecycleTombstone spawning(UUID builderId) {
+        return new BuilderLifecycleTombstone(
+                builderId, Status.SPAWN_PENDING, Optional.empty(), 0, CURRENT_FORMAT_VERSION);
+    }
+
+    public BuilderLifecycleTombstone activate() {
+        if (status != Status.SPAWN_PENDING) {
+            throw new IllegalStateException("Only a pending Builder spawn can become active");
+        }
+        return new BuilderLifecycleTombstone(
+                builderId, Status.ACTIVE, Optional.empty(), revision + 1, formatVersion);
+    }
+
     public BuilderLifecycleTombstone observeUnload() {
         if (status != Status.ACTIVE) {
             return this;
@@ -80,7 +93,7 @@ public record BuilderLifecycleTombstone(
             throw new IllegalArgumentException("Replacement Builder must have a new identity");
         }
         return new BuilderLifecycleTombstone(
-                replacementId, Status.ACTIVE, Optional.empty(), revision + 1, formatVersion);
+                replacementId, Status.SPAWN_PENDING, Optional.empty(), revision + 1, formatVersion);
     }
 
     private BuilderLifecycleTombstone tombstone(Cause cause, long observedGameTime) {
@@ -111,6 +124,7 @@ public record BuilderLifecycleTombstone(
     }
 
     public enum Status {
+        SPAWN_PENDING,
         ACTIVE,
         SUSPENDED,
         TOMBSTONED

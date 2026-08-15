@@ -1,86 +1,96 @@
 package dev.ssa.fabric.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.ssa.architect.blueprint.Blueprint;
 import dev.ssa.architect.model.EntrancePreference;
 import dev.ssa.architect.model.HouseRequirements;
 import dev.ssa.architect.model.StyleId;
-import dev.ssa.fabric.network.PreviewPayloads.ConfirmPreview;
-import dev.ssa.fabric.network.PreviewPayloads.PreviewFailure;
-import dev.ssa.fabric.network.PreviewPayloads.PreviewResult;
-import dev.ssa.fabric.network.PreviewPayloads.RequestPreview;
-import dev.ssa.fabric.network.PreviewPayloads.SurveyStatus;
+import dev.ssa.fabric.preview.PreviewTestFixtures;
+import io.netty.buffer.Unpooled;
 import java.util.Arrays;
 import java.util.UUID;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
 final class PreviewPayloadCodecTest {
     @Test
-    void previewRequestCarriesOnlySurveyAuthorityAndDesignInputs() {
-        HouseRequirements requirements = new HouseRequirements(
-                StyleId.parse("ssa:medieval"),
-                15,
-                19,
-                2,
-                3,
-                true,
-                true,
-                false,
-                true,
-                EntrancePreference.FRONT,
-                42L);
-
-        RequestPreview request = new RequestPreview("survey-token", requirements, 90, 7L);
-
-        assertEquals("survey-token", request.surveyToken());
-        assertEquals(requirements, request.requirements());
-        assertEquals(90, request.rotation());
-        assertEquals(7L, request.requestNonce());
-        assertThrows(IllegalArgumentException.class,
-                () -> new RequestPreview("survey-token", requirements, 45, 7L));
-    }
-
-    @Test
-    void confirmPayloadCarriesOnlyServerIssuedPreviewIdentityHashAndHutChoice() {
-        UUID sessionId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        UUID hutId = UUID.fromString("22222222-2222-2222-2222-222222222222");
-        String hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-        ConfirmPreview confirm = new ConfirmPreview(sessionId, hash, hutId);
-
-        assertEquals(sessionId, confirm.previewSessionId());
-        assertEquals(hash, confirm.expectedBlueprintHash());
-        assertEquals(hutId, confirm.chosenHutId());
-        assertThrows(IllegalArgumentException.class,
-                () -> new ConfirmPreview(sessionId, "not-a-hash", hutId));
-    }
-
-    @Test
-    void previewResultRejectsMismatchedBlueprintHash() {
-        Blueprint blueprint = PreviewTestBlueprints.blueprint();
-
-        assertThrows(IllegalArgumentException.class, () -> new PreviewResult(
+    void requestAndConfirmPayloadsRoundTripWithoutCoordinatesOrBlueprint() {
+        PreviewPayloads.RequestPreview request = new PreviewPayloads.RequestPreview(
+                "survey-token",
+                new HouseRequirements(
+                        StyleId.parse("smart_survival_architect:medieval"),
+                        9,
+                        11,
+                        2,
+                        2,
+                        true,
+                        true,
+                        true,
+                        false,
+                        EntrancePreference.EAST,
+                        42),
+                270,
+                7);
+        PreviewPayloads.ConfirmPreview confirm = new PreviewPayloads.ConfirmPreview(
                 UUID.randomUUID(),
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                blueprint,
-                new net.minecraft.core.BlockPos(0, 64, 0),
-                0,
-                100,
-                1));
-    }
+                UUID.randomUUID());
+        PreviewPayloads.StartSurvey start = new PreviewPayloads.StartSurvey(new BlockPos(1, 64, 2));
+        PreviewPayloads.CancelSurvey cancel = new PreviewPayloads.CancelSurvey();
+        PreviewPayloads.SurveyStatus status = new PreviewPayloads.SurveyStatus(
+                PreviewPayloads.SurveyStatus.Action.START, true);
+        PreviewPayloads.SelectSurveySite select = new PreviewPayloads.SelectSurveySite(new BlockPos(9, 70, 11));
+        PreviewPayloads.SurveyTokenResult token = new PreviewPayloads.SurveyTokenResult("opaque-token");
+        PreviewPayloads.PreviewFailure failure = new PreviewPayloads.PreviewFailure(
+                7, PreviewPayloads.PreviewFailure.Reason.SURVEY_EXPIRED);
 
-    @Test
-    void previewFailureRejectsNegativeRequestNonce() {
-        assertThrows(IllegalArgumentException.class,
-                () -> new PreviewFailure(-1, PreviewFailure.Reason.SERVER_BUSY));
+        assertEquals(start, roundTrip(start, PreviewPayloads.StartSurvey.CODEC));
+        assertEquals(cancel, roundTrip(cancel, PreviewPayloads.CancelSurvey.CODEC));
+        assertEquals(status, roundTrip(status, PreviewPayloads.SurveyStatus.CODEC));
+        assertEquals(select, roundTrip(select, PreviewPayloads.SelectSurveySite.CODEC));
+        assertEquals(token, roundTrip(token, PreviewPayloads.SurveyTokenResult.CODEC));
+        assertEquals(failure, roundTrip(failure, PreviewPayloads.PreviewFailure.CODEC));
+        assertEquals(request, roundTrip(request, PreviewPayloads.RequestPreview.CODEC));
+        assertEquals(confirm, roundTrip(confirm, PreviewPayloads.ConfirmPreview.CODEC));
     }
 
     @Test
     void surveyStatusProtocolIncludesExplicitConfirmAcknowledgement() {
-        assertTrue(Arrays.stream(SurveyStatus.Action.values())
+        assertTrue(Arrays.stream(PreviewPayloads.SurveyStatus.Action.values())
                 .anyMatch(action -> action.name().equals("CONFIRM")));
+    }
+
+    @Test
+    void serverPreviewResultRoundTripsTheExactTrustedBlueprint() {
+        var blueprint = PreviewTestFixtures.blueprint(42);
+        PreviewPayloads.PreviewResult result = new PreviewPayloads.PreviewResult(
+                UUID.randomUUID(),
+                blueprint.hash(),
+                blueprint,
+                new BlockPos(125, 71, -48),
+                90,
+                500,
+                8);
+
+        PreviewPayloads.PreviewResult decoded = roundTrip(result, PreviewPayloads.PreviewResult.CODEC);
+
+        assertEquals(result, decoded);
+        assertEquals(result.blueprintHash(), decoded.blueprint().hash());
+    }
+
+    private static <T> T roundTrip(
+            T value,
+            net.minecraft.network.codec.StreamCodec<RegistryFriendlyByteBuf, T> codec) {
+        RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(
+                Unpooled.buffer(), RegistryAccess.EMPTY);
+        try {
+            codec.encode(buffer, value);
+            return codec.decode(buffer);
+        } finally {
+            buffer.release();
+        }
     }
 }

@@ -227,7 +227,7 @@ public final class PreviewNetworking {
         if (!confirmation.confirmed()) {
             PreviewSessionService.ConfirmationFailure failure = confirmation.failure().orElseThrow();
             LOGGER.debug("Rejected preview confirmation for {}: {}", player.getUUID(), failure);
-            player.displayClientMessage(Component.literal("Terrainwright: " + failure.message()), false);
+            player.sendSystemMessage(Component.literal("Terrainwright: " + failure.message()));
             return;
         }
         PreviewSessionService.ConfirmationAuthority authority = confirmation.authority().orElseThrow();

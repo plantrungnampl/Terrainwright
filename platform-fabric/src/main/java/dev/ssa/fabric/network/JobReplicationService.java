@@ -110,7 +110,7 @@ public final class JobReplicationService {
         if (current.revision() != expectedRevision) {
             return rejected(Rejection.STALE_REVISION, current.revision());
         }
-        if (!permissions.canModify(requester, current.origin())) {
+        if (!permissions.canModify(requester, current.worldId().toString(), current.origin())) {
             return rejected(Rejection.PROTECTED, current.revision());
         }
         if (targetState == BuildJobState.PREPARING && current.state() != BuildJobState.PAUSED) {
@@ -129,9 +129,11 @@ public final class JobReplicationService {
         try {
             execution = Objects.requireNonNull(action.apply(next), "command execution future");
         } catch (RuntimeException failure) {
-            return CompletableFuture.failedFuture(failure);
+            return rejected(Rejection.EXECUTION_FAILED, next.revision());
         }
-        return execution.thenApply(ignored -> CommandResult.accepted(next.revision()));
+        return execution.handle((ignored, failure) -> failure == null
+                ? CommandResult.accepted(next.revision())
+                : CommandResult.rejected(Rejection.EXECUTION_FAILED, next.revision()));
     }
 
     private static CompletableFuture<CommandResult> rejected(Rejection rejection, long revision) {

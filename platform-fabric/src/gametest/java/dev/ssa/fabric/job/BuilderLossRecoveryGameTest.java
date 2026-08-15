@@ -87,6 +87,56 @@ public final class BuilderLossRecoveryGameTest {
         });
     }
 
+    @GameTest(maxTicks = 40, padding = 12)
+    public void missingActiveBuilderBecomesReplaceableNoBuilderState(GameTestHelper context) {
+        ServerLevel level = context.getLevel();
+        BlockPos chest = context.absolutePos(new BlockPos(2, 1, 2));
+        BlockPos builderStart = context.absolutePos(new BlockPos(2, 1, 5));
+        BlockPos origin = context.absolutePos(new BlockPos(8, 1, 5));
+        context.setBlock(new BlockPos(2, 1, 2), Blocks.CHEST);
+        UUID ownerId = UUID.randomUUID();
+        UUID hutId = UUID.randomUUID();
+        UUID missingBuilderId = UUID.randomUUID();
+        String jobId = UUID.randomUUID().toString();
+        BuildJob job = BuildJob.create(
+                jobId,
+                ownerId.toString(),
+                hutId.toString(),
+                "blueprint-missing-active-builder",
+                "aaaaaaaaaaaaaaaa",
+                NamespacedId.parse(level.dimension().identifier().toString()),
+                new GridPos(origin.getX(), origin.getY(), origin.getZ()),
+                0);
+        ContainerBinding binding = ContainerBinding.resolve(
+                level.dimension().identifier(), chest, Optional.empty(), Optional.empty());
+        ServerBuildJobRepository repository = ServerBuildJobRepository.get(level);
+        repository.saveJob(job);
+        repository.savePlan(jobId, plan());
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                hutId,
+                ownerId,
+                Optional.of(jobId),
+                Optional.of(binding),
+                Optional.of(BuilderLifecycleTombstone.active(missingBuilderId)),
+                1));
+
+        Optional<BuilderEntity> result = BuilderRuntimeService.start(
+                level, job, plan(), binding, builderStart).join();
+        context.assertTrue(result.isEmpty(), "runtime unexpectedly recreated an ACTIVE Builder identity");
+        BuildJob recovered = repository.findJob(jobId).orElseThrow();
+        BuilderLifecycleTombstone lifecycle = repository.findHut(hutId)
+                .orElseThrow()
+                .builderLifecycle()
+                .orElseThrow();
+        context.assertValueEqual(recovered.state(), BuildJobState.NO_BUILDER,
+                "missing ACTIVE Builder job state");
+        context.assertTrue(lifecycle.canReplace(),
+                "missing ACTIVE Builder did not produce replaceable lifecycle evidence");
+        context.assertValueEqual(lifecycle.builderId(), missingBuilderId,
+                "missing Builder identity changed during recovery");
+        context.succeed();
+    }
+
     @GameTest(maxTicks = 300, padding = 12)
     public void deathTombstonesThenExplicitReplacementStartsEmpty(GameTestHelper context) {
         Fixture fixture = start(context, "death");

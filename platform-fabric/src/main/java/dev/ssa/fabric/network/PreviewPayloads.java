@@ -83,7 +83,8 @@ public final class PreviewPayloads {
 
         public enum Action {
             START,
-            SELECT_SITE
+            SELECT_SITE,
+            CONFIRM
         }
     }
 

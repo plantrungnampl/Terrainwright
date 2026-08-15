@@ -2,7 +2,6 @@ package dev.ssa.fabric.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.ssa.architect.model.GridPos;
@@ -23,7 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +81,7 @@ final class JobReplicationServiceTest {
     }
 
     @Test
-    void failedPauseCheckpointRollsBackDurableState() {
+    void failedPauseCheckpointReturnsExecutionFailureAtAuthoritativeRevision() {
         ServerBuildJobRepository repository = new ServerBuildJobRepository();
         BuildJob job = job("job-pause-failure", OWNER);
         repository.saveJob(job);
@@ -112,8 +110,15 @@ final class JobReplicationServiceTest {
                     }
                 });
 
-        assertThrows(CompletionException.class, () -> service.pause(job.jobId(), OWNER, job.revision()).join());
-        assertEquals(job, repository.findJob(job.jobId()).orElseThrow());
+        JobReplicationService.CommandResult result = service
+                .pause(job.jobId(), OWNER, job.revision())
+                .join();
+        BuildJob authoritative = repository.findJob(job.jobId()).orElseThrow();
+
+        assertFalse(result.accepted());
+        assertEquals(JobReplicationService.Rejection.EXECUTION_FAILED, result.rejection());
+        assertEquals(authoritative.revision(), result.revision());
+        assertEquals(BuildJobState.PAUSED, authoritative.state());
     }
 
     @Test

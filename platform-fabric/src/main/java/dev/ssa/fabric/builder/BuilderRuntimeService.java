@@ -576,7 +576,7 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 mutations,
                 new MaterialTransferService(mutations),
                 ServerBuildJobRepository.get(level),
-                links,
+                new BuilderChestLinkService(permissions, UUID.fromString(job.ownerId())),
                 permissions,
                 recoveredLevel -> {
                     new ChunkSuspensionService(ServerBuildJobRepository.get(recoveredLevel))

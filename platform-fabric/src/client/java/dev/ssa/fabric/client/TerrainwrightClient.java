@@ -177,7 +177,9 @@ public final class TerrainwrightClient implements ClientModInitializer {
     }
 
     private static void cancelSelection(boolean reopenScreen) {
-        ClientPlayNetworking.send(new CancelSurvey());
+        if (selectionMode == SelectionMode.SITE_PENDING || selectionMode == SelectionMode.SITE) {
+            ClientPlayNetworking.send(new CancelSurvey());
+        }
         selectionMode = SelectionMode.NONE;
         if (reopenScreen) {
             openScreen(Minecraft.getInstance());

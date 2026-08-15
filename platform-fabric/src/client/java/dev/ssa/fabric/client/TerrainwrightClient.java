@@ -145,8 +145,11 @@ public final class TerrainwrightClient implements ClientModInitializer {
             return InteractionResult.SUCCESS;
         }
         if (level.getBlockState(position).is(ModBlocks.ARCHITECT_TABLE)) {
-            activeArchitectTable = position.immutable();
-            PREVIEW_STATE.clear();
+            BlockPos selectedTable = position.immutable();
+            if (!selectedTable.equals(activeArchitectTable)) {
+                PREVIEW_STATE.clear();
+            }
+            activeArchitectTable = selectedTable;
             openScreen(Minecraft.getInstance());
             return InteractionResult.SUCCESS;
         }
@@ -188,6 +191,14 @@ public final class TerrainwrightClient implements ClientModInitializer {
 
     private static void receiveSurveyStatus(SurveyStatus payload, ClientPlayNetworking.Context context) {
         context.client().execute(() -> {
+            if (payload.action() == SurveyStatus.Action.CONFIRM && payload.accepted()) {
+                selectionMode = SelectionMode.NONE;
+                PREVIEW_STATE.clear();
+                if (context.client().gui.screen() instanceof ArchitectScreen) {
+                    context.client().setScreenAndShow(null);
+                }
+                return;
+            }
             if (payload.action() == SurveyStatus.Action.START
                     && selectionMode == SelectionMode.SITE_PENDING
                     && payload.accepted()) {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 - 2026-08-15
+
+- Hardened preview confirmation so only unchanged, server-authoritative previews can start jobs.
+- Added dimension-aware permission checks for previews, chest links, block mutations, material transfers, and Safe Undo.
+- Fixed interrupted Builder spawn and replacement recovery, including cleanup of stranded entities.
+- Fixed Architect Table workflow state across dimensions and site or Hut reselection.
+- Added confirmation feedback and focused regression coverage for the hardened workflows.
+
 ## 1.0.1 - 2026-08-14
 
 - Fixed Creative tab/search behavior.

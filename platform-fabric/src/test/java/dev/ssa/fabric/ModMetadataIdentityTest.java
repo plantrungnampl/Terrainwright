@@ -29,7 +29,7 @@ final class ModMetadataIdentityTest {
     void usesTheReleaseVersion() throws IOException {
         String metadata = metadata();
 
-        assertTrue(metadata.contains("\"version\": \"1.0.1\""), metadata);
+        assertTrue(metadata.contains("\"version\": \"1.0.2\""), metadata);
     }
 
     private static String metadata() throws IOException {

@@ -2,6 +2,7 @@ package dev.ssa.fabric.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.ssa.architect.model.GridPos;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +80,40 @@ final class JobReplicationServiceTest {
         assertEquals(JobReplicationService.Rejection.PROTECTED, result.rejection());
         assertEquals(job, repository.findJob(job.jobId()).orElseThrow());
         assertEquals(0, executor.stopCount.get());
+    }
+
+    @Test
+    void failedPauseCheckpointRollsBackDurableState() {
+        ServerBuildJobRepository repository = new ServerBuildJobRepository();
+        BuildJob job = job("job-pause-failure", OWNER);
+        repository.saveJob(job);
+        JobReplicationService service = new JobReplicationService(
+                repository,
+                (owner, position) -> true,
+                new JobReplicationService.CommandExecutor() {
+                    @Override
+                    public CompletableFuture<Void> pause(BuildJob pausedJob) {
+                        return CompletableFuture.failedFuture(new IllegalStateException("checkpoint failed"));
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> resume(BuildJob resumedJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> stop(BuildJob stoppingJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    @Override
+                    public CompletableFuture<Void> undo(BuildJob undoingJob) {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                });
+
+        assertThrows(CompletionException.class, () -> service.pause(job.jobId(), OWNER, job.revision()).join());
+        assertEquals(job, repository.findJob(job.jobId()).orElseThrow());
     }
 
     @Test

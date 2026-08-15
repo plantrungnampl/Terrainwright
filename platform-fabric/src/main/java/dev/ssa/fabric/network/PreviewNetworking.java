@@ -251,17 +251,38 @@ public final class PreviewNetworking {
                 hut.containerBinding(),
                 hut.builderLifecycle(),
                 hut.revision() + 1));
-        BuilderRuntimeService.start(
-                        player.level(),
-                        job,
-                        plan,
-                        hut.containerBinding().orElseThrow(),
-                        authority.anchor().above())
-                .whenComplete((builder, failure) -> {
-                    if (failure != null) {
-                        LOGGER.error("Durable Builder spawn failed for job {}", job.jobId(), failure);
-                    }
-                });
+
+        sendSurveyStatus(player, SurveyStatus.Action.CONFIRM, true);
+        try {
+            BuilderRuntimeService.start(
+                            player.level(),
+                            job,
+                            plan,
+                            hut.containerBinding().orElseThrow(),
+                            authority.anchor().above())
+                    .whenComplete((builder, failure) -> {
+                        if (failure == null && builder.isPresent()) {
+                            return;
+                        }
+                        context.server().execute(() -> {
+                            if (failure != null) {
+                                LOGGER.error("Durable Builder spawn failed for job {}", job.jobId(), failure);
+                            } else {
+                                LOGGER.error("Durable Builder spawn returned no entity for job {}", job.jobId());
+                            }
+                            if (player.connection != null) {
+                                player.sendSystemMessage(Component.literal(
+                                        "Terrainwright: The build was confirmed, but the Builder could not start. "
+                                                + "Open the Builder Hut to replace it."));
+                            }
+                        });
+                    });
+        } catch (RuntimeException failure) {
+            LOGGER.error("Durable Builder start failed synchronously for job {}", job.jobId(), failure);
+            player.sendSystemMessage(Component.literal(
+                    "Terrainwright: The build was confirmed, but the Builder could not start. "
+                            + "Open the Builder Hut to recover it."));
+        }
     }
 
     private static Services services(MinecraftServer server) {

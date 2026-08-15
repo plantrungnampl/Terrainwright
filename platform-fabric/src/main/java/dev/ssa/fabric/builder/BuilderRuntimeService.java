@@ -215,6 +215,9 @@ public final class BuilderRuntimeService implements AutoCloseable {
                 attach(level, builder, job, plan, chestBinding);
                 return CompletableFuture.completedFuture(Optional.of(builder));
             }
+            if (lifecycle.status() == BuilderLifecycleTombstone.Status.ACTIVE) {
+                markSpawnFailure(level, repository, hut.hutId(), job.jobId(), lifecycle.builderId());
+            }
             return CompletableFuture.completedFuture(Optional.empty());
         }
 
@@ -230,9 +233,15 @@ public final class BuilderRuntimeService implements AutoCloseable {
         CompletableFuture<Optional<BuilderEntity>> result = new CompletableFuture<>();
         level.getDataStorage().scheduleSave().whenComplete((ignored, saveFailure) -> server.execute(() -> {
             if (saveFailure != null) {
+                try {
+                    markSpawnFailure(level, repository, hut.hutId(), job.jobId(), builderId);
+                } catch (RuntimeException recoveryFailure) {
+                    saveFailure.addSuppressed(recoveryFailure);
+                }
                 result.completeExceptionally(saveFailure);
                 return;
             }
+            BuilderEntity builder = null;
             try {
                 ServerBuildJobRepository.HutState durableHut = repository
                         .findHut(UUID.fromString(job.hutId()))
@@ -242,23 +251,66 @@ public final class BuilderRuntimeService implements AutoCloseable {
                         || durableLifecycle.status() != BuilderLifecycleTombstone.Status.ACTIVE) {
                     throw new IllegalStateException("Builder lifecycle changed before durable spawn");
                 }
-                BuilderEntity builder = new BuilderEntity(ModEntityTypes.BUILDER, level);
+                builder = new BuilderEntity(ModEntityTypes.BUILDER, level);
                 builder.setUUID(builderId);
                 builder.setPos(
                         spawnPosition.getX() + 0.5,
                         spawnPosition.getY(),
                         spawnPosition.getZ() + 0.5);
                 if (!level.addFreshEntity(builder)) {
-                    builder.discard();
                     throw new IllegalStateException("Minecraft rejected the production Builder spawn");
                 }
                 attach(level, builder, repository.findJob(job.jobId()).orElseThrow(), plan, chestBinding);
                 result.complete(Optional.of(builder));
             } catch (Throwable failure) {
+                try {
+                    markSpawnFailure(level, repository, hut.hutId(), job.jobId(), builderId);
+                } catch (RuntimeException recoveryFailure) {
+                    failure.addSuppressed(recoveryFailure);
+                }
+                if (builder != null && !builder.isRemoved()) {
+                    builder.discard();
+                }
                 result.completeExceptionally(failure);
             }
         }));
         return result;
+    }
+
+    private void markSpawnFailure(
+            ServerLevel level,
+            ServerBuildJobRepository repository,
+            UUID hutId,
+            String jobId,
+            UUID builderId) {
+        ServerBuildJobRepository.HutState currentHut = repository.findHut(hutId).orElse(null);
+        if (currentHut == null) {
+            return;
+        }
+        BuilderLifecycleTombstone lifecycle = currentHut.builderLifecycle().orElse(null);
+        if (lifecycle == null
+                || !lifecycle.builderId().equals(builderId)
+                || lifecycle.isTombstoned()) {
+            return;
+        }
+        BuildJob currentJob = repository.findJob(jobId).orElse(null);
+        if (currentJob != null) {
+            if (currentJob.state() == BuildJobState.IDLE) {
+                currentJob = currentJob.transitionTo(BuildJobState.PREPARING);
+            }
+            if (currentJob.state().canTransitionTo(BuildJobState.NO_BUILDER)) {
+                currentJob = currentJob.transitionTo(BuildJobState.NO_BUILDER);
+                repository.saveJob(currentJob);
+            }
+        }
+        repository.saveHutState(new ServerBuildJobRepository.HutState(
+                currentHut.hutId(),
+                currentHut.ownerId(),
+                currentHut.activeJobId(),
+                currentHut.containerBinding(),
+                Optional.of(lifecycle.observeSpawnFailure(level.getGameTime())),
+                currentHut.revision() + 1));
+        level.getDataStorage().scheduleSave();
     }
 
     private CompletableFuture<Optional<BuilderEntity>> replaceTombstoned(

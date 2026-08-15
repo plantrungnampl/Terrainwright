@@ -2,6 +2,7 @@ package dev.ssa.fabric.link;
 
 import dev.ssa.architect.model.GridPos;
 import dev.ssa.architect.model.NamespacedId;
+import dev.ssa.common.permission.PermissionPort;
 import dev.ssa.construction.job.BuildJob;
 import dev.ssa.fabric.block.BuilderHutBlockEntity;
 import dev.ssa.fabric.block.ModBlocks;
@@ -48,6 +49,35 @@ public final class HutChestLinkGameTest {
         context.assertValueEqual(wrongContainer.binding(), linked.binding(), "binding after barrel rejection");
         context.assertTrue(!wrongOwner.linked(), "non-owner linked the chest");
         context.assertValueEqual(wrongOwner.binding(), linked.binding(), "binding after ownership rejection");
+        context.succeed();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void linkingUsesTargetDimensionPermissionBoundary(GameTestHelper context) {
+        ServerLevel level = context.getLevel();
+        BlockPos hut = context.absolutePos(new BlockPos(0, 1, 0));
+        BlockPos chest = context.absolutePos(new BlockPos(3, 1, 2));
+        level.setBlock(chest, Blocks.CHEST.defaultBlockState(), 3);
+        PermissionPort permissions = new PermissionPort() {
+            @Override
+            public boolean canModify(UUID owner, GridPos position) {
+                return true;
+            }
+
+            @Override
+            public boolean canModify(UUID owner, String worldId, GridPos position) {
+                return false;
+            }
+        };
+        BuilderChestLinkService service = new BuilderChestLinkService(permissions);
+
+        BuilderChestLinkService.LinkResult result = service.link(level, hut, OWNER, chest, Optional.empty());
+
+        context.assertTrue(!result.linked(), "chest link bypassed target-dimension permission boundary");
+        context.assertValueEqual(
+                result.failure(),
+                Optional.of(BuilderChestLinkService.LinkFailure.PERMISSION_DENIED),
+                "dimension-aware permission rejection");
         context.succeed();
     }
 

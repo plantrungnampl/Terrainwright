@@ -306,7 +306,7 @@ public final class FabricMutationExecutor {
                 if (delta instanceof InventoryDelta inventoryDelta) {
                     BoundInventory bound = inventory(inventoryDelta);
                     bound.permissionPosition().ifPresent(position -> {
-                        if (!permissions.canModify(owner, position)) {
+                        if (!canModify(position)) {
                             throw new SecurityException(
                                     "owner cannot modify bound inventory: " + delta.evidenceKey());
                         }
@@ -323,7 +323,7 @@ public final class FabricMutationExecutor {
                 if (!level.isLoaded(position)) {
                     throw new IllegalStateException("world mutation target is not loaded: " + position);
                 }
-                if (!permissions.canModify(owner, gridPos(position))) {
+                if (!canModify(gridPos(position))) {
                     throw new SecurityException("owner cannot modify world mutation target: " + position);
                 }
             }
@@ -368,7 +368,7 @@ public final class FabricMutationExecutor {
             }
             WorldDelta worldDelta = (WorldDelta) delta;
             BlockPos position = position(worldDelta);
-            if (enforcePermissionOnApply && !permissions.canModify(owner, gridPos(position))) {
+            if (enforcePermissionOnApply && !canModify(gridPos(position))) {
                 throw new SecurityException("permission changed before world mutation: " + position);
             }
             if (!snapshots.snapshot(level.getBlockState(position)).equals(worldDelta.before())) {
@@ -387,6 +387,13 @@ public final class FabricMutationExecutor {
         @Override
         public CompletableFuture<Void> commit(OperationIntent intent) {
             return commitLog.commit(intent);
+        }
+
+        private boolean canModify(GridPos position) {
+            return permissions.canModify(
+                    owner,
+                    level.dimension().identifier().toString(),
+                    position);
         }
 
         private BoundInventory inventory(InventoryDelta delta) {
